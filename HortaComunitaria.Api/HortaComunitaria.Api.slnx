@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../tests/HortaComunitaria.Api.IntegrationTests/HortaComunitaria.Api.IntegrationTests.csproj" />
+  <Project Path="HortaComunitaria.Api.csproj" />
+</Solution>

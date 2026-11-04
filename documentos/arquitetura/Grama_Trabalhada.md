@@ -1,0 +1,9 @@
+# Grama trabalhada — textura v2
+
+Arquivo: [worked-grass-tile-v2.png](../../hortacomunitaria-webapp/public/assets/pixel-garden/worked-grass-tile-v2.png).
+
+Gerado com a ferramenta integrada `image_gen`, usando `grass-tile.png` como alvo de edição. A variação anterior foi descartada. A textura final conserva a paleta, o tamanho dos pixels e a maior parte da grama original; apenas pequenas marcas sugerem manejo. Na panorâmica, o padrão usa a mesma escala e transformação da grama original, com máscara de transição nas bordas e transparência de 85%. As caixas e plantas são renderizadas separadamente.
+
+Prompt final:
+
+> Use case: precise-object-edit. Edit target: the provided original pixel-art grass ground tile. Create its SUBTLY WORKED GRASS variant for the same game, with seamless tileable edges. Preserve approximately 85-90 percent of the original grass surface and its exact cool forest-green palette, pixel scale, grass tuft style, scattered small bright pixels and lighting. Make only a gentle lived-in cultivated change: add a few small irregular flattened/trampled grass patches and tiny muted earthy-olive/brown exposed soil scuffs, totaling no more than 12-15 percent of the surface, with soft irregular grassy borders made of crisp pixel clusters. A handful of very short subtle rake/spade impressions within those small patches can imply garden work. Keep it predominantly the SAME green lawn. No global recoloring, no yellow/olive color cast over the entire tile, no large bare-soil regions, no large orderly strips, no wooden planting boxes, no plants or seedlings, no strong borders, no text, no perspective, no image frame. Keep the whole flat top-down square tile filled, uniformly detailed, and seamlessly repeatable on all edges. The result must blend naturally into the original unworked grass rather than reading as a different ground biome. Preserve crisp pixel art, not blurry painting.

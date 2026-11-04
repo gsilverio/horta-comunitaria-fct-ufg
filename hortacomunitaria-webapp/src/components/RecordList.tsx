@@ -1,0 +1,9 @@
+import { Icon } from './Icon'
+import { useGardenState } from "../hooks/useGardenState"
+import type { ReactNode } from 'react'
+import type { ApiFailure, Page } from '../types/api'
+import { Failure, Pagination } from './Feedback'
+export function RecordList({ title, hint, create, children, filters, apply, loading, error, retry, data, page, requireActiveGarden = true, createDisabled = false }: { title: string; hint: string; create: () => void; children: ReactNode; filters: ReactNode; apply: () => void; loading: boolean; error?: ApiFailure; retry: () => void; data?: Pick<Page<unknown>, 'page' | 'totalPages' | 'totalCount' | 'hasPreviousPage' | 'hasNextPage'>; page: (page: number) => void; requireActiveGarden?: boolean; createDisabled?: boolean }) {
+  const garden = useGardenState()
+  return <><div className="page-heading"><div><span className="eyebrow">Registros da horta</span><h1 tabIndex={-1}>{title}</h1><p>{hint}</p></div><button disabled={createDisabled || requireActiveGarden && !garden.isActive} onClick={create}><Icon name="plus" />Novo cadastro / registro</button></div><form className="panel filter-panel grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label={`Filtros de ${title}`} onSubmit={event => { event.preventDefault(); apply() }}>{filters}<button className="secondary self-end">Aplicar filtros</button></form><section className="panel results-panel"><div className="results-heading"><h2>Registros</h2><span className="badge">{data?.totalCount ?? "—"} no recorte</span></div>{loading && <p role="status">Carregando registros…</p>}{error && <Failure error={error} retry={retry} />}{data && <>{data.totalCount === 0 ? <div className="empty"><Icon name="records" /><h3>Nenhum registro neste recorte</h3><p>Ajuste os filtros ou adicione o primeiro registro.</p></div> : <ul className="record-results">{children}</ul>}<Pagination data={data} change={page} label={`Páginas de ${title}`} /></>}</section></>
+}

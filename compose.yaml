@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17.0
+    environment:
+      POSTGRES_DB: horta_demo
+      POSTGRES_USER: horta_demo
+      POSTGRES_PASSWORD: ${HORTA_POSTGRES_PASSWORD:?Defina HORTA_POSTGRES_PASSWORD no arquivo .env local}
+    ports:
+      - "127.0.0.1:54329:5432"
+    volumes:
+      - horta-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U horta_demo -d horta_demo"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  horta-postgres:
+

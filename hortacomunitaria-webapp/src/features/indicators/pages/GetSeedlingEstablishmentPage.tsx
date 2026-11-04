@@ -1,0 +1,28 @@
+import { formatDate } from "../../../services/dates"
+import { useCallback } from "react"
+import { IndicatorPanel } from "../../../components/IndicatorPanel"
+import { Field, SelectField, Facts } from "../../../components/Fields"
+import { Failure, Pagination } from "../../../components/Feedback"
+import { useListFilters } from "../../../hooks/useListFilters"
+import { useLookups } from "../../../hooks/useLookups"
+import { useRemote } from "../../../hooks/useRemote"
+import { indicatorOriginHref as routeHref } from "../../../services/indicatorOriginHref"
+import { enumLabels } from "../../../services/labels"
+import { formatNumber } from "../../irrigation/formValues"
+import type { RecordRoute } from "../../../types/records"
+import { indicatorApi } from "../services/indicatorApi"
+export function GetSeedlingEstablishmentPage({ route }: { route: RecordRoute }) {
+const filters = useListFilters(route, ['from', 'to', 'speciesId', 'kind', 'method'], true)
+const options = useLookups(route.garden, ['species'])
+const load = useCallback((signal: AbortSignal) => indicatorApi.getSeedlingEstablishment(route.garden, { page: filters.page, pageSize: 5, from: filters.values.from || undefined, to: filters.values.to || undefined, speciesId: filters.values.speciesId || undefined, kind: filters.values.kind || undefined, method: filters.values.method || undefined }, signal), [route.garden, filters.page, filters.values.from, filters.values.to, filters.values.speciesId, filters.values.kind, filters.values.method])
+const result = useRemote(JSON.stringify(filters.values) + "/" + filters.page + "/" + filters.revision, load), record = result.data
+return <IndicatorPanel title="Pegamento das mudas" unit="Percentual (%) por natureza e método" competence="data do plantio" apply={filters.apply} loading={result.loading} error={filters.error ?? result.error} retry={filters.retry} page={filters.changePage} result={record && { from: record.from, to: record.to, definition: record.definition, availability: record.availability, summary: [{ label: 'Plantios de mudas elegíveis', value: formatNumber(record.eligiblePlantingCount) }, { label: 'Material não elegível', value: formatNumber(record.ineligibleMaterialCount) }, { label: 'Plantios sem avaliação', value: formatNumber(record.withoutAssessmentCount) }], origins: record.origins }} filters={<>
+<Field name="from" label="De" required type="date" value={filters.draft.from} change={value => filters.change("from", value)} error={filters.error} />
+<Field name="to" label="Até" required type="date" value={filters.draft.to} change={value => filters.change("to", value)} error={filters.error} />
+<SelectField name="speciesId" label="Espécie" value={filters.draft.speciesId} change={value => filters.change("speciesId", value)} options={options.data?.species ?? []} />
+<SelectField name="kind" label="Natureza do plantio" value={filters.draft.kind} change={value => filters.change("kind", value)} options={[{ id: 'Initial', label: 'Inicial' }, { id: 'Replacement', label: 'Reposição' }]} />
+<Field name="method" label="Método" type="text" value={filters.draft.method} change={value => filters.change("method", value)} />
+{options.error && <Failure error={options.error} retry={options.retry} />}</>}
+groups={record && <section className="panel"><h2>Grupos compatíveis do período</h2>{record.groups.items.map((item, index) => <div className="border-b border-horta-line py-4" key={index}><Facts items={[{ label: 'Natureza do plantio', value: enumLabels[item.kind] }, { label: 'Método', value: item.method === null ? "Não informado" : item.method }, { label: 'Plantios do grupo', value: formatNumber(item.plantingCount) }, { label: 'Plantios avaliados', value: formatNumber(item.assessedCount) }, { label: 'Base plantada avaliada', value: formatNumber(item.assessedPlantedQuantity) }, { label: 'Quantidade sobrevivente', value: formatNumber(item.survivingQuantity) }, { label: 'Percentual (%)', value: item.percentage === null ? "Não informado" : formatNumber(item.percentage) }]} /></div>)}<Pagination data={record.groups} change={filters.changePage} label="Páginas de grupos" /></section>}
+>{record?.origins.items.map((item, index) => <li key={index} className="rounded-xl border border-horta-line p-4"><Facts items={[{ label: 'Natureza do plantio', value: enumLabels[item.kind] }, { label: 'Quantidade plantada', value: formatNumber(item.plantedQuantity) }, { label: 'Identificação da avaliação', value: item.assessmentId === null ? "Não informado" : item.assessmentId }, { label: 'Data da avaliação', value: item.assessedOn === null ? "Não informado" : formatDate(item.assessedOn) }, { label: 'Quantidade sobrevivente', value: item.survivingQuantity === null ? "Não informado" : formatNumber(item.survivingQuantity) }, { label: 'Método', value: item.method === null ? "Não informado" : item.method }, { label: 'Percentual (%)', value: item.percentage === null ? "Não informado" : formatNumber(item.percentage) }]} /><a className="mt-4 inline-block font-semibold underline" href={routeHref(route.garden, 'cultivo', 'plantios', item.plantingId, new URLSearchParams({ from: filters.values.from, to: filters.values.to, speciesId: filters.values.speciesId, kind: filters.values.kind, method: filters.values.method }))}>Abrir origem</a>{item.assessmentId && <a className="ml-4 inline-block underline" href={routeHref(route.garden, "cultivo", "avaliacoes", item.assessmentId, new URLSearchParams({ from: filters.values.from, to: filters.values.to, speciesId: filters.values.speciesId, kind: filters.values.kind, method: filters.values.method }))}>Avaliação selecionada</a>}</li>)}</IndicatorPanel>
+}

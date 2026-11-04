@@ -1,0 +1,670 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "title": "Cultivares da Embrapa Hortaliças (1981–2023)",
+    "isbn": "978-65-89957-98-0",
+    "sha256": "e278d84bc9469517fd9bfad93394a1b4f5005d9a265302a445f97899361bfead",
+    "url": "https://www.infoteca.cnptia.embrapa.br/infoteca/bitstream/doc/1156800/1/livro-cultivares-embrapa-hortalicas.pdf"
+  },
+  "species": [
+    {
+      "key": "abobora",
+      "commonName": "Abóbora",
+      "scientificName": "Cucurbita moschata",
+      "imageQuery": "Cucurbita moschata fruit",
+      "cultivars": [
+        {
+          "name": "BRS Brasileirinha",
+          "sourcePage": 10
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "abobora-hibrida",
+      "commonName": "Abóbora híbrida",
+      "scientificName": "Cucurbita maxima × Cucurbita moschata",
+      "imageQuery": "Tetsukabuto squash",
+      "cultivars": [
+        {
+          "name": "Jabras",
+          "sourcePage": 12
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "alface",
+      "commonName": "Alface",
+      "scientificName": "Lactuca sativa",
+      "imageQuery": "Lactuca sativa",
+      "cultivars": [
+        {
+          "name": "BRS Leila",
+          "sourcePage": 14
+        },
+        {
+          "name": "BRS Lélia",
+          "sourcePage": 16
+        },
+        {
+          "name": "BRS Mediterrânea",
+          "sourcePage": 18
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "alho",
+      "commonName": "Alho",
+      "scientificName": "Allium sativum",
+      "imageQuery": "Allium sativum bulbs",
+      "cultivars": [
+        {
+          "name": "Amarante",
+          "sourcePage": 20
+        },
+        {
+          "name": "BRS Hozan",
+          "sourcePage": 22
+        },
+        {
+          "name": "Ito",
+          "sourcePage": 24
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "batata-doce",
+      "commonName": "Batata-doce",
+      "scientificName": "Ipomoea batatas",
+      "imageQuery": "Ipomoea batatas tubers",
+      "cultivars": [
+        {
+          "name": "Brazlândia Branca",
+          "sourcePage": 26
+        },
+        {
+          "name": "Brazlândia Rosada",
+          "sourcePage": 28
+        },
+        {
+          "name": "Brazlândia Roxa",
+          "sourcePage": 30
+        },
+        {
+          "name": "Coquinho",
+          "sourcePage": 32
+        },
+        {
+          "name": "Princesa",
+          "sourcePage": 34
+        },
+        {
+          "name": "CIP BRS Nuti",
+          "sourcePage": 36
+        },
+        {
+          "name": "BRS Cotinga",
+          "sourcePage": 38
+        },
+        {
+          "name": "BRS Anembé",
+          "sourcePage": 40
+        },
+        {
+          "name": "Beauregard",
+          "sourcePage": 234
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "berinjela",
+      "commonName": "Berinjela",
+      "scientificName": "Solanum melongena",
+      "imageQuery": "Solanum melongena fruit",
+      "cultivars": [
+        {
+          "name": "Ciça",
+          "sourcePage": 42
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "cebola",
+      "commonName": "Cebola",
+      "scientificName": "Allium cepa",
+      "imageQuery": "Allium cepa bulbs",
+      "cultivars": [
+        {
+          "name": "Alfa Tropical",
+          "sourcePage": 44
+        },
+        {
+          "name": "Beta Cristal",
+          "sourcePage": 46
+        },
+        {
+          "name": "BRS Belatriz 239",
+          "sourcePage": 48
+        },
+        {
+          "name": "BRS 367 (Riva)",
+          "sourcePage": 50
+        },
+        {
+          "name": "BRS Sustentare",
+          "sourcePage": 52
+        },
+        {
+          "name": "Conquista",
+          "sourcePage": 54
+        },
+        {
+          "name": "São Paulo",
+          "sourcePage": 56
+        },
+        {
+          "name": "BRS Alfa São Francisco",
+          "sourcePage": 236
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "cenoura",
+      "commonName": "Cenoura",
+      "scientificName": "Daucus carota",
+      "imageQuery": "Daucus carota carrots",
+      "cultivars": [
+        {
+          "name": "Alvorada",
+          "sourcePage": 58
+        },
+        {
+          "name": "Brasília",
+          "sourcePage": 60
+        },
+        {
+          "name": "BRS Carmela",
+          "sourcePage": 62
+        },
+        {
+          "name": "BRS Esplanada",
+          "sourcePage": 64
+        },
+        {
+          "name": "BRS Paranoá",
+          "sourcePage": 66
+        },
+        {
+          "name": "BRS Planaltina",
+          "sourcePage": 68
+        },
+        {
+          "name": "BRS Planalto",
+          "sourcePage": 70
+        },
+        {
+          "name": "Kuronan",
+          "sourcePage": 72
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "brocolis",
+      "commonName": "Couve-brócolis",
+      "scientificName": "Brassica oleracea (Grupo Italica)",
+      "imageQuery": "broccoli Brassica oleracea",
+      "cultivars": [
+        {
+          "name": "Ramoso de Brasília",
+          "sourcePage": 74
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "ervilha",
+      "commonName": "Ervilha",
+      "scientificName": "Pisum sativum",
+      "imageQuery": "Pisum sativum pods",
+      "cultivars": [
+        {
+          "name": "Amélia",
+          "sourcePage": 76
+        },
+        {
+          "name": "Dileta",
+          "sourcePage": 78
+        },
+        {
+          "name": "Flávia",
+          "sourcePage": 80
+        },
+        {
+          "name": "Kodama",
+          "sourcePage": 82
+        },
+        {
+          "name": "Luiza",
+          "sourcePage": 84
+        },
+        {
+          "name": "Maria",
+          "sourcePage": 86
+        },
+        {
+          "name": "Marina",
+          "sourcePage": 88
+        },
+        {
+          "name": "Viçosa",
+          "sourcePage": 90
+        },
+        {
+          "name": "Axé",
+          "sourcePage": 92
+        },
+        {
+          "name": "Forró",
+          "sourcePage": 94
+        },
+        {
+          "name": "Frevo",
+          "sourcePage": 96
+        },
+        {
+          "name": "Pagode",
+          "sourcePage": 98
+        },
+        {
+          "name": "Samba",
+          "sourcePage": 100
+        },
+        {
+          "name": "BRS Sulina",
+          "sourcePage": 102
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "grao-de-bico",
+      "commonName": "Grão-de-bico",
+      "scientificName": "Cicer arietinum",
+      "imageQuery": "Cicer arietinum seeds",
+      "cultivars": [
+        {
+          "name": "BRS Aleppo",
+          "sourcePage": 104
+        },
+        {
+          "name": "Cícero",
+          "sourcePage": 106
+        },
+        {
+          "name": "BRS Cristalino",
+          "sourcePage": 108
+        },
+        {
+          "name": "BRS Hari",
+          "sourcePage": 110
+        },
+        {
+          "name": "BRS Kalifa",
+          "sourcePage": 112
+        },
+        {
+          "name": "BRS Toro",
+          "sourcePage": 114
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "lentilha",
+      "commonName": "Lentilha",
+      "scientificName": "Lens culinaris",
+      "imageQuery": "Lens culinaris seeds",
+      "cultivars": [
+        {
+          "name": "Precoz",
+          "sourcePage": 116
+        },
+        {
+          "name": "Silvina",
+          "sourcePage": 118
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "mandioquinha",
+      "commonName": "Mandioquinha-salsa",
+      "scientificName": "Arracacia xanthorrhiza",
+      "imageQuery": "Arracacia xanthorrhiza roots",
+      "cultivars": [
+        {
+          "name": "Amarela de Senador Amaral",
+          "sourcePage": 120
+        },
+        {
+          "name": "BRS Acarijó 56",
+          "sourcePage": 122
+        },
+        {
+          "name": "BRS Catarina 64",
+          "sourcePage": 124
+        },
+        {
+          "name": "BRS Rubia 41",
+          "sourcePage": 126
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "melao",
+      "commonName": "Melão",
+      "scientificName": "Cucumis melo",
+      "imageQuery": "Cucumis melo fruit",
+      "cultivars": [
+        {
+          "name": "BRS Anton",
+          "sourcePage": 128
+        },
+        {
+          "name": "BRS Araguaia",
+          "sourcePage": 130
+        },
+        {
+          "name": "Eldorado 300",
+          "sourcePage": 132
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "milho-doce",
+      "commonName": "Milho-doce",
+      "scientificName": "Zea mays (Grupo Saccharata)",
+      "imageQuery": "sweet corn cobs",
+      "cultivars": [
+        {
+          "name": "Doce Cristal",
+          "sourcePage": 134
+        },
+        {
+          "name": "Doce de Ouro",
+          "sourcePage": 136
+        },
+        {
+          "name": "Docemel",
+          "sourcePage": 138
+        },
+        {
+          "name": "Lili",
+          "sourcePage": 140
+        },
+        {
+          "name": "Superdoce",
+          "sourcePage": 142
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "mostarda",
+      "commonName": "Mostarda-branca",
+      "scientificName": "Sinapis alba",
+      "imageQuery": "Sinapis alba",
+      "cultivars": [
+        {
+          "name": "Gisilba",
+          "sourcePage": 144
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "pepino",
+      "commonName": "Pepino",
+      "scientificName": "Cucumis sativus",
+      "imageQuery": "Cucumis sativus fruit",
+      "cultivars": [
+        {
+          "name": "Anápolis 796",
+          "sourcePage": 146
+        },
+        {
+          "name": "Anápolis 798",
+          "sourcePage": 148
+        },
+        {
+          "name": "Colônia",
+          "sourcePage": 150
+        },
+        {
+          "name": "BRS Curumim",
+          "sourcePage": 152
+        },
+        {
+          "name": "Guaíra",
+          "sourcePage": 154
+        },
+        {
+          "name": "Shibata",
+          "sourcePage": 156
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "pimenta-chinense",
+      "commonName": "Pimenta (Capsicum chinense)",
+      "scientificName": "Capsicum chinense",
+      "imageQuery": "Capsicum chinense fruit",
+      "cultivars": [
+        {
+          "name": "BRS Araçari",
+          "sourcePage": 158
+        },
+        {
+          "name": "BRS Biguatinga",
+          "sourcePage": 160
+        },
+        {
+          "name": "BRS Juruti",
+          "sourcePage": 168
+        },
+        {
+          "name": "BRS Moema",
+          "sourcePage": 172
+        },
+        {
+          "name": "BRS Nandaia",
+          "sourcePage": 174
+        },
+        {
+          "name": "BRS Seriema",
+          "sourcePage": 178
+        },
+        {
+          "name": "BRS Tui",
+          "sourcePage": 180
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "pimenta-annuum",
+      "commonName": "Pimenta e pimentão (Capsicum annuum)",
+      "scientificName": "Capsicum annuum",
+      "imageQuery": "Capsicum annuum fruit",
+      "cultivars": [
+        {
+          "name": "BRS Brasilândia",
+          "sourcePage": 162
+        },
+        {
+          "name": "BRS Ema",
+          "sourcePage": 164
+        },
+        {
+          "name": "BRS Garça",
+          "sourcePage": 166
+        },
+        {
+          "name": "BRS Sarakura",
+          "sourcePage": 176
+        },
+        {
+          "name": "BRS Acará",
+          "sourcePage": 182
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "pimenta-baccatum",
+      "commonName": "Pimenta dedo-de-moça",
+      "scientificName": "Capsicum baccatum",
+      "imageQuery": "Capsicum baccatum fruit",
+      "cultivars": [
+        {
+          "name": "BRS Mari",
+          "sourcePage": 170
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "repolho",
+      "commonName": "Repolho",
+      "scientificName": "Brassica oleracea (Grupo Capitata)",
+      "imageQuery": "cabbage Brassica oleracea",
+      "cultivars": [
+        {
+          "name": "União",
+          "sourcePage": 184
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "tomate",
+      "commonName": "Tomate",
+      "scientificName": "Solanum lycopersicum",
+      "imageQuery": "Solanum lycopersicum fruit",
+      "cultivars": [
+        {
+          "name": "Nemadoro",
+          "sourcePage": 186
+        },
+        {
+          "name": "BRS Sena",
+          "sourcePage": 188
+        },
+        {
+          "name": "Tospodoro",
+          "sourcePage": 190
+        },
+        {
+          "name": "Viradoro",
+          "sourcePage": 192
+        },
+        {
+          "name": "BRS Couto",
+          "sourcePage": 194
+        },
+        {
+          "name": "Duradoro",
+          "sourcePage": 196
+        },
+        {
+          "name": "Finestra (ornamental)",
+          "sourcePage": 198
+        },
+        {
+          "name": "BRS Fontana",
+          "sourcePage": 200
+        },
+        {
+          "name": "BRS Imigrante",
+          "sourcePage": 202
+        },
+        {
+          "name": "BRS Iracema",
+          "sourcePage": 204
+        },
+        {
+          "name": "BRS Kiara",
+          "sourcePage": 206
+        },
+        {
+          "name": "BRS Montese",
+          "sourcePage": 208
+        },
+        {
+          "name": "BRS Nagai",
+          "sourcePage": 210
+        },
+        {
+          "name": "BRS Portinari",
+          "sourcePage": 212
+        },
+        {
+          "name": "BRS San Vito",
+          "sourcePage": 214
+        },
+        {
+          "name": "BRS Zamir",
+          "sourcePage": 216
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    },
+    {
+      "key": "batata",
+      "commonName": "Batata",
+      "scientificName": "Solanum tuberosum",
+      "imageQuery": "Solanum tuberosum tubers",
+      "cultivars": [
+        {
+          "name": "BRS Ana",
+          "sourcePage": 220
+        },
+        {
+          "name": "BRS F63 (Camila)",
+          "sourcePage": 222
+        },
+        {
+          "name": "BRS F50 (Cecília)",
+          "sourcePage": 224
+        },
+        {
+          "name": "BRS Clara",
+          "sourcePage": 226
+        },
+        {
+          "name": "Contenda",
+          "sourcePage": 228
+        },
+        {
+          "name": "BRS IPRBel",
+          "sourcePage": 230
+        },
+        {
+          "name": "BRS F183 (Potira)",
+          "sourcePage": 232
+        }
+      ],
+      "description": "Catálogo Embrapa Hortaliças (1981–2023). Imagem ilustrativa do grupo de cultivo; não identifica a cultivar."
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+import { Failure } from './Feedback'
+import type { ReactNode } from 'react'
+import type { ApiFailure } from '../types/api'
+export function CommandFeedback({ error, busy, notice, compare, review, acknowledge }: { error?: ApiFailure; busy: boolean; notice: string; compare: () => void; review?: ReactNode; acknowledge: () => void }) { return <>{notice && <p className="feedback success" role="status">{notice}</p>}{error && <Failure error={error} />}{error?.status === 409 && <button className="secondary" type="button" disabled={busy} onClick={compare}>Recarregar para comparar</button>}{review && <section className="my-4 rounded-xl border border-horta-line p-4"><h4>Estado atual do servidor</h4>{review}<button type="button" className="secondary" onClick={acknowledge}>Revisei e reconheço a versão atual</button></section>}</> }

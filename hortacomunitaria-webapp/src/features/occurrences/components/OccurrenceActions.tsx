@@ -1,0 +1,24 @@
+import { useGardenState } from "../../../hooks/useGardenState"
+import { useCallback, useState } from 'react'
+import { Field, Facts, SelectField } from '../../../components/Fields'
+import { CommandFeedback } from '../../../components/CommandFeedback'
+import { Failure, Pagination } from '../../../components/Feedback'
+import { useCommand } from '../../../hooks/useCommand'
+import { useRemote } from '../../../hooks/useRemote'
+import { routeHref } from '../../../hooks/useRoute'
+import { instant } from '../../../services/values'
+import { today, FormFailure } from '../../irrigation/formValues'
+import { occurrenceApi } from '../services/OccurrenceApi'
+import { activityApi } from '../../activities/services/ActivityApi'
+import type { Occurrence } from '../types/Occurrence'
+import type { RecordRoute } from '../../../types/records'
+export function OccurrenceActions({ route, record, changed }: { route: RecordRoute; record: Occurrence; changed: () => void }) {
+  const workspace = useGardenState()
+  const [resolvedAt, setResolvedAt] = useState(today() + 'T17:00'), [resolution, setResolution] = useState(''), [status, setStatus] = useState<'Open' | 'InProgress'>('InProgress'), [reason, setReason] = useState(''), [page, setPage] = useState(1), [revision, setRevision] = useState(0)
+  const command = useCommand(record, () => occurrenceApi.get(route.garden, record.id), changed)
+  const load = useCallback((signal: AbortSignal) => activityApi.list(route.garden, { from: '1900-01-01', to: '2100-12-31', occurrenceId: record.id, page, pageSize: 5 }, signal), [route.garden, record.id, page])
+  const interventions = useRemote(`${record.id}/${record.version}/${page}/${revision}`, load), query = new URLSearchParams({ occurrenceId: record.id, from: '1900-01-01', to: '2100-12-31' })
+  return <section className="mt-6 space-y-4"><h3>Providências vinculadas</h3>{record.validity === 'Valid' && workspace.isActive && <a className="font-semibold underline" href={routeHref(route.garden, 'atividades', 'registros', 'novo', query)}>Registrar providência como atividade</a>}{interventions.loading && <p role="status">Carregando providências…</p>}{interventions.error && <Failure error={interventions.error} retry={() => setRevision(x => x + 1)} />}{interventions.data && <><ul>{interventions.data.items.map(item => <li className="py-2" key={item.id}><a href={routeHref(route.garden, 'atividades', 'registros', item.id, query)}>{item.title} · {item.performedOn}</a></li>)}</ul><Pagination data={interventions.data} change={setPage} label="Páginas de providências" /></>}
+    {record.status !== 'Resolved' && record.validity === 'Valid' && workspace.isActive && <details><summary>Acompanhar ou resolver ocorrência</summary><CommandFeedback {...command} compare={() => void command.compare()} review={command.review && <Facts items={[{ label: 'Versão', value: command.review.version }, { label: 'Situação', value: command.review.status }, { label: 'Resolução', value: command.review.resolution }]} />} /><fieldset disabled={command.busy} className="grid gap-4 sm:grid-cols-2"><Field name="reason" label="Motivo da transição" required type="textarea" maxLength={500} value={reason} change={setReason} error={command.error} /><SelectField name="status" label="Situação de acompanhamento" required value={status} change={value => { if (value === 'Open' || value === 'InProgress') setStatus(value) }} options={[{ id: 'Open', label: 'Aberta' }, { id: 'InProgress', label: 'Em andamento' }]} error={command.error} /><button type="button" className="secondary" disabled={command.error?.status === 409} onClick={() => void command.submit(version => { if (!reason.trim()) throw new FormFailure({ reason: ['Informe o motivo.'] }); return occurrenceApi.status(route.garden, record.id, status, version, reason.trim()) })}>Confirmar situação</button><Field name="resolvedAt" label="Resolvida em" required type="datetime-local" value={resolvedAt} change={setResolvedAt} error={command.error} /><Field name="resolution" label="Providência conclusiva" required type="textarea" value={resolution} change={setResolution} error={command.error} /><button type="button" disabled={command.error?.status === 409} onClick={() => void command.submit(version => { if (!reason.trim()) throw new FormFailure({ reason: ['Informe o motivo.'] }); if (!resolution.trim()) throw new FormFailure({ resolution: ['Descreva a resolução.'] }); return occurrenceApi.resolve(route.garden, record.id, instant(resolvedAt, 'resolvedAt'), resolution.trim(), version, reason.trim()) })}>Confirmar resolução</button></fieldset></details>}
+  </section>
+}

@@ -1,0 +1,10 @@
+export type MaterialType = 'Seedling' | 'Seed' | 'Cutting' | 'Other'
+export type PlantingKind = 'Initial' | 'Replacement'
+export type CultivationStatus = 'InProgress' | 'Closed'
+export type DryingStatus = 'InProgress' | 'Completed'
+export type MeasurementQuality = 'Normal' | 'Questionable'
+export type OccurrenceStatus = 'Open' | 'InProgress' | 'Resolved'
+export type FinancialNature = 'Planned' | 'Actual'
+export type RecordValidity = 'Valid' | 'Invalid'
+export type IndicatorAvailability = 'NoData' | 'Unavailable' | 'Partial' | 'Available'
+export function enumValue<T extends string>(value: string, choices: readonly T[]): T { const found = choices.find(item => item === value); if (!found) throw new Error("Seleção inválida."); return found }

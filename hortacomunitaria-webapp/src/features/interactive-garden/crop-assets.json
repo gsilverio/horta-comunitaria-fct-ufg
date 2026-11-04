@@ -1,0 +1,766 @@
+{
+  "species": {
+    "embrapa-2023:abobora": "abobora",
+    "embrapa-2023:abobora-hibrida": "abobora-hibrida",
+    "embrapa-2023:alface": "alface",
+    "embrapa-2023:alho": "alho",
+    "embrapa-2023:batata-doce": "batata-doce",
+    "embrapa-2023:berinjela": "berinjela",
+    "embrapa-2023:cebola": "cebola",
+    "embrapa-2023:cenoura": "cenoura",
+    "embrapa-2023:brocolis": "brocolis",
+    "embrapa-2023:ervilha": "ervilha",
+    "embrapa-2023:grao-de-bico": "grao-de-bico",
+    "embrapa-2023:lentilha": "lentilha",
+    "embrapa-2023:mandioquinha": "mandioquinha",
+    "embrapa-2023:melao": "melao",
+    "embrapa-2023:milho-doce": "milho-doce",
+    "embrapa-2023:mostarda": "mostarda",
+    "embrapa-2023:pepino": "pepino",
+    "embrapa-2023:pimenta-chinense": "pimenta-chinense",
+    "embrapa-2023:pimenta-annuum": "pimenta-annuum",
+    "embrapa-2023:pimenta-baccatum": "pimenta-baccatum",
+    "embrapa-2023:repolho": "repolho",
+    "embrapa-2023:tomate": "tomate",
+    "embrapa-2023:batata": "batata"
+  },
+  "cultivars": {
+    "embrapa-2023:page-10": {
+      "asset": "abobora",
+      "sharedWithSpecies": true,
+      "sourcePage": 10
+    },
+    "embrapa-2023:page-12": {
+      "asset": "abobora-hibrida",
+      "sharedWithSpecies": true,
+      "sourcePage": 12
+    },
+    "embrapa-2023:page-14": {
+      "asset": "alface-page-14",
+      "sharedWithSpecies": false,
+      "sourcePage": 14
+    },
+    "embrapa-2023:page-16": {
+      "asset": "alface-page-16",
+      "sharedWithSpecies": false,
+      "sourcePage": 16
+    },
+    "embrapa-2023:page-18": {
+      "asset": "alface-page-18",
+      "sharedWithSpecies": false,
+      "sourcePage": 18
+    },
+    "embrapa-2023:page-20": {
+      "asset": "alho",
+      "sharedWithSpecies": true,
+      "sourcePage": 20
+    },
+    "embrapa-2023:page-22": {
+      "asset": "alho",
+      "sharedWithSpecies": true,
+      "sourcePage": 22
+    },
+    "embrapa-2023:page-24": {
+      "asset": "alho",
+      "sharedWithSpecies": true,
+      "sourcePage": 24
+    },
+    "embrapa-2023:page-26": {
+      "asset": "batata-doce",
+      "sharedWithSpecies": true,
+      "sourcePage": 26
+    },
+    "embrapa-2023:page-28": {
+      "asset": "batata-doce",
+      "sharedWithSpecies": true,
+      "sourcePage": 28
+    },
+    "embrapa-2023:page-30": {
+      "asset": "batata-doce",
+      "sharedWithSpecies": true,
+      "sourcePage": 30
+    },
+    "embrapa-2023:page-32": {
+      "asset": "batata-doce",
+      "sharedWithSpecies": true,
+      "sourcePage": 32
+    },
+    "embrapa-2023:page-34": {
+      "asset": "batata-doce",
+      "sharedWithSpecies": true,
+      "sourcePage": 34
+    },
+    "embrapa-2023:page-36": {
+      "asset": "batata-doce",
+      "sharedWithSpecies": true,
+      "sourcePage": 36
+    },
+    "embrapa-2023:page-38": {
+      "asset": "batata-doce",
+      "sharedWithSpecies": true,
+      "sourcePage": 38
+    },
+    "embrapa-2023:page-40": {
+      "asset": "batata-doce",
+      "sharedWithSpecies": true,
+      "sourcePage": 40
+    },
+    "embrapa-2023:page-234": {
+      "asset": "batata-doce",
+      "sharedWithSpecies": true,
+      "sourcePage": 234
+    },
+    "embrapa-2023:page-42": {
+      "asset": "berinjela",
+      "sharedWithSpecies": true,
+      "sourcePage": 42
+    },
+    "embrapa-2023:page-44": {
+      "asset": "cebola",
+      "sharedWithSpecies": true,
+      "sourcePage": 44
+    },
+    "embrapa-2023:page-46": {
+      "asset": "cebola",
+      "sharedWithSpecies": true,
+      "sourcePage": 46
+    },
+    "embrapa-2023:page-48": {
+      "asset": "cebola",
+      "sharedWithSpecies": true,
+      "sourcePage": 48
+    },
+    "embrapa-2023:page-50": {
+      "asset": "cebola",
+      "sharedWithSpecies": true,
+      "sourcePage": 50
+    },
+    "embrapa-2023:page-52": {
+      "asset": "cebola",
+      "sharedWithSpecies": true,
+      "sourcePage": 52
+    },
+    "embrapa-2023:page-54": {
+      "asset": "cebola",
+      "sharedWithSpecies": true,
+      "sourcePage": 54
+    },
+    "embrapa-2023:page-56": {
+      "asset": "cebola",
+      "sharedWithSpecies": true,
+      "sourcePage": 56
+    },
+    "embrapa-2023:page-236": {
+      "asset": "cebola",
+      "sharedWithSpecies": true,
+      "sourcePage": 236
+    },
+    "embrapa-2023:page-58": {
+      "asset": "cenoura",
+      "sharedWithSpecies": true,
+      "sourcePage": 58
+    },
+    "embrapa-2023:page-60": {
+      "asset": "cenoura",
+      "sharedWithSpecies": true,
+      "sourcePage": 60
+    },
+    "embrapa-2023:page-62": {
+      "asset": "cenoura",
+      "sharedWithSpecies": true,
+      "sourcePage": 62
+    },
+    "embrapa-2023:page-64": {
+      "asset": "cenoura",
+      "sharedWithSpecies": true,
+      "sourcePage": 64
+    },
+    "embrapa-2023:page-66": {
+      "asset": "cenoura",
+      "sharedWithSpecies": true,
+      "sourcePage": 66
+    },
+    "embrapa-2023:page-68": {
+      "asset": "cenoura",
+      "sharedWithSpecies": true,
+      "sourcePage": 68
+    },
+    "embrapa-2023:page-70": {
+      "asset": "cenoura",
+      "sharedWithSpecies": true,
+      "sourcePage": 70
+    },
+    "embrapa-2023:page-72": {
+      "asset": "cenoura",
+      "sharedWithSpecies": true,
+      "sourcePage": 72
+    },
+    "embrapa-2023:page-74": {
+      "asset": "brocolis",
+      "sharedWithSpecies": true,
+      "sourcePage": 74
+    },
+    "embrapa-2023:page-76": {
+      "asset": "ervilha",
+      "sharedWithSpecies": true,
+      "sourcePage": 76
+    },
+    "embrapa-2023:page-78": {
+      "asset": "ervilha",
+      "sharedWithSpecies": true,
+      "sourcePage": 78
+    },
+    "embrapa-2023:page-80": {
+      "asset": "ervilha",
+      "sharedWithSpecies": true,
+      "sourcePage": 80
+    },
+    "embrapa-2023:page-82": {
+      "asset": "ervilha",
+      "sharedWithSpecies": true,
+      "sourcePage": 82
+    },
+    "embrapa-2023:page-84": {
+      "asset": "ervilha",
+      "sharedWithSpecies": true,
+      "sourcePage": 84
+    },
+    "embrapa-2023:page-86": {
+      "asset": "ervilha",
+      "sharedWithSpecies": true,
+      "sourcePage": 86
+    },
+    "embrapa-2023:page-88": {
+      "asset": "ervilha",
+      "sharedWithSpecies": true,
+      "sourcePage": 88
+    },
+    "embrapa-2023:page-90": {
+      "asset": "ervilha",
+      "sharedWithSpecies": true,
+      "sourcePage": 90
+    },
+    "embrapa-2023:page-92": {
+      "asset": "ervilha",
+      "sharedWithSpecies": true,
+      "sourcePage": 92
+    },
+    "embrapa-2023:page-94": {
+      "asset": "ervilha",
+      "sharedWithSpecies": true,
+      "sourcePage": 94
+    },
+    "embrapa-2023:page-96": {
+      "asset": "ervilha",
+      "sharedWithSpecies": true,
+      "sourcePage": 96
+    },
+    "embrapa-2023:page-98": {
+      "asset": "ervilha",
+      "sharedWithSpecies": true,
+      "sourcePage": 98
+    },
+    "embrapa-2023:page-100": {
+      "asset": "ervilha",
+      "sharedWithSpecies": true,
+      "sourcePage": 100
+    },
+    "embrapa-2023:page-102": {
+      "asset": "ervilha",
+      "sharedWithSpecies": true,
+      "sourcePage": 102
+    },
+    "embrapa-2023:page-104": {
+      "asset": "grao-de-bico",
+      "sharedWithSpecies": true,
+      "sourcePage": 104
+    },
+    "embrapa-2023:page-106": {
+      "asset": "grao-de-bico",
+      "sharedWithSpecies": true,
+      "sourcePage": 106
+    },
+    "embrapa-2023:page-108": {
+      "asset": "grao-de-bico",
+      "sharedWithSpecies": true,
+      "sourcePage": 108
+    },
+    "embrapa-2023:page-110": {
+      "asset": "grao-de-bico",
+      "sharedWithSpecies": true,
+      "sourcePage": 110
+    },
+    "embrapa-2023:page-112": {
+      "asset": "grao-de-bico",
+      "sharedWithSpecies": true,
+      "sourcePage": 112
+    },
+    "embrapa-2023:page-114": {
+      "asset": "grao-de-bico",
+      "sharedWithSpecies": true,
+      "sourcePage": 114
+    },
+    "embrapa-2023:page-116": {
+      "asset": "lentilha",
+      "sharedWithSpecies": true,
+      "sourcePage": 116
+    },
+    "embrapa-2023:page-118": {
+      "asset": "lentilha",
+      "sharedWithSpecies": true,
+      "sourcePage": 118
+    },
+    "embrapa-2023:page-120": {
+      "asset": "mandioquinha",
+      "sharedWithSpecies": true,
+      "sourcePage": 120
+    },
+    "embrapa-2023:page-122": {
+      "asset": "mandioquinha",
+      "sharedWithSpecies": true,
+      "sourcePage": 122
+    },
+    "embrapa-2023:page-124": {
+      "asset": "mandioquinha",
+      "sharedWithSpecies": true,
+      "sourcePage": 124
+    },
+    "embrapa-2023:page-126": {
+      "asset": "mandioquinha",
+      "sharedWithSpecies": true,
+      "sourcePage": 126
+    },
+    "embrapa-2023:page-128": {
+      "asset": "melao",
+      "sharedWithSpecies": true,
+      "sourcePage": 128
+    },
+    "embrapa-2023:page-130": {
+      "asset": "melao",
+      "sharedWithSpecies": true,
+      "sourcePage": 130
+    },
+    "embrapa-2023:page-132": {
+      "asset": "melao",
+      "sharedWithSpecies": true,
+      "sourcePage": 132
+    },
+    "embrapa-2023:page-134": {
+      "asset": "milho-doce",
+      "sharedWithSpecies": true,
+      "sourcePage": 134
+    },
+    "embrapa-2023:page-136": {
+      "asset": "milho-doce",
+      "sharedWithSpecies": true,
+      "sourcePage": 136
+    },
+    "embrapa-2023:page-138": {
+      "asset": "milho-doce",
+      "sharedWithSpecies": true,
+      "sourcePage": 138
+    },
+    "embrapa-2023:page-140": {
+      "asset": "milho-doce",
+      "sharedWithSpecies": true,
+      "sourcePage": 140
+    },
+    "embrapa-2023:page-142": {
+      "asset": "milho-doce",
+      "sharedWithSpecies": true,
+      "sourcePage": 142
+    },
+    "embrapa-2023:page-144": {
+      "asset": "mostarda",
+      "sharedWithSpecies": true,
+      "sourcePage": 144
+    },
+    "embrapa-2023:page-146": {
+      "asset": "pepino",
+      "sharedWithSpecies": true,
+      "sourcePage": 146
+    },
+    "embrapa-2023:page-148": {
+      "asset": "pepino",
+      "sharedWithSpecies": true,
+      "sourcePage": 148
+    },
+    "embrapa-2023:page-150": {
+      "asset": "pepino",
+      "sharedWithSpecies": true,
+      "sourcePage": 150
+    },
+    "embrapa-2023:page-152": {
+      "asset": "pepino",
+      "sharedWithSpecies": true,
+      "sourcePage": 152
+    },
+    "embrapa-2023:page-154": {
+      "asset": "pepino",
+      "sharedWithSpecies": true,
+      "sourcePage": 154
+    },
+    "embrapa-2023:page-156": {
+      "asset": "pepino",
+      "sharedWithSpecies": true,
+      "sourcePage": 156
+    },
+    "embrapa-2023:page-158": {
+      "asset": "pimenta-chinense-page-158",
+      "sharedWithSpecies": false,
+      "sourcePage": 158
+    },
+    "embrapa-2023:page-160": {
+      "asset": "pimenta-chinense-page-160",
+      "sharedWithSpecies": false,
+      "sourcePage": 160
+    },
+    "embrapa-2023:page-168": {
+      "asset": "pimenta-chinense-page-168",
+      "sharedWithSpecies": false,
+      "sourcePage": 168
+    },
+    "embrapa-2023:page-172": {
+      "asset": "pimenta-chinense-page-172",
+      "sharedWithSpecies": false,
+      "sourcePage": 172
+    },
+    "embrapa-2023:page-174": {
+      "asset": "pimenta-chinense-page-174",
+      "sharedWithSpecies": false,
+      "sourcePage": 174
+    },
+    "embrapa-2023:page-178": {
+      "asset": "pimenta-chinense-page-178",
+      "sharedWithSpecies": false,
+      "sourcePage": 178
+    },
+    "embrapa-2023:page-180": {
+      "asset": "pimenta-chinense-page-180",
+      "sharedWithSpecies": false,
+      "sourcePage": 180
+    },
+    "embrapa-2023:page-162": {
+      "asset": "pimenta-annuum",
+      "sharedWithSpecies": true,
+      "sourcePage": 162
+    },
+    "embrapa-2023:page-164": {
+      "asset": "pimenta-annuum",
+      "sharedWithSpecies": true,
+      "sourcePage": 164
+    },
+    "embrapa-2023:page-166": {
+      "asset": "pimenta-annuum",
+      "sharedWithSpecies": true,
+      "sourcePage": 166
+    },
+    "embrapa-2023:page-176": {
+      "asset": "pimenta-annuum",
+      "sharedWithSpecies": true,
+      "sourcePage": 176
+    },
+    "embrapa-2023:page-182": {
+      "asset": "pimenta-annuum",
+      "sharedWithSpecies": true,
+      "sourcePage": 182
+    },
+    "embrapa-2023:page-170": {
+      "asset": "pimenta-baccatum",
+      "sharedWithSpecies": true,
+      "sourcePage": 170
+    },
+    "embrapa-2023:page-184": {
+      "asset": "repolho",
+      "sharedWithSpecies": true,
+      "sourcePage": 184
+    },
+    "embrapa-2023:page-186": {
+      "asset": "tomate",
+      "sharedWithSpecies": true,
+      "sourcePage": 186
+    },
+    "embrapa-2023:page-188": {
+      "asset": "tomate",
+      "sharedWithSpecies": true,
+      "sourcePage": 188
+    },
+    "embrapa-2023:page-190": {
+      "asset": "tomate",
+      "sharedWithSpecies": true,
+      "sourcePage": 190
+    },
+    "embrapa-2023:page-192": {
+      "asset": "tomate",
+      "sharedWithSpecies": true,
+      "sourcePage": 192
+    },
+    "embrapa-2023:page-194": {
+      "asset": "tomate",
+      "sharedWithSpecies": true,
+      "sourcePage": 194
+    },
+    "embrapa-2023:page-196": {
+      "asset": "tomate",
+      "sharedWithSpecies": true,
+      "sourcePage": 196
+    },
+    "embrapa-2023:page-198": {
+      "asset": "tomate",
+      "sharedWithSpecies": true,
+      "sourcePage": 198
+    },
+    "embrapa-2023:page-200": {
+      "asset": "tomate",
+      "sharedWithSpecies": true,
+      "sourcePage": 200
+    },
+    "embrapa-2023:page-202": {
+      "asset": "tomate",
+      "sharedWithSpecies": true,
+      "sourcePage": 202
+    },
+    "embrapa-2023:page-204": {
+      "asset": "tomate",
+      "sharedWithSpecies": true,
+      "sourcePage": 204
+    },
+    "embrapa-2023:page-206": {
+      "asset": "tomate",
+      "sharedWithSpecies": true,
+      "sourcePage": 206
+    },
+    "embrapa-2023:page-208": {
+      "asset": "tomate",
+      "sharedWithSpecies": true,
+      "sourcePage": 208
+    },
+    "embrapa-2023:page-210": {
+      "asset": "tomate",
+      "sharedWithSpecies": true,
+      "sourcePage": 210
+    },
+    "embrapa-2023:page-212": {
+      "asset": "tomate",
+      "sharedWithSpecies": true,
+      "sourcePage": 212
+    },
+    "embrapa-2023:page-214": {
+      "asset": "tomate",
+      "sharedWithSpecies": true,
+      "sourcePage": 214
+    },
+    "embrapa-2023:page-216": {
+      "asset": "tomate",
+      "sharedWithSpecies": true,
+      "sourcePage": 216
+    },
+    "embrapa-2023:page-220": {
+      "asset": "batata",
+      "sharedWithSpecies": true,
+      "sourcePage": 220
+    },
+    "embrapa-2023:page-222": {
+      "asset": "batata",
+      "sharedWithSpecies": true,
+      "sourcePage": 222
+    },
+    "embrapa-2023:page-224": {
+      "asset": "batata",
+      "sharedWithSpecies": true,
+      "sourcePage": 224
+    },
+    "embrapa-2023:page-226": {
+      "asset": "batata",
+      "sharedWithSpecies": true,
+      "sourcePage": 226
+    },
+    "embrapa-2023:page-228": {
+      "asset": "batata",
+      "sharedWithSpecies": true,
+      "sourcePage": 228
+    },
+    "embrapa-2023:page-230": {
+      "asset": "batata",
+      "sharedWithSpecies": true,
+      "sourcePage": 230
+    },
+    "embrapa-2023:page-232": {
+      "asset": "batata",
+      "sharedWithSpecies": true,
+      "sourcePage": 232
+    }
+  },
+  "assets": {
+    "abobora": {
+      "seedling": "/assets/pixel-garden/crops/abobora-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/abobora-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/abobora-harvest.svg"
+    },
+    "abobora-hibrida": {
+      "seedling": "/assets/pixel-garden/crops/abobora-hibrida-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/abobora-hibrida-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/abobora-hibrida-harvest.svg"
+    },
+    "alface": {
+      "seedling": "/assets/pixel-garden/crops/alface-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/alface-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/alface-harvest.svg"
+    },
+    "alho": {
+      "seedling": "/assets/pixel-garden/crops/alho-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/alho-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/alho-harvest.svg"
+    },
+    "batata-doce": {
+      "seedling": "/assets/pixel-garden/crops/batata-doce-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/batata-doce-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/batata-doce-harvest.svg"
+    },
+    "berinjela": {
+      "seedling": "/assets/pixel-garden/crops/berinjela-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/berinjela-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/berinjela-harvest.svg"
+    },
+    "cebola": {
+      "seedling": "/assets/pixel-garden/crops/cebola-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/cebola-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/cebola-harvest.svg"
+    },
+    "cenoura": {
+      "seedling": "/assets/pixel-garden/crops/cenoura-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/cenoura-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/cenoura-harvest.svg"
+    },
+    "brocolis": {
+      "seedling": "/assets/pixel-garden/crops/brocolis-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/brocolis-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/brocolis-harvest.svg"
+    },
+    "ervilha": {
+      "seedling": "/assets/pixel-garden/crops/ervilha-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/ervilha-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/ervilha-harvest.svg"
+    },
+    "grao-de-bico": {
+      "seedling": "/assets/pixel-garden/crops/grao-de-bico-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/grao-de-bico-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/grao-de-bico-harvest.svg"
+    },
+    "lentilha": {
+      "seedling": "/assets/pixel-garden/crops/lentilha-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/lentilha-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/lentilha-harvest.svg"
+    },
+    "mandioquinha": {
+      "seedling": "/assets/pixel-garden/crops/mandioquinha-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/mandioquinha-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/mandioquinha-harvest.svg"
+    },
+    "melao": {
+      "seedling": "/assets/pixel-garden/crops/melao-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/melao-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/melao-harvest.svg"
+    },
+    "milho-doce": {
+      "seedling": "/assets/pixel-garden/crops/milho-doce-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/milho-doce-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/milho-doce-harvest.svg"
+    },
+    "mostarda": {
+      "seedling": "/assets/pixel-garden/crops/mostarda-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/mostarda-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/mostarda-harvest.svg"
+    },
+    "pepino": {
+      "seedling": "/assets/pixel-garden/crops/pepino-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/pepino-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/pepino-harvest.svg"
+    },
+    "pimenta-chinense": {
+      "seedling": "/assets/pixel-garden/crops/pimenta-chinense-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/pimenta-chinense-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/pimenta-chinense-harvest.svg"
+    },
+    "pimenta-annuum": {
+      "seedling": "/assets/pixel-garden/crops/pimenta-annuum-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/pimenta-annuum-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/pimenta-annuum-harvest.svg"
+    },
+    "pimenta-baccatum": {
+      "seedling": "/assets/pixel-garden/crops/pimenta-baccatum-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/pimenta-baccatum-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/pimenta-baccatum-harvest.svg"
+    },
+    "repolho": {
+      "seedling": "/assets/pixel-garden/crops/repolho-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/repolho-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/repolho-harvest.svg"
+    },
+    "tomate": {
+      "seedling": "/assets/pixel-garden/crops/tomate-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/tomate-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/tomate-harvest.svg"
+    },
+    "batata": {
+      "seedling": "/assets/pixel-garden/crops/batata-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/batata-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/batata-harvest.svg"
+    },
+    "generic": {
+      "seedling": "/assets/pixel-garden/crops/generic-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/generic-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/generic-harvest.svg"
+    },
+    "alface-page-14": {
+      "seedling": "/assets/pixel-garden/crops/alface-page-14-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/alface-page-14-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/alface-page-14-harvest.svg"
+    },
+    "alface-page-16": {
+      "seedling": "/assets/pixel-garden/crops/alface-page-16-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/alface-page-16-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/alface-page-16-harvest.svg"
+    },
+    "alface-page-18": {
+      "seedling": "/assets/pixel-garden/crops/alface-page-18-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/alface-page-18-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/alface-page-18-harvest.svg"
+    },
+    "pimenta-chinense-page-158": {
+      "seedling": "/assets/pixel-garden/crops/pimenta-chinense-page-158-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/pimenta-chinense-page-158-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/pimenta-chinense-page-158-harvest.svg"
+    },
+    "pimenta-chinense-page-160": {
+      "seedling": "/assets/pixel-garden/crops/pimenta-chinense-page-160-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/pimenta-chinense-page-160-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/pimenta-chinense-page-160-harvest.svg"
+    },
+    "pimenta-chinense-page-168": {
+      "seedling": "/assets/pixel-garden/crops/pimenta-chinense-page-168-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/pimenta-chinense-page-168-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/pimenta-chinense-page-168-harvest.svg"
+    },
+    "pimenta-chinense-page-172": {
+      "seedling": "/assets/pixel-garden/crops/pimenta-chinense-page-172-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/pimenta-chinense-page-172-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/pimenta-chinense-page-172-harvest.svg"
+    },
+    "pimenta-chinense-page-174": {
+      "seedling": "/assets/pixel-garden/crops/pimenta-chinense-page-174-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/pimenta-chinense-page-174-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/pimenta-chinense-page-174-harvest.svg"
+    },
+    "pimenta-chinense-page-178": {
+      "seedling": "/assets/pixel-garden/crops/pimenta-chinense-page-178-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/pimenta-chinense-page-178-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/pimenta-chinense-page-178-harvest.svg"
+    },
+    "pimenta-chinense-page-180": {
+      "seedling": "/assets/pixel-garden/crops/pimenta-chinense-page-180-seedling.svg",
+      "growing": "/assets/pixel-garden/crops/pimenta-chinense-page-180-growing.svg",
+      "harvest": "/assets/pixel-garden/crops/pimenta-chinense-page-180-harvest.svg"
+    }
+  }
+}

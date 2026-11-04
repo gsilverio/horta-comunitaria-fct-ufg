@@ -1,0 +1,139 @@
+@host = http://localhost:5163
+# Use os IDs dos cadastros criados pela interface ou pelo Get Started.
+@gardenId = COLE_O_ID_DA_HORTA
+@sectorId = COLE_O_ID_DO_SETOR
+@bedId1 = COLE_O_ID_DO_CANTEIRO_1
+@bedId2 = COLE_O_ID_DO_CANTEIRO_2
+@bedId3 = COLE_O_ID_DO_CANTEIRO_3
+@bedId4 = COLE_O_ID_DO_CANTEIRO_4
+@operationId = 01a11c0e-0d4d-7928-8b6b-fd88c78ae086
+# Substitua pelo id retornado no POST ou abra o Location da resposta.
+@irrigationId = COLE_O_ID_RETORNADO
+
+GET {{host}}/api/v1/gardens?page=1&pageSize=20
+Accept: application/json
+
+###
+GET {{host}}/api/v1/gardens/{{gardenId}}/sectors
+Accept: application/json
+
+###
+GET {{host}}/api/v1/gardens/{{gardenId}}/beds?on=2026-10-08&sectorId={{sectorId}}
+Accept: application/json
+
+###
+GET {{host}}/api/v1/gardens/{{gardenId}}/participants
+Accept: application/json
+
+### Registrar 120 L para quatro canteiros. Reenvio idêntico: 200 e mesmo id.
+# Use nova operationId para outro evento; não altere a chave em um retry.
+POST {{host}}/api/v1/gardens/{{gardenId}}/irrigations
+Content-Type: application/json
+Accept: application/json
+
+{
+  "operationId": "{{operationId}}",
+  "sectorId": "{{sectorId}}",
+  "bedIds": [
+    "{{bedId1}}",
+    "{{bedId2}}",
+    "{{bedId3}}",
+    "{{bedId4}}"
+  ],
+  "startedAt": "2026-10-08T08:00:00-03:00",
+  "endedAt": "2026-10-08T08:30:00-03:00",
+  "activeDurationMinutes": 30,
+  "volumeLiters": 120,
+  "flowRateLitersPerMinute": null,
+  "volumeSource": "Measured",
+  "volumeMethod": "Recipiente graduado",
+  "status": "Completed",
+  "responsibleParticipantId": null,
+  "notes": null
+}
+
+### Detalhe: valores, autoria demonstrativa e vínculos históricos.
+GET {{host}}/api/v1/gardens/{{gardenId}}/irrigations/{{irrigationId}}
+Accept: application/json
+
+### Listagem pelo dia local do início; validade padrão Valid.
+GET {{host}}/api/v1/gardens/{{gardenId}}/irrigations?from=2026-10-08&to=2026-10-08&page=1&pageSize=20
+Accept: application/json
+
+### Resumo e primeira página de setores: 120 L; S2 aparece na página 2 com NoData.
+GET {{host}}/api/v1/gardens/{{gardenId}}/indicators/water-consumption?from=2026-10-08&to=2026-10-08&pageSize=1
+Accept: application/json
+
+### Apenas S1: filtro também restringe o resumo.
+GET {{host}}/api/v1/gardens/{{gardenId}}/indicators/water-consumption?from=2026-10-08&to=2026-10-08&sectorId={{sectorId}}
+Accept: application/json
+
+### Corrigir 120 L para 100 L: versão 1 -> 2, com motivo e formulário completo.
+# Use a versão atual do detalhe. Todos os campos são obrigatórios no PUT, inclusive null.
+PUT {{host}}/api/v1/gardens/{{gardenId}}/irrigations/{{irrigationId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "sectorId": "{{sectorId}}",
+  "bedIds": [
+    "{{bedId1}}",
+    "{{bedId2}}",
+    "{{bedId3}}",
+    "{{bedId4}}"
+  ],
+  "startedAt": "2026-10-08T08:00:00-03:00",
+  "endedAt": "2026-10-08T08:30:00-03:00",
+  "activeDurationMinutes": 30,
+  "volumeLiters": 100,
+  "flowRateLitersPerMinute": null,
+  "volumeSource": "Measured",
+  "volumeMethod": "Recipiente graduado",
+  "status": "Completed",
+  "responsibleParticipantId": null,
+  "notes": null,
+  "expectedVersion": 1,
+  "reason": "Conferência da medição"
+}
+
+### Consumo corrigido: 100 L. Correção igual com expectedVersion=2 mantém a versão 2.
+GET {{host}}/api/v1/gardens/{{gardenId}}/indicators/water-consumption?from=2026-10-08&to=2026-10-08
+Accept: application/json
+
+### Invalidar: versão 2 -> 3. Preserva valores, canteiros e autoria original.
+POST {{host}}/api/v1/gardens/{{gardenId}}/irrigations/{{irrigationId}}/invalidation
+Content-Type: application/json
+Accept: application/json
+
+{
+  "expectedVersion": 2,
+  "reason": "Registro lançado por engano"
+}
+
+### Conflito esperado após invalidar: 409, code=irrigation.version_conflict e traceId.
+# Recarregue o detalhe; não repita a alteração automaticamente.
+POST {{host}}/api/v1/gardens/{{gardenId}}/irrigations/{{irrigationId}}/invalidation
+Content-Type: application/json
+Accept: application/json
+
+{
+  "expectedVersion": 2,
+  "reason": "Registro lançado por engano"
+}
+
+### Histórico: Invalidated, Corrected e Created, com snapshots antes/depois e autor.
+GET {{host}}/api/v1/gardens/{{gardenId}}/irrigations/{{irrigationId}}/history?page=1&pageSize=20
+Accept: application/json
+
+### Invalidado permanece consultável; consumo passa a NoData no banco demonstrativo vazio.
+GET {{host}}/api/v1/gardens/{{gardenId}}/irrigations?from=2026-10-08&to=2026-10-08&validity=Invalid
+Accept: application/json
+
+# Reenviar o POST inicial preservando operationId e os 120 L retorna o estado atual
+# (100 L, Invalid, versão 3), sem novo fato nem nova entrada de histórico.
+
+###
+GET {{host}}/health/live
+
+###
+GET {{host}}/health/ready

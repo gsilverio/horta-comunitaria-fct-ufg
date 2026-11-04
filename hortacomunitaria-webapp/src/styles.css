@@ -1,0 +1,450 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Segoe UI", Inter, Arial, sans-serif;
+  --color-horta-forest: #1c4939;
+  --color-horta-forest-hover: #2c634b;
+  --color-horta-ink: #24372d;
+  --color-horta-muted: #617069;
+  --color-horta-canvas: #f4f5ef;
+  --color-horta-line: #dce3d9;
+  --color-horta-soft: #e8f1db;
+  --color-horta-danger: #8d3430;
+  --color-horta-focus: #b36b18;
+}
+
+@layer base {
+  body { @apply m-0 min-w-80 bg-horta-canvas font-sans text-horta-ink antialiased; }
+  button, input, select, textarea { font: inherit; }
+  button, a, input, select, textarea, summary { @apply touch-manipulation; }
+  button { @apply min-h-11 cursor-pointer rounded-md border border-horta-forest bg-horta-forest px-5 py-3 text-sm font-semibold text-white transition-colors; }
+  button:hover:not(:disabled) { @apply bg-horta-forest-hover; }
+  button:disabled { @apply cursor-default opacity-50; }
+  :focus-visible { @apply outline-3 outline-offset-3 outline-horta-focus; }
+  a { @apply text-horta-forest; }
+  h1 { @apply mb-3 text-3xl leading-tight font-semibold tracking-tight; }
+  h2 { @apply mt-1 mb-5 text-xl font-bold tracking-tight; }
+  h3 { @apply mt-5 mb-3 text-base font-semibold; }
+  p { @apply mb-3 text-sm leading-relaxed; }
+  small { @apply text-xs leading-relaxed text-horta-muted; }
+  label { @apply flex flex-col gap-2 text-xs leading-relaxed font-semibold; }
+  input, select, textarea { @apply block min-h-11 w-full min-w-0 rounded-md border border-[#c9d4cc] bg-white px-3 py-2.5 text-sm font-normal text-horta-ink; }
+  textarea { @apply resize-y; }
+  input:disabled, select:disabled, textarea:disabled { @apply bg-horta-canvas text-horta-muted; }
+  [aria-invalid=true] { @apply border-horta-danger; }
+  fieldset { @apply m-0 min-w-0 border-0 p-0; }
+  details { @apply my-2 text-xs break-words; }
+  summary { @apply min-h-8 cursor-pointer py-1 text-horta-forest; }
+  footer { @apply mx-auto flex max-w-7xl flex-col justify-between gap-2 border-t border-horta-line px-5 py-6 text-xs text-horta-muted sm:flex-row sm:px-12; }
+}
+
+@layer components {
+  .interactive-cultivation { @apply min-w-0 text-horta-ink; }
+  .interactive-cultivation .editor-panel { @apply m-0 max-w-none rounded-none border-0 bg-transparent p-0 shadow-none; }
+  .interactive-cultivation .editor-panel h1 { @apply mt-1 text-xl; }
+  .interactive-cultivation .editor-actions { @apply mx-0 mt-4 flex-wrap bg-[#f3f5e9]/95 px-0 py-3; }
+  .interactive-cultivation .editor-panel > .eyebrow { @apply hidden; }
+  .interactive-cultivation .editor-panel > p { @apply mb-4 pb-3 text-xs; }
+  .interactive-cultivation button { @apply rounded-none; box-shadow: 0 2px 0 #1c49392b; }
+  .interactive-cultivation input, .interactive-cultivation select, .interactive-cultivation textarea { @apply rounded-none; }
+  .interactive-cultivation li[aria-current=step] { @apply bg-[#1c4939] text-[#fff8de]; }
+  .secondary { @apply border-[#cbd7ce] bg-white text-horta-forest; }
+  .secondary:hover:not(:disabled) { @apply bg-[#edf3e9]; }
+  .danger { @apply border-horta-danger bg-horta-danger; }
+  .danger:hover:not(:disabled) { @apply bg-[#742b27]; }
+  .danger-outline { @apply border-[#d9aaa6] bg-white text-horta-danger; }
+  .danger-outline:hover:not(:disabled) { @apply bg-horta-danger text-white; }
+  .text-button { @apply mb-4 border-0 bg-transparent px-0 py-3 text-horta-forest; }
+  .text-button:hover:not(:disabled) { @apply bg-transparent underline; }
+  .muted, .hint { @apply text-horta-muted; }
+  .hint { @apply text-xs leading-relaxed; }
+  .eyebrow { @apply text-[0.65rem] font-bold tracking-widest text-horta-muted uppercase; }
+  .app-header { @apply mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-5 py-5 sm:flex-row sm:items-center sm:gap-8 sm:px-12; }
+  .brand { @apply flex items-center gap-3 text-lg font-bold tracking-tight no-underline; }
+  .brand svg { @apply size-10 fill-[#d5e6bc] stroke-horta-forest; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+  .brand small { @apply mt-1 block text-[0.65rem] font-normal tracking-widest; }
+  .garden-select { @apply w-full flex-row items-center justify-between gap-3 text-horta-muted sm:w-auto; }
+  .garden-select select { @apply w-[calc(100%_-_4rem)] bg-transparent sm:w-64; }
+  .demo-strip { @apply flex flex-wrap items-center gap-2 border-y border-[#d7e0cb] bg-[#e9eedf] px-5 py-3 text-xs text-[#486143] sm:justify-center; }
+  .demo-dot { @apply size-1.5 rounded-full bg-[#748d38]; }
+  .demo-strip > span:last-child { @apply basis-full pl-3 text-[#586650] sm:basis-auto sm:pl-0; }
+  main { @apply mx-auto min-h-[70vh] max-w-7xl px-4 py-7 sm:px-12 sm:py-10; }
+  .page-heading { @apply mb-7 flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-center; }
+  .page-heading .eyebrow { @apply mb-4 block; }
+  .page-heading p { @apply mb-0 text-horta-muted; }
+  .page-heading button { @apply w-full whitespace-nowrap sm:w-auto; }
+  .panel { @apply mb-5 rounded-xl border border-horta-line bg-white p-5 shadow-xs sm:p-6; }
+  .count { @apply pt-2 text-xs whitespace-nowrap text-horta-muted; }
+  .filters { @apply mb-6 grid grid-cols-2 items-end gap-4 p-5 lg:grid-cols-[1fr_1fr_1.4fr_1fr_auto]; }
+  .filters label:nth-of-type(3), .filters label:nth-of-type(4), .filters button { @apply col-span-full sm:col-span-1; }
+  .filters button { @apply sm:col-span-full lg:col-span-1; }
+  .badge { @apply inline-block rounded-full bg-horta-soft px-3 py-1.5 text-[0.7rem] leading-tight font-semibold text-[#436037]; }
+  .badge.invalid { @apply bg-[#f7e9e6] text-[#91463e]; }
+  .consumption-value { @apply my-4 text-5xl leading-tight font-semibold tracking-tight text-horta-forest; }
+  .consumption-value > span { @apply ml-2 text-lg font-normal tracking-normal text-horta-muted; }
+  .sector-list { @apply mt-5 border-t border-horta-line; }
+  .sector-row { @apply flex items-center justify-between gap-4 border-b border-horta-line py-4 text-xs; }
+  .sector-row small { @apply mt-1 block; }
+  .sector-row > strong { @apply whitespace-nowrap; }
+  .record { @apply flex items-start justify-between gap-4 border-b border-horta-line py-4 text-sm sm:items-center; }
+  .record:first-child { @apply pt-1; }
+  .record p { @apply mt-1 mb-2 text-xs text-horta-muted; }
+  .record-end { @apply flex flex-col items-end gap-3 text-right; }
+  .record-end button { @apply px-3 py-2 text-xs; }
+  .pagination { @apply mt-5 flex items-center justify-between gap-2 text-xs text-horta-muted; }
+  .pagination button { @apply min-h-10 px-2.5 py-2 text-xs; }
+  .empty { @apply px-4 py-9 text-center text-horta-muted; }
+  .empty > span { @apply block text-3xl text-[#8b9e81]; }
+  .empty h3 { @apply text-[#425847]; }
+  .field-error { @apply text-xs font-medium text-horta-danger; }
+  .form-panel { @apply mx-auto max-w-4xl; }
+  .form-panel h2 { @apply text-2xl; }
+  .form-panel .hint { @apply mt-3; }
+  .bed-picker { @apply my-6 rounded-lg border border-horta-line p-4; }
+  .bed-picker legend { @apply px-2 text-sm font-semibold; }
+  .bed-options { @apply grid grid-cols-1 gap-3 sm:grid-cols-2; }
+  .check-card { @apply flex cursor-pointer flex-row items-center gap-3 rounded-md border border-horta-line p-3 font-normal; }
+  .check-card input { @apply size-4.5 min-h-4.5 w-4.5 shrink-0 accent-horta-forest; }
+  .check-card span { @apply flex flex-col text-xs text-horta-muted; }
+  .check-card strong { @apply text-sm text-horta-forest; }
+  .feedback { @apply mb-4 rounded-lg border border-[#e7d49e] bg-[#fff4da] p-4 text-sm wrap-anywhere; }
+  .feedback p:last-child { @apply mb-0; }
+  .feedback button { @apply mt-3; }
+  .feedback.error { @apply border-[#e7c2ba] bg-[#fff2ef] text-[#84372c]; }
+  .feedback.success { @apply border-[#cddfc4] bg-[#eef5e6] text-[#3c5b35]; }
+  .feedback code { @apply block text-xs wrap-anywhere; }
+  .notice { @apply border-l-3 border-[#a8bd8c] bg-[#f4f7ee] px-3 py-2 text-xs text-[#4e6742]; }
+  .detail-heading { @apply my-4 flex items-start justify-between; }
+  .detail-heading h3 { @apply mt-0 mb-3 text-2xl; }
+  .facts { @apply m-0 text-sm; }
+  .facts > div { @apply mb-4 min-w-0; }
+  .facts dt { @apply mb-1 text-xs text-horta-muted; }
+  .facts dd { @apply m-0 leading-relaxed whitespace-pre-wrap wrap-anywhere; }
+  .detail-facts { @apply mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3; }
+  .timeline { @apply my-4 list-none p-0; }
+  .timeline > li { @apply relative ml-1 border-l border-horta-line py-5 pl-6; }
+  .timeline > li::before { @apply absolute top-6 -left-1 size-2 rounded-full bg-[#6d9254] ring-4 ring-white; content: ''; }
+  .timeline p { @apply my-3 text-sm; }
+  .history-head { @apply flex flex-col justify-between gap-2 text-sm sm:flex-row; }
+  .history-head > span { @apply text-xs text-horta-muted; }
+  .timeline details section { @apply mt-3 rounded-md bg-[#f5f7f2] p-4; }
+  .timeline details h3 { @apply mt-0 mb-4; }
+  .invalidation { @apply mt-6 border-t border-horta-line pt-2; }
+}
+
+@layer components {
+  .ui-icon { @apply size-5 shrink-0; }
+  .skip-link { @apply sr-only; }
+  .skip-link:focus { @apply not-sr-only fixed top-4 left-4 z-50 rounded-lg bg-white p-3; }
+  .masthead { @apply relative flex min-h-22 items-center justify-center border-b border-horta-line px-5 py-4; }
+  .environment-label { @apply absolute right-8 hidden items-center gap-2 text-xs text-horta-muted lg:flex; }
+  .workspace-layout { @apply grid min-h-dvh lg:grid-cols-[232px_minmax(0,1fr)]; }
+  .workspace-sidebar { @apply sticky top-0 hidden h-screen overflow-y-auto flex-col border-r border-horta-line bg-[#f9faf6] px-4 py-7 lg:flex; }
+  .sidebar-context { @apply mb-7 flex flex-col gap-2 px-3; }
+  .sidebar-context strong { @apply text-sm font-semibold; }
+  .nav-group { @apply mb-6; }
+  .nav-group-title { @apply mb-2 px-3 text-[10px] font-semibold tracking-widest text-horta-muted uppercase; }
+  .nav-link { @apply my-1 flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-horta-muted no-underline transition-colors hover:bg-horta-soft; }
+  .nav-link span { @apply flex-1; }
+  .nav-link[aria-current=page] { @apply bg-horta-forest font-semibold text-white; }
+  .nav-chevron { @apply size-3 opacity-40; }
+  .sidebar-note { @apply mt-auto flex items-start gap-2 border-t border-horta-line px-2 pt-5 text-[11px] text-horta-muted; }
+  .sidebar-note .demo-dot { @apply mt-1 shrink-0; }
+  .sidebar-note p { @apply mt-1 mb-0 text-[11px]; }
+  .workspace-content { @apply flex min-w-0 flex-col; }
+  .workspace-toolbar { @apply flex flex-col justify-between gap-4 border-b border-horta-line bg-white/50 px-5 py-4 sm:flex-row sm:items-center xl:px-9; }
+  .breadcrumb { @apply flex items-center gap-2 text-xs text-horta-muted; }
+  .breadcrumb strong { @apply font-medium text-horta-ink; }
+  .breadcrumb .ui-icon { @apply size-3; }
+  .garden-select { @apply w-full flex-row items-center gap-3 text-xs sm:w-auto; }
+  .garden-select select { @apply min-h-10 flex-1 bg-white py-2 sm:w-56; }
+  .section-navigation { @apply flex gap-1 overflow-x-auto border-b border-horta-line bg-white px-4 pt-2 xl:px-8; }
+  .section-navigation a { @apply shrink-0 border-b-2 border-transparent px-3 py-3 text-xs font-medium whitespace-nowrap text-horta-muted no-underline hover:bg-horta-canvas; }
+  .section-navigation a[aria-current=page] { @apply border-horta-forest font-semibold text-horta-forest; }
+  .workspace-content main { @apply mx-auto w-full max-w-none flex-1 px-5 py-7 xl:px-9 xl:py-8; }
+  .workspace-footer { @apply w-full max-w-none shrink-0 px-5 xl:px-9; }
+  .mobile-menu-button { @apply absolute left-3 min-h-10 border-0 bg-transparent p-2 lg:hidden; }
+  .navigation-dialog { @apply fixed inset-0 m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-sm overflow-y-auto rounded-2xl border border-horta-line bg-horta-canvas p-5 shadow-xl; }
+  .navigation-dialog::backdrop { background: rgb(24 47 35 / 45%); backdrop-filter: blur(3px); }
+  .navigation-dialog .primary-navigation { @apply mt-6; }
+  .page-heading { @apply mb-6 gap-4; }
+  .page-heading .eyebrow { @apply mb-2; }
+  .page-heading h1 { @apply mb-2; }
+  .page-heading p { @apply max-w-2xl text-sm; }
+  .page-heading button { @apply flex items-center justify-center gap-2; }
+  .panel { @apply rounded-xl border-horta-line shadow-none; }
+  .filter-panel { @apply mb-6 bg-[#fafbf8] p-4; }
+  .filter-panel button { @apply min-h-11; }
+  .results-heading { @apply mb-2 flex items-center justify-between gap-4 border-b border-horta-line pb-4; }
+  .results-heading h2 { @apply m-0 text-base; }
+  .record-results > li { @apply flex flex-wrap items-center justify-between gap-2 border-b border-horta-line px-2 py-5 text-sm; }
+  .record-results > li:hover { @apply bg-horta-canvas; }
+  .record-results > li > a { @apply min-w-0 flex-1 font-semibold underline-offset-4; }
+  .record-results > li > span { @apply rounded-full bg-horta-canvas px-3 py-1 text-xs text-horta-muted; }
+  .empty .ui-icon { @apply mx-auto size-9 text-horta-muted; }
+  .editor-panel { @apply mx-auto max-w-5xl p-5 sm:p-8; }
+  .editor-panel > .eyebrow { @apply mb-2 block; }
+  .editor-panel > p { @apply mb-7 border-b border-horta-line pb-5; }
+  .editor-panel label { @apply gap-1.5 text-[13px]; }
+  .hint:empty, .field-error:empty { @apply hidden; }
+  .editor-panel fieldset fieldset { @apply mt-2 rounded-lg border border-horta-line bg-[#fafbf8] p-5; }
+  .editor-panel legend { @apply px-2 text-sm font-semibold text-horta-forest; }
+  .editor-actions { @apply sticky bottom-0 -mx-5 mt-8 flex flex-wrap justify-end gap-3 border-t border-horta-line bg-white/95 px-5 py-4 backdrop-blur-sm sm:-mx-8 sm:px-8; }
+  .editor-actions button { @apply flex-1 sm:flex-none; }
+  .indicator-summary .facts { @apply mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3; }
+  .indicator-summary .facts > div { @apply mb-0 rounded-lg border border-horta-line bg-[#f8faf5] p-4; }
+  .indicator-summary .facts dt { @apply mb-2 text-xs; }
+  .indicator-summary .facts dd { @apply text-lg font-semibold text-horta-forest; }
+  .indicator-summary > p { @apply mt-4 text-xs text-horta-muted; }
+  .indicator-definition { @apply border-b border-horta-line pb-3; }
+  .origin-results > li { @apply border-b border-horta-line py-4 text-sm; }
+}
+
+@layer components { .form-section-title { @apply col-span-full mt-3 mb-1 border-b border-horta-line pb-3 text-sm; } }
+
+@layer components {
+  .feedback.success { @apply flex flex-wrap items-center justify-between gap-2 py-3; }
+  .feedback.success .text-button { @apply m-0 min-h-8 px-2 py-1; }
+  .indicator-summary > div:first-child { @apply items-start; }
+  .record-description { @apply order-3 basis-full text-xs font-normal text-horta-muted; }
+  .editor-panel input[type=checkbox] { @apply accent-horta-forest; }
+}
+
+@layer components {
+  .action-link { @apply inline-flex min-h-11 items-center justify-center rounded-md border border-horta-forest bg-horta-forest px-4 py-2 text-sm font-semibold text-white no-underline hover:bg-horta-forest-hover; }
+  .next-step { @apply my-6 flex flex-wrap items-center gap-4 rounded-lg border border-horta-line bg-horta-soft/40 p-5; }
+  .next-step h3, .next-step p { @apply m-0 basis-full; }
+  .next-step > a:not(.action-link) { @apply text-sm font-semibold underline underline-offset-4; }
+  .setup-steps { @apply grid list-none gap-5 p-0; }
+  .setup-steps > li { @apply flex gap-4 rounded-xl border border-horta-line bg-white p-5 sm:p-6; }
+  .setup-steps h2 { @apply mt-0 mb-2 text-lg; }
+  .step-number { @apply flex size-9 shrink-0 items-center justify-center rounded-full bg-horta-soft font-semibold text-horta-forest; }
+  .setup-steps li > div { @apply min-w-0 flex-1; }
+  .setup-steps a { @apply mr-5 mb-2 inline-flex text-sm font-semibold underline-offset-4; }
+  .setup-beds { @apply mt-4 divide-y divide-horta-line; }
+  .setup-beds li { @apply flex flex-wrap items-center justify-between gap-2 py-3 text-sm; }
+  .setup-beds span { @apply text-xs text-horta-muted; }
+  .bed-setup { @apply mt-6 border-t border-horta-line pt-3; }
+  .setup-form { @apply rounded-xl border border-horta-line bg-horta-canvas/50 p-5; }
+  .setup-form h3 { @apply mt-0; }
+  .workflow-guide { @apply mb-6 rounded-lg border border-horta-line bg-white/60 px-4 py-3; }
+  .workflow-guide summary { @apply font-semibold; }
+  .workflow-guide p { @apply mt-2 text-xs text-horta-muted; }
+  .workflow-guide nav { @apply flex flex-wrap gap-2; }
+  .workflow-guide a { @apply rounded-md border border-horta-line bg-white px-3 py-2 text-xs no-underline; }
+  .workflow-guide a[aria-current=step] { @apply border-horta-forest bg-horta-soft font-semibold; }
+  .dashboard-group { @apply my-8; }
+  .dashboard-group > h2 { @apply border-b border-horta-line pb-3; }
+  .dashboard-grid { @apply grid gap-5 xl:grid-cols-2; }
+  .dashboard-card { @apply flex min-w-0 flex-col rounded-xl border border-horta-line bg-white p-5 sm:p-6; }
+  .dashboard-card h3 { @apply m-0 text-base; }
+  .dashboard-card > .hint { @apply mt-2 text-xs; }
+  .dashboard-value { @apply my-4 text-3xl leading-tight font-semibold text-horta-forest; }
+  .dashboard-detail { @apply mt-auto inline-block border-t border-horta-line pt-4 text-sm font-semibold underline-offset-4; }
+  .dashboard-bars { @apply my-4 space-y-3; }
+  .dashboard-bars li { @apply grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-xs; }
+  .dashboard-bars meter { @apply col-span-full h-3 w-full; }
+  .dashboard-bars meter::-webkit-meter-bar { background: #edf1e8; border: 0; }
+  .dashboard-bars meter::-webkit-meter-optimum-value { background: #48765a; }
+  .garden-overview { @apply overflow-hidden bg-[#f8faf5] p-4 sm:p-6; }
+  .garden-overview-heading { @apply mb-5 flex flex-wrap items-start justify-between gap-4; }
+  .garden-overview-heading h2 { @apply mt-1 mb-1 text-xl text-horta-forest; }
+  .garden-overview-heading p { @apply m-0 max-w-2xl text-sm text-horta-muted; }
+  .garden-scene { @apply relative h-80 w-full min-w-0 overflow-hidden rounded-xl border border-[#b7ceb2] bg-[#244936] shadow-inner sm:aspect-video sm:h-auto; min-height: 300px; touch-action: none; }
+  .garden-scene > svg { @apply block size-full; touch-action: none; user-select: none; cursor: grab; }
+  .garden-scene > svg[data-dragging="true"], .garden-scene > svg[data-dragging="true"] .garden-scene-object { cursor: grabbing; }
+  .garden-scene svg image { image-rendering: pixelated; }
+  .garden-scene-object { cursor: pointer; transition: filter 160ms ease, opacity 160ms ease; }
+  .garden-scene-object-shadow { fill: #183b2b; opacity: .24; transition: opacity 160ms ease; }
+  .garden-scene-object.hovered { filter: brightness(1.1) saturate(1.12) drop-shadow(0 0 5px rgba(238, 210, 149, .75)); }
+  .garden-scene-object.selected { filter: brightness(1.08) saturate(1.14) drop-shadow(0 0 7px rgba(238, 210, 149, .85)); }
+  .garden-scene-object.hovered .garden-scene-object-shadow, .garden-scene-object.selected .garden-scene-object-shadow { opacity: .34; }
+  .garden-scene-object:focus { outline: none; }
+  .garden-scene-object:focus-visible { filter: brightness(1.1) saturate(1.12) drop-shadow(0 0 0.35rem rgba(238, 210, 149, .95)); }
+  .garden-scene-life > g { animation: garden-scene-life 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  .garden-scene-breeze-tuft { animation: garden-scene-breeze 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; opacity: .86; }
+  .garden-scene-focus { animation: garden-scene-focus 4s ease-in-out infinite; }
+  .garden-scene-label { font-family: "Segoe UI", Inter, Arial, sans-serif; }
+  .garden-scene-label rect { fill: #173d2e; fill-opacity: .94; stroke: #a3bd80; stroke-width: 1; }
+  .garden-scene-label path { fill: none; stroke: #d6e6b9; stroke-width: 1; }
+  .garden-scene-label circle { fill: #d6e6b9; }
+  .garden-scene-label-kind { fill: #b8d194; font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .garden-scene-label-name { fill: #fff9e9; font-size: 12px; font-weight: 600; }
+  .garden-scene-label.selected rect { stroke: #ffe0a0; stroke-width: 2; }
+  .garden-scene-compass text { fill: #e8f0d7; font-size: 12px; font-weight: 700; }
+  .garden-scene-vignette rect { fill: none; stroke: rgba(13, 38, 27, .5); stroke-width: 30px; }
+  .garden-scene-controls { @apply absolute top-3 right-3 flex max-w-[calc(100%-24px)] flex-wrap items-center justify-end gap-1 rounded-lg border border-white/30 bg-[#173d2e]/80 p-1 text-xs font-semibold text-[#edf4dc] shadow-lg backdrop-blur-sm; }
+  .garden-scene-controls button { @apply flex size-8 min-h-8 p-0 items-center justify-center rounded-md border-0 bg-transparent text-base text-[#edf4dc] hover:bg-white/15; }
+  .garden-scene-controls span { @apply min-w-10 text-center text-[11px]; }
+  .garden-scene-controls .garden-scene-fit { @apply w-auto px-1 text-[10px] sm:ml-1 sm:px-2 sm:text-[11px]; }
+  .garden-scene-inspector { @apply relative mt-3 max-h-80 overflow-y-auto rounded-lg border border-[#d7e5c2] bg-[#f8fbf1]/95 p-3 text-[#244936] shadow-xl backdrop-blur-sm sm:absolute sm:top-3 sm:left-3 sm:mt-0 sm:max-h-[calc(100%-80px)] sm:w-[min(300px,calc(100%-136px))]; }
+  .garden-scene-inspector-header { @apply flex items-start justify-between gap-3 border-b border-[#d7e5c2] pb-2; }
+  .garden-scene-inspector-header strong { @apply mt-1 block break-words text-sm; }
+  .garden-scene-inspector-header button { @apply flex size-7 shrink-0 items-center justify-center rounded-full border border-[#cbdab7] bg-transparent text-lg leading-none text-[#52735a] hover:bg-white; }
+  .garden-scene-facts { @apply mt-3 grid grid-cols-2 gap-2; }
+  .garden-scene-facts > div { @apply rounded-md bg-white/70 p-2; }
+  .garden-scene-facts dt { @apply text-[10px] uppercase tracking-wide text-[#66816a]; }
+  .garden-scene-facts dd { @apply mt-1 text-xs font-semibold; }
+  .garden-scene-hint { @apply absolute right-3 bottom-16 left-3 rounded-lg bg-[#173d2e]/75 px-3 py-2 text-[11px] font-medium text-[#edf4dc] shadow-lg backdrop-blur-sm sm:top-3 sm:right-auto sm:bottom-auto; }
+  .garden-scene-caption { @apply absolute right-3 bottom-3 left-3 flex flex-wrap justify-between gap-2 rounded-md bg-[#173d2e]/75 px-3 py-2 text-[11px] font-medium text-[#edf4dc] backdrop-blur-sm; }
+  .garden-overview-note { @apply mt-3 text-xs text-horta-muted; }
+}
+
+@keyframes garden-scene-life {
+  0%, 100% { transform: translateY(0) rotate(-2deg); opacity: .78; }
+  50% { transform: translateY(-2px) rotate(2deg); opacity: 1; }
+}
+
+@keyframes garden-scene-breeze {
+  0%, 100% { transform: rotate(-2deg) translateX(0); }
+  38% { transform: rotate(2deg) translateX(1px); }
+  68% { transform: rotate(-4deg) translateX(-1px); }
+}
+
+@keyframes garden-scene-focus {
+  0%, 100% { opacity: .18; }
+  50% { opacity: .36; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .garden-scene-life > g,
+  .garden-scene-breeze-tuft,
+  .garden-scene-focus { animation: none; }
+}
+
+@layer components {
+  .organization-shell .editor-panel { @apply max-w-2xl; }
+  .organization-shell .editor-panel fieldset fieldset { @apply m-0 border-0 bg-transparent p-0; }
+  .organization-shell .editor-panel > .eyebrow { @apply hidden; }
+  .organization-shell .editor-panel h1 { @apply text-2xl; }
+  .organization-shell .editor-panel label { @apply text-sm; }
+  .organization-trail { @apply mb-8 text-sm text-horta-muted; }
+  .organization-trail ol { @apply flex flex-wrap items-center gap-x-2 gap-y-2; }
+  .organization-trail li { @apply flex min-w-0 items-center gap-2; }
+  .organization-trail a { @apply rounded py-1 underline-offset-4 hover:underline; }
+  .organization-trail [aria-current=page] { @apply font-medium text-horta-ink; }
+  .organization-trail .ui-icon { @apply size-3 shrink-0 text-horta-muted; }
+  .organization-heading { @apply mb-8 items-start; }
+  .organization-heading h1 { @apply break-words text-3xl sm:text-4xl; }
+  .organization-heading > div { @apply min-w-0; }
+  .organization-heading > .action-link { @apply shrink-0; }
+  .organization-path { @apply mb-8 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-horta-line bg-white/50 px-5 py-4 text-sm text-horta-muted; }
+  .organization-collection { @apply overflow-hidden rounded-xl border border-horta-line bg-white; }
+  .organization-rows { @apply divide-y divide-horta-line; }
+  .organization-rows > li { @apply flex flex-col justify-between gap-4 px-5 py-6 sm:flex-row sm:items-center sm:px-6; }
+  .organization-rows h3 { @apply m-0 text-lg font-semibold break-words; }
+  .organization-rows h3 a { @apply underline-offset-4 hover:underline; }
+  .organization-rows p { @apply mt-2 mb-0 max-w-2xl break-words text-horta-muted; }
+  .organization-row-action { @apply inline-flex min-h-11 shrink-0 items-center justify-center gap-3 self-start rounded-md border border-horta-line px-4 py-2 text-sm font-semibold hover:bg-horta-soft sm:self-center; }
+  .organization-secondary-links { @apply mt-6 flex flex-wrap gap-x-6 gap-y-3; }
+  .organization-secondary-links a { @apply inline-flex min-h-11 items-center text-sm underline underline-offset-4; }
+  .organization-disclosure { @apply my-6 rounded-lg border border-horta-line bg-white px-5 py-3 text-sm; }
+  .organization-disclosure > summary { @apply min-h-11 py-3 font-semibold; }
+  .organization-disclosure[open] > summary { @apply mb-4 border-b border-horta-line; }
+  .organization-shell .detail-facts { @apply my-6 grid gap-5 sm:grid-cols-2; }
+  .organization-shell .detail-facts > div { @apply rounded-lg bg-horta-canvas/60 p-4; }
+  .organization-shell .detail-facts dt { @apply mb-2 text-xs text-horta-muted; }
+  .organization-shell .detail-facts dd { @apply text-base font-medium; }
+}
+
+@layer components {
+  .interactive-garden { @apply min-w-0; }
+  .interactive-demo-notice { @apply mb-5 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-[#d7e0cb] bg-[#e9eedf] px-4 py-3 text-xs text-[#486143]; }
+  .interactive-demo-notice strong { @apply font-semibold text-horta-forest; }
+  .interactive-demo-notice span:last-child { @apply font-semibold text-[#7b551d]; }
+  .interactive-toolbar { @apply flex flex-wrap items-center justify-between gap-4 bg-white p-4; }
+  .interactive-tools, .interactive-actions { @apply flex flex-wrap items-center gap-2; }
+  .interactive-toolbar button { @apply min-h-10 px-3 py-2; }
+  .interactive-tool { @apply min-h-10 px-3 py-2; }
+  .interactive-tool.active { @apply border-horta-forest bg-horta-forest text-white; }
+  .interactive-tools > span { @apply min-w-12 text-center text-xs font-semibold text-horta-muted; }
+  .interactive-check { @apply flex min-h-10 flex-row items-center gap-2 px-2 text-xs font-normal; }
+  .interactive-check input { @apply size-4 min-h-4 w-4 accent-horta-forest; }
+  .interactive-editor { @apply grid min-w-0 gap-5 ; }
+  .interactive-canvas-panel, .interactive-side { @apply min-w-0 p-4 sm:p-5; }
+  .interactive-panel-heading { @apply mb-4 flex flex-wrap items-start justify-between gap-3; }
+  .interactive-panel-heading h2 { @apply mt-1 mb-0 text-lg; }
+  .interactive-canvas { @apply h-[78dvh] min-h-[560px] sm:min-h-[680px] touch-none overflow-hidden rounded-lg border border-horta-line bg-[#f8faf5]; cursor: crosshair; }
+  .interactive-canvas.panning { cursor: grab; }
+  .interactive-canvas.panning:active { cursor: grabbing; }
+  .interactive-canvas svg { @apply block h-full w-full select-none; }
+  .interactive-canvas svg:focus { @apply outline-none; }
+  .interactive-canvas [role="button"]:focus { @apply outline-none; }
+  .interactive-canvas [role="button"]:focus-visible { outline: 2px solid #c08a4b; outline-offset: 3px; }
+  .interactive-canvas [role="button"].interactive-object:focus-visible, .interactive-canvas [role="button"].interactive-curved-element:focus-visible { outline: none; filter: brightness(1.08) saturate(1.12) drop-shadow(0 0 4px rgba(192, 138, 75, .62)); }
+  .interactive-canvas [role="button"].interactive-rotation-hit-area:focus-visible { outline: none; stroke: #c08a4b; stroke-width: 22; stroke-opacity: .22; }
+  .interactive-svg-label { fill: #617069; font-size: 11px; font-family: "Segoe UI", Inter, Arial, sans-serif; }
+  .interactive-object, .interactive-curved-element { transition: filter 140ms ease, fill-opacity 140ms ease, opacity 140ms ease; }
+  .interactive-object.hovered, .interactive-curved-element.hovered { filter: brightness(1.08) saturate(1.12) drop-shadow(0 0 4px rgba(192, 138, 75, .48)); }
+  .interactive-object.selected, .interactive-curved-element.selected { filter: brightness(1.08) saturate(1.12); }
+  .interactive-sector-object { stroke-dasharray: 7 5; }
+  .interactive-rotation-arc, .interactive-rotation-hit-area { cursor: grab; }
+  .interactive-rotation-arc:active, .interactive-rotation-hit-area:active { cursor: grabbing; }
+  .interactive-rotation-arc { transition: filter 120ms ease, opacity 120ms ease; opacity: .9; }
+  .interactive-rotation-arc.active { filter: drop-shadow(0 0 3px rgba(47, 107, 76, .55)); opacity: 1; }
+  .interactive-rotation-hit-area:focus { outline: none; }
+  .interactive-alignment-guides line { stroke: #c08a4b; stroke-width: 1.5; stroke-dasharray: 6 4; opacity: .9; }
+  .interactive-selection-marquee { fill: rgba(72, 123, 158, .12); stroke: #477b9e; stroke-width: 1.5; stroke-dasharray: 6 4; }
+  .interactive-mandala-preview-shape { fill: rgba(192, 138, 75, .08); stroke: #c08a4b; stroke-width: 1.5; stroke-dasharray: 5 4; opacity: .95; }
+  .interactive-modal-backdrop { @apply fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[#21352a]/40 px-4 py-8; }
+  .interactive-mandala-modal { @apply w-full max-w-3xl bg-white p-5 shadow-xl sm:p-6; }
+  .interactive-properties-popover { @apply fixed z-40 w-[min(320px,calc(100vw-24px))] max-h-[calc(100vh-24px)] overflow-y-auto rounded-xl border border-[#cddbc8] bg-white/95 shadow-2xl backdrop-blur-sm; }
+  .interactive-properties-header { @apply sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-horta-line bg-gradient-to-br from-[#f4f8ef]/95 to-white/95 px-4 py-4; }
+  .interactive-properties-header h2 { @apply mt-1 mb-1 text-lg text-horta-forest; }
+  .interactive-properties-header p { @apply m-0 max-w-md text-xs text-horta-muted; }
+  .interactive-properties-close { @apply flex size-8 shrink-0 items-center justify-center rounded-full border border-horta-line bg-white text-lg leading-none text-horta-muted transition hover:border-horta-forest hover:text-horta-forest focus:outline-none focus:ring-2 focus:ring-horta-forest/30; }
+  .interactive-properties-body { @apply p-4; }
+  .interactive-properties-summary { @apply mb-4 flex items-center gap-3 rounded-lg border border-[#d7e4d1] bg-[#f4f8ef] px-3 py-2.5; }
+  .interactive-properties-summary > div { @apply flex min-w-0 flex-col gap-1; }
+  .interactive-properties-summary strong { @apply text-sm text-horta-forest; }
+  .interactive-properties-summary span { @apply text-xs text-horta-muted; }
+  .interactive-geometry-limit { @apply col-span-full m-0 rounded-lg border border-[#d5e1d1] bg-[#f4f8ef] px-3 py-2 text-xs leading-relaxed text-[#486143]; }
+  .interactive-geometry-limit strong { @apply font-semibold text-horta-forest; }
+  .interactive-properties-actions { @apply mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-horta-line pt-4; }
+  .interactive-mandala-layout { @apply grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px]; }
+  .interactive-mandala-fields { @apply grid grid-cols-2 gap-3; }
+  .interactive-mandala-fields label { @apply relative gap-1 text-xs; }
+  .interactive-mandala-fields input { @apply pr-7; }
+  .interactive-field-help { @apply mt-1 block text-[11px] font-normal text-horta-muted; }
+  .interactive-mandala-wide { @apply col-span-full; }
+  .interactive-mandala-preview { @apply flex min-h-60 flex-col items-center justify-center gap-2 rounded-lg border border-horta-line bg-[#f8faf5] p-3; }
+  .interactive-mandala-preview svg { @apply aspect-square w-full max-w-56; }
+  .interactive-mandala-preview span { @apply text-xs text-horta-muted; }
+  .interactive-mandala-actions { @apply mt-6 flex flex-wrap justify-end gap-2 border-t border-horta-line pt-4; }
+  .interactive-rotation-hint { @apply mb-4 rounded-md border border-[#d5e1d1] bg-[#eef4ea] px-3 py-2 text-xs text-[#486143]; }
+  .interactive-scale { @apply mt-3 flex items-center gap-2 text-[11px] text-horta-muted; }
+  .interactive-scale-line { @apply block h-0 border-t-2 border-horta-forest; }
+  .interactive-elements { @apply m-0 list-none divide-y divide-horta-line border-y border-horta-line p-0; }
+  .interactive-element { @apply flex min-h-14 w-full flex-row items-center gap-3 rounded-none border-0 bg-transparent px-2 py-3 text-left text-horta-ink; }
+  .interactive-element:hover:not(:disabled), .interactive-element.selected { @apply bg-horta-soft; }
+  .interactive-element-swatch { @apply size-4 shrink-0 rounded-sm border-2 border-horta-forest bg-[#7aa566]; }
+  .interactive-element-swatch.circle { @apply rounded-full bg-[#b8c99a]; }
+  .interactive-element span:last-child { @apply flex min-w-0 flex-col gap-1; }
+  .interactive-element strong { @apply break-words text-sm; }
+  .interactive-element small { @apply text-xs; }
+  .interactive-properties { @apply mt-6 rounded-lg border border-horta-line bg-[#fafbf8] p-4; }
+  .interactive-properties legend { @apply px-2 text-sm font-semibold text-horta-forest; }
+  .interactive-properties .hint { @apply mb-4; }
+  .interactive-field-grid { @apply grid grid-cols-2 gap-3; }
+  .interactive-field-grid.full { @apply grid-cols-2; }
+  .interactive-name-field { @apply col-span-full; }
+  .interactive-field-grid label { @apply relative gap-1 text-xs; }
+  .interactive-field-grid input { @apply pr-7; }
+  .interactive-circular-title { @apply col-span-full mt-2 mb-0 border-t border-horta-line pt-3 text-xs font-semibold text-horta-forest; }
+  .interactive-unit { @apply absolute right-3 bottom-3 text-xs font-normal text-horta-muted; }
+  .interactive-facts { @apply mt-5 grid grid-cols-2 gap-3; }
+  .interactive-facts > div { @apply rounded-md bg-white p-3; }
+  .interactive-facts dt { @apply text-[11px] text-horta-muted; }
+  .interactive-facts dd { @apply mt-1 text-xs font-semibold text-horta-forest; }
+  .interactive-help { @apply mt-5 text-xs text-horta-muted; }
+  .interactive-remove { @apply mt-5 w-full; }
+}
+
+@layer components {
+  .integrated-brand { @apply gap-2 text-sm; }
+  .integrated-brand svg { @apply size-8 shrink-0; }
+  .integrated-brand small { @apply text-[9px]; }
+  .workspace-sidebar > .integrated-brand { @apply mb-8 px-2; }
+  .workspace-sidebar .sidebar-context { @apply mb-6 border-b border-horta-line pb-5; }
+  .organization-shell .workspace-content main { @apply max-w-none; }
+}
