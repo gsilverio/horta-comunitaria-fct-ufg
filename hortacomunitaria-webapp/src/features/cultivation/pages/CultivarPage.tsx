@@ -1,3 +1,6 @@
+import { CropCatalogEntry } from '../components/CropCatalogEntry'
+import { speciesApi } from '../services/SpeciesApi'
+import { useSpeciesImage } from '../../interactive-garden/hooks/useSpeciesCatalog'
 import { VisualGrowthForm } from '../components/VisualGrowthForm'
 import { visualGrowthApi } from '../services/visualGrowthApi'
 import { useCallback } from "react"
@@ -29,11 +32,14 @@ const params = { page: filters.page, pageSize: 10, isActive: filters.values.isAc
 const queryKey = JSON.stringify(params)
 const load = useCallback((signal: AbortSignal) => parent ? cultivarApi.list(parent, { page: filters.page, pageSize: 10, isActive: filters.values.isActive ? filters.values.isActive === "true" : undefined }, signal) : Promise.resolve({ items: [], page: 1, pageSize: 10, totalCount: 0, totalPages: 0, hasPreviousPage: false, hasNextPage: false }), [filters.page, filters.values.isActive, parent])
 const result = useRemote(queryKey + "/" + filters.revision + "/" + parent, load)
-return <RecordList createDisabled={!parent || options.loading || !!options.error} requireActiveGarden={false} title="Cultivares" hint="Cadastros de apoio com identificação, versão e histórico." create={() => navigate(route.garden, route.module, route.resource, "novo", route.search)} apply={filters.apply} loading={result.loading} error={filters.error ?? result.error} retry={filters.retry} data={result.data} page={filters.changePage} filters={<>
-<SelectField name="speciesId" label="Espécie dos cultivares" required value={parent} change={value => { const query = new URLSearchParams(route.search); query.set("speciesId", value); navigate(route.garden, route.module, route.resource, "", query) }} options={options.data?.species ?? []} />
+const loadSpecies = useCallback((signal: AbortSignal) => parent ? speciesApi.get(parent, signal) : Promise.resolve(undefined), [parent])
+const species = useRemote(`cultivar-species/${parent}`, loadSpecies)
+const image = useSpeciesImage(parent, !!species.data?.imageUrl)
+return <RecordList createDisabled={!parent || options.loading || !!options.error} requireActiveGarden={false} title="Cultivares" hint="Escolha uma espécie para consultar suas cultivares. As imagens são ilustrativas da espécie." create={() => navigate(route.garden, route.module, route.resource, "novo", route.search)} apply={filters.apply} loading={result.loading} error={filters.error ?? result.error} retry={filters.retry} data={result.data} page={filters.changePage} filters={<>
+<SelectField name="speciesId" label="Espécie dos cultivares" required value={parent} change={value => { const query = new URLSearchParams(route.search); query.set("speciesId", value); query.delete("page"); navigate(route.garden, route.module, route.resource, "", query) }} options={options.data?.species ?? []} />
 <SelectField name="isActive" label="Situação cadastral" value={filters.draft.isActive} change={value => filters.change("isActive", value)} options={[{ id: 'true', label: 'Ativo' }, { id: 'false', label: 'Inativo' }]} />
 {options.error && <Failure error={options.error} retry={options.retry} />}</>}>
-{result.data?.items.map(item => <li className="py-4" key={item.id}><a className="font-semibold underline decoration-horta-line underline-offset-4" href={routeHref(route.garden, route.module, route.resource, item.id, route.search)}>{item.name}</a><span className="ml-3 text-sm text-horta-muted">{item.isActive ? "Ativo" : "Inativo"} · v{item.version}</span></li>)}
+{result.data?.items.map(item => <CropCatalogEntry key={item.id} name={item.name} scientificName={species.data?.scientificName} active={item.isActive} speciesPhoto image={image} href={routeHref(route.garden, route.module, route.resource, item.id, route.search)} />)}
 </RecordList>
 }
 function CultivarDetail({ route, saved }: { route: RecordRoute; saved: (message: string) => void }) {

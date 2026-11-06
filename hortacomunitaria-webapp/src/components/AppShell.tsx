@@ -47,13 +47,15 @@ export function AppShell({
         Pular para o conteúdo
       </a>
       <div className="workspace-layout">
-        <aside className="workspace-sidebar" aria-label="Navegação principal">
-          <Brand />
-          <div className="sidebar-context">{gardenSelect}</div>
+        <aside className="workspace-sidebar lg:pt-0" aria-label="Navegação principal">
+          <div className="-mx-4 mb-6 flex min-h-20 items-center border-b border-horta-line px-6">
+            <Brand />
+          </div>
           <Navigation route={route} />
         </aside>
         <dialog
           ref={menu}
+          id="workspace-navigation"
           className="navigation-dialog"
           aria-label="Menu de navegação"
         >
@@ -67,32 +69,32 @@ export function AppShell({
               <Icon name="close" />
             </button>
           </div>
-          <div className="my-5" onChange={() => menu.current?.close()}>
-            {gardenSelect}
-          </div>
           <Navigation route={route} onNavigate={() => menu.current?.close()} />
         </dialog>
         <div className="workspace-content">
-          <div className="flex items-center justify-between gap-4 px-5 pt-5 lg:hidden">
-            <Brand />
+          <header className="flex min-h-20 min-w-0 items-center gap-3 border-b border-horta-line bg-[#f9faf6] px-4 sm:px-6 xl:px-9">
             <button
-              className="secondary p-3"
+              type="button"
+              className="secondary shrink-0 p-3 lg:hidden"
               aria-label="Abrir menu de navegação"
+              aria-controls="workspace-navigation"
+              aria-haspopup="dialog"
               onClick={() => menu.current?.showModal()}
             >
               <Icon name="menu" />
             </button>
-          </div>
-          {route.garden && (
-            <>
-              <div className={route.module === "horta" ? "hidden" : "workspace-toolbar"}>
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-                  {route.module !== "horta" && <a className="font-semibold underline" href={routeHref(route.garden, "horta", "interativa")}>Configurar horta</a>}
-                </div>
+            <div className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-3 py-3 sm:gap-5">
+              {gardenSelect && <div className="min-w-0 flex-1 sm:max-w-64">{gardenSelect}</div>}
+            <div className="flex shrink-0 items-center justify-end gap-3" role="group" aria-label="Identificação do operador demonstrativo">
+              <div className="hidden min-w-0 text-right sm:block">
+                <p className="m-0 truncate text-sm leading-5 font-semibold text-horta-ink">Operador de demonstração</p>
+                <p className="m-0 text-xs leading-5 text-horta-muted">Modo demonstrativo</p>
               </div>
-              <SectionNavigation route={route} />
-            </>
-          )}
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-horta-line bg-horta-soft text-sm font-semibold text-horta-forest" aria-hidden="true">OD</span>
+            </div>
+            </div>
+          </header>
+          {route.garden && <SectionNavigation route={route} />}
           <main id="main-content" tabIndex={-1}>
             {children}
           </main>

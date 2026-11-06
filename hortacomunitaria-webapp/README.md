@@ -53,9 +53,9 @@ O setup usa um banco descartável `horta_e2e_<uuid>`, API real em **5279** e pre
 
 Relatórios, screenshots e logs ficam em `playwright-report/` e `test-results/`, ignorados pelo Git. A validação cobre percurso completo, cultivo/plantio pelo canteiro, nova espécie durante o preenchimento, retomada após resposta perdida, cadastros pendentes, contexto/paginação, conflito de edição, todos os módulos do menu e layout de 390 px com teclado. Aceite funcional da PO permanece pendente.
 
-O menu permanece disponível também na listagem de hortas, no desktop e no celular. Ao escolher uma área sem horta selecionada, selecione a horta na lista para abrir a área desejada.
+O menu permanece disponível também na listagem de hortas, no desktop e no celular. Ao entrar em uma área sem contexto, a primeira horta disponível é selecionada automaticamente; links com horta explícita preservam seu contexto.
 O rodapé ocupa o fim da janela nas páginas curtas e acompanha o final do conteúdo nas páginas longas, com o mesmo layout em todas as áreas.
-O seletor de horta fica no menu e inicia com “Selecione uma horta” quando não há contexto. A seleção abre a área escolhida; sem hortas ativas disponíveis, oferece cadastrar uma horta.
+O seletor de horta fica no header, ao lado da identificação do operador, e aparece somente quando há mais de uma horta disponível. Com uma horta, a entrada usa essa horta sem exibir seletor; com várias, usa a primeira por padrão. A escolha explícita na URL é preservada. A listagem global e o cadastro de hortas continuam acessíveis sem redirecionamento automático. Sem hortas, a aplicação permite cadastrar a primeira. A troca mantém as proteções de rascunho e envio em andamento.
 
 ## Experimento do modo interativo
 
@@ -112,3 +112,39 @@ A escolha inclui espécie, variedade opcional, início e área ocupada; o planti
 O editor é a entrada padrão ao criar/selecionar uma horta ou abrir a área Horta. A rota antiga de preparação leva ao mesmo editor; os cadastros tradicionais continuam nas seções de setores/canteiros. Na panorâmica, setores com plantio confirmado em cultivo ativo recebem [grama trabalhada](../documentos/arquitetura/Grama_Trabalhada.md), usando a mesma paleta, escala e alinhamento da grama original e transição suave nas bordas. Ciclos sem plantio, encerrados e rascunhos não ativam essa variação.
 
 Ao selecionar um canteiro na panorâmica por clique, toque ou teclado, a câmera aproxima e centraliza a peça na área livre ao lado do painel. A transição respeita a preferência por movimento reduzido e é interrompida por arraste, zoom manual ou Enquadrar horta. No celular, os dados aparecem abaixo da cena para não cobrir o canteiro. **Ver detalhes do canteiro** abre o cadastro pelo ID confirmado da mesma horta, com identificação, setor, área/medidas reais, cultivos, plantios e histórico, e oferece retorno à panorâmica. Formas sem vínculo cadastral não recebem esse link.
+
+## Revisão visual da organização — 04/11/2026
+
+A entrada e as telas tradicionais de hortas, setores e canteiros usam listas contínuas, navegação de gestão explícita, detalhes com divisórias e formulários de até 720 px. A homepage oferece Configurar horta e Ver setores. A apresentação usa Tailwind e fica delimitada por `organization-workspace`; o cadastro interativo e a panorâmica permanecem fora desse escopo. Contratos e operações existentes foram preservados. Build e lint aprovados; integração dispensada pelo responsável nesta etapa.
+
+## Header e identificação — 06/11/2026
+
+O header acompanha o menu lateral com a mesma superfície, altura e divisória. A identificação Operador de demonstração fica no extremo direito, com avatar de iniciais e indicação de modo demonstrativo. No celular, o botão do header abre o menu lateral em diálogo. Não há conta autenticada, perfil ou ação de sair nesta etapa.
+
+### Gestão pelo menu Horta — 06/11/2026
+
+O item Horta do menu lateral abre sempre a listagem global, mesmo com horta selecionada. A lista oferece Nova horta, Dados e histórico, Editar, Inativar, Ver setores e Configurar horta. Inativar abre a confirmação com motivo e versão; não apaga registros. O detalhe volta à listagem; cancelar ou salvar uma edição volta ao detalhe. O cadastro interativo e a panorâmica mantêm seus fluxos.
+
+### Listagem de hortas em DataGrid — 06/11/2026
+
+Somente a listagem de hortas usa o DataGrid de referência do EasyDFe/Metronic. A adaptação preserva o layout, a arquitetura e os tokens `horta-*` deste projeto; não importa o tema, o CSS global ou os layouts do EasyDFe. Os componentes reutilizáveis do Metronic ficam disponíveis no projeto, com dependências diretas fixadas no lockfile. Nesta etapa, somente a listagem de hortas passa a usar essa biblioteca; os demais fluxos continuam com seus componentes atuais.
+
+A tabela oferece paginação remota com 10/25/50/100 itens, filtro de situação, controle de colunas, atualização e menu por linha para dados/histórico, edição, desenho, setores e inativação. Não há busca ou ordenação local que represente apenas uma página como se fosse todo o catálogo. Página e tamanho ficam na URL. O cadastro interativo e a panorâmica mantêm os componentes existentes.
+
+### Catálogo de cultivo e navegação de seções — 06/11/2026
+
+Espécies e Cultivares exibem miniaturas ao lado do nome, usando a consulta de imagens já existente e preservando créditos/licenças. Nas cultivares, a foto é identificada como ilustrativa da espécie. Ausência, carregamento e falha de imagem têm fallback; a versão deixa de aparecer nas linhas, e somente cadastros inativos recebem indicação de situação. Os metadados e a versão continuam disponíveis nos detalhes.
+
+As faixas superiores com Todas as hortas e Configurar horta foram removidas. A navegação de Cultivo agrupa Catálogo e Acompanhamento; no celular usa seletor nativo. Links mantêm acesso direto/voltar/avançar e as proteções de rascunho. As setas, Home e End movem o foco nas seções do desktop; Enter abre a seção. Ao partir do detalhe de uma espécie, Cultivares/Origem do material recebem essa espécie como contexto. O editor e a panorâmica não foram modificados.
+
+Build aprovado; lint sem erros, com o aviso preexistente do React Compiler/TanStack no DataGrid. Conferência de navegador com respostas simuladas aprovada para imagens, fallback, contexto da espécie, navegação por teclado, cancelamento de saída com rascunho e larguras 320/390/768/1280/1920 px. Não foi executada integração com API/banco reais nesta etapa.
+
+### Densidade visual e exemplos da horta — 06/11/2026
+
+A cena usa 2/4/6 símbolos por cultivo (baixa/média/alta), com limite total de 12 por canteiro, sem alterar quantidades reais do cadastro. Na horta teste existente, três canteiros vagos receberam alface e tomate em fase intermediária e pepino em fase de colheita prevista, usando datas e prazos demonstrativos. Plantios anteriores e desenho preservados. Detalhes em [Cultivos no panorama](../documentos/arquitetura/Cultivos_no_Panorama.md).
+
+### Ficha da espécie e linha clicável — 06/11/2026
+
+A linha inteira da listagem de Espécies/Cultivares é um link nativo para o cadastro correspondente, incluindo a imagem e a área de texto. A listagem não exibe créditos da foto. A ficha de espécie mostra foto ampliada, nome comum/científico, descrição, situação, acesso às cultivares e fases visuais; histórico fica recolhido. Edição, inativação, versão esperada e consulta de histórico mantêm os contratos existentes.
+
+A horta local recebeu oito novos canteiros, totalizando 14 canteiros/espécies, com estágios variados; os seis anteriores foram preservados. Build aprovado e lint sem erros (aviso preexistente do DataGrid). Ficha real, clique na linha/imagem, ausência dos créditos e panorâmica ampliada conferidos no navegador em desktop e celular, sem executar a suíte de integração.

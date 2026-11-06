@@ -52,4 +52,6 @@ Os planos individuais preservam o percurso, as hipóteses e os cenários de acei
 
 ## Revisão de usabilidade
 
+A [reestruturação visual da entrada e gestão da horta](Reestruturacao_Visual_Horta.md), planejada em 04/11/2026, delimita a próxima revisão à homepage, navegação e telas tradicionais de hortas, setores e canteiros. Define padrões responsivos com Tailwind e preserva integralmente o cadastro interativo e a renderização panorâmica. A implementação foi aplicada às telas tradicionais após o push da base. Build e lint aprovados; integração dispensada pelo responsável e revisão visual completa pendente.
+
 A [revisão dos fluxos](../Revisao_Fluxos_Frontend_MVP.md) corrige seleção automática da horta, preparação física, orientação de dependências e entrada pelo dashboard consolidado. A existência das telas anteriores não representava conclusão da jornada por navegação; os testes foram ampliados para esse percurso.

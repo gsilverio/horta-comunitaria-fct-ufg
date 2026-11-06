@@ -15,13 +15,16 @@ export function RecordDetail<T>({
   edit,
   back,
   children,
+  heading,
   catalog = false,
   requireActiveGarden = true,
   compact = false,
   hideBack = false,
+  deactivationInitiallyOpen = false,
 }: {
   compact?: boolean;
   hideBack?: boolean;
+  deactivationInitiallyOpen?: boolean;
   state: ReturnType<typeof useRecord<T>>;
   title: string;
   items: DetailItem[];
@@ -30,6 +33,7 @@ export function RecordDetail<T>({
   edit: () => void;
   back: () => void;
   children?: ReactNode;
+  heading?: ReactNode;
   catalog?: boolean;
   requireActiveGarden?: boolean;
 }) {
@@ -47,14 +51,14 @@ export function RecordDetail<T>({
         </p>
       )}
       <section className="panel">
-        <h1 tabIndex={-1}>{title}</h1>
+        {state.detail.data && heading ? heading : <h1 tabIndex={-1}>{title}</h1>}
         {state.detail.loading && <p role="status">Carregando registro…</p>}
         {state.detail.error && (
           <Failure error={state.detail.error} retry={state.refresh} />
         )}
         {state.detail.data && (
           <>
-            <p className="badge">
+            {!heading && <p className="badge">
               {catalog
                 ? active
                   ? "Ativo"
@@ -63,7 +67,7 @@ export function RecordDetail<T>({
                   ? "Válido"
                   : "Invalidado"}
               {!compact && ` · Versão ${version}`}
-            </p>
+            </p>}
             {items
               .filter((item) => isValidElement(item.value))
               .map((item) => (
@@ -71,9 +75,9 @@ export function RecordDetail<T>({
                   {item.value}
                 </div>
               ))}
-            <Facts
+            {items.some(item => !isValidElement(item.value)) && <Facts
               items={items.filter((item) => !isValidElement(item.value))}
-            />
+            />}
             {children}
             {active && (!requireActiveGarden || garden.isActive) && (
               <>
@@ -86,7 +90,7 @@ export function RecordDetail<T>({
                     {catalog ? "Editar cadastro" : "Corrigir registro"}
                   </button>
                 </div>
-                <details className="mt-5">
+                <details className="mt-5" open={deactivationInitiallyOpen || undefined}>
                   <summary>
                     {catalog ? "Inativar cadastro" : "Invalidar registro"}
                   </summary>

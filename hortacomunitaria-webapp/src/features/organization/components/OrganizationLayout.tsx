@@ -27,15 +27,15 @@ export function OrganizationCollection({ title, loading, error, retry, data, cha
   title: string; loading: boolean; error?: ApiFailure; retry: () => void; data?: Page<unknown>; changePage: (page: number) => void; children: ReactNode;
   emptyTitle: string; emptyText: string; emptyAction?: ReactNode; filter?: ReactNode;
 }) {
-  return <section aria-label={title} className="organization-collection">
+  return <section aria-label={title} aria-busy={loading} className="organization-collection">
     <div className="flex flex-wrap items-center justify-between gap-4 border-b border-horta-line px-5 py-4 sm:px-6"><h2 className="m-0 text-base">{title}{data && <span className="ml-2 font-normal text-horta-muted">({data.totalCount})</span>}</h2>{filter}</div>
     {loading && <p role="status" className="p-6">Carregando {title.toLocaleLowerCase('pt-BR')}…</p>}
     {error && <div className="p-5"><Failure error={error} retry={retry} /></div>}
-    {data && (data.items.length ? <ul className="organization-rows">{children}</ul> : <div className="empty py-12"><Icon name="cultivo" /><h3>{emptyTitle}</h3><p className="mx-auto max-w-md">{emptyText}</p>{emptyAction}</div>)}
-    {data && data.totalPages > 1 && <div className="border-t border-horta-line px-5 pb-5"><Pagination data={data} change={changePage} label={`Páginas de ${title}`} /></div>}
+    {data && !loading && !error && (data.items.length ? <ul className="organization-rows">{children}</ul> : <div className="empty py-12"><Icon name="cultivo" /><h3>{emptyTitle}</h3><p className="mx-auto max-w-md">{emptyText}</p>{emptyAction}</div>)}
+    {data && !loading && !error && data.totalPages > 1 && <div className="border-t border-horta-line px-5 pb-5"><Pagination data={data} change={changePage} label={`Páginas de ${title}`} /></div>}
   </section>
 }
 
-export function OrganizationRow({ title, description, href, action, status }: { title: string; description: string; href: string; action: string; status?: string }) {
-  return <li><div className="min-w-0"><h3><a href={href}>{title}</a></h3><p>{description}</p>{status && <span className="badge mt-2">{status}</span>}</div><a className="organization-row-action" href={href} aria-label={`${action}: ${title}`}>{action}<Icon name="chevron" /></a></li>
+export function OrganizationRow({ title, description, href, action, status, secondaryHref, actions }: { title: string; description: string; href: string; action: string; status?: string; secondaryHref?: string; actions?: ReactNode }) {
+  return <li><div className="min-w-0"><h3><a href={href}>{title}</a></h3><p>{description}</p>{status && <span className="badge mt-2">{status}</span>}</div><div className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-2 sm:max-w-[60%] sm:justify-end">{actions}{secondaryHref && <a className="inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4" href={secondaryHref} aria-label={`Ver setores: ${title}`}>Ver setores</a>}<a className="organization-row-action" href={href} aria-label={`${action}: ${title}`}>{action}<Icon name="chevron" /></a></div></li>
 }

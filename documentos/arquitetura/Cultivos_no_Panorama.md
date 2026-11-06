@@ -37,13 +37,13 @@ A referência é a soma das quantidades dos **plantios iniciais válidos** do ci
 
 | Faixa estética | Quantidade inicial / área ocupada | Símbolos pretendidos por cultivo |
 | --- | --- | ---: |
-| Baixa | até 4 plantas/m² | 3 |
-| Média | acima de 4 até 12 plantas/m² | 8 |
-| Alta | acima de 12 plantas/m² | 16 |
+| Baixa | até 4 plantas/m² | 2 |
+| Média | acima de 4 até 12 plantas/m² | 4 |
+| Alta | acima de 12 plantas/m² | 6 |
 
-Os limites são parâmetros de apresentação, **não** recomendação de espaçamento, produtividade ou lotação agronômica. Nunca desenhar mais símbolos que a quantidade inicial. Sem quantidade ou área válida, não assumir zero ou criar plantas. Exemplo para 4 m²: 8 plantas → baixa/3 símbolos; 24 → média/8; 80 → alta/16.
+Os limites são parâmetros de apresentação, **não** recomendação de espaçamento, produtividade ou lotação agronômica. Nunca desenhar mais símbolos que a quantidade inicial. Sem quantidade ou área válida, não assumir zero ou criar plantas. Exemplo para 4 m²: 8 plantas → baixa/2 símbolos; 24 → média/4; 80 → alta/6. Redução solicitada em 06/11/2026 para diminuir a sobreposição sem alterar as quantidades cadastradas.
 
-Há orçamento máximo de 48 símbolos por canteiro, distribuídos em rodadas entre cultivos; em um consórcio muito grande a cena é uma amostra e o inspetor mantém a lista de todos os ciclos. Zoom não altera quantidade, seleção de assets ou posições no terreno. Distribuição respeita retângulos rotacionados, canteiros circulares e setores de anel. Ainda não há delimitação física da área de cada ciclo no desenho; símbolos de consórcios compartilham o canteiro e não representam a posição real de cada planta.
+Há orçamento máximo de 12 símbolos por canteiro, distribuídos em rodadas entre cultivos; em um consórcio muito grande a cena é uma amostra e o inspetor mantém a lista de todos os ciclos. Zoom não altera quantidade, seleção de assets ou posições no terreno. Distribuição respeita retângulos rotacionados, canteiros circulares e setores de anel. Ainda não há delimitação física da área de cada ciclo no desenho; símbolos de consórcios compartilham o canteiro e não representam a posição real de cada planta.
 
 No formulário contextual de plantio, uma prévia identifica a densidade visual da quantidade digitada. O contrato continua separando abertura de cultivo e registro do plantio: não transformar quantidade planejada em fato antes de plantar.
 
@@ -64,3 +64,34 @@ Dados de cultivo não são gravados no rascunho geométrico do `sessionStorage`:
 Build Release do backend sem warnings; build TypeScript/Vite e ESLint aprovados. Treze testes de integração aprovados em PostgreSQL 17 descartável, incluindo prazos, herança/override, auditoria e concorrência, fases por data, reposições, colheita/invalidação, encerramento e regressões do seed/cadastros. A conferência final da política de fases foi repetida em dois testes, e o EF CLI não encontrou mudanças pendentes do modelo.
 
 Três testes Playwright cobrem limites/ausência da densidade e orçamento, percurso real de configuração dos prazos e panorama com API/PostgreSQL, desktop e celular, colheita parcial e carregamento dos 102 SVGs/113 mapeamentos. Capturas de inspeção ficam em `test-results/`, ignoradas pelo Git. Não foi aplicada migration nem seed no banco de uso; contextos de teste são descartados.
+
+## Demonstração local solicitada em 06/11/2026
+
+Na horta existente `horta teste`, foram preenchidos os três canteiros vagos pela API, sem seed automático, migration ou alteração do desenho. Os três ciclos e plantios anteriores (couve-brócolis, cenoura e berinjela) foram conferidos antes/depois e preservados integralmente.
+
+| Canteiro | Espécie | Data do plantio | Quantidade cadastrada | Fase em 06/11/2026 |
+| --- | --- | --- | ---: | --- |
+| Retângulo 3 | Alface | 29/10/2026 | 8 | Crescimento intermediário |
+| Mandala · Anel 1 · Canteiro 1 | Tomate | 28/10/2026 | 24 | Crescimento intermediário |
+| Mandala · Anel 1 · Canteiro 2 | Pepino | 25/10/2026 | 60 | Colheita prevista |
+
+Somente esses canteiros sem configuração receberam área demonstrativa de 4 m², sem inferência a partir do grid. Alface, tomate e pepino receberam prazos visuais fictícios de 5 dias para crescimento e 10 para colheita prevista, com motivo registrado na auditoria; os prazos das espécies já plantadas foram preservados. Colheita prevista seleciona o asset maduro, sem confirmar disponibilidade agronômica ou registrar colheita.
+
+Conferência somente de leitura da panorâmica com API local: 8 símbolos dos cultivos anteriores, 6 intermediários e 6 de colheita prevista, tanto no desktop quanto no celular. Não foi executada a suíte de integração nesta etapa. Os testes existentes tiveram suas expectativas de contagem atualizadas para 2/4/6 e orçamento de 12.
+
+## Ampliação da demonstração local em 06/11/2026
+
+A horta teste recebeu oito novos canteiros (07–14) em um setor de diversidade na parte livre do terreno. O mapa passou à versão 2, preservando as formas, posições e dimensões dos elementos anteriores. Os seis canteiros, ciclos e plantios já existentes foram comparados antes/depois e permaneceram intactos.
+
+| Novo canteiro | Espécie | Plantio | Fase na data da preparação |
+| --- | --- | --- | --- |
+| 07 | Abóbora | 05/11/2026 | Mudas iniciais |
+| 08 | Cebola | 29/10/2026 | Crescimento intermediário |
+| 09 | Ervilha | 20/10/2026 | Colheita prevista |
+| 10 | Milho-doce | 27/10/2026 | Crescimento intermediário |
+| 11 | Repolho | 18/10/2026 | Colheita prevista |
+| 12 | Alho | 04/11/2026 | Mudas iniciais |
+| 13 | Mostarda-branca | 31/10/2026 | Crescimento intermediário |
+| 14 | Pimenta dedo-de-moça | Ainda não registrado | Cultivo aberto, aguardando plantio |
+
+Total local: 14 canteiros e 14 espécies, com cinco fases disponíveis. As espécies novas receberam prazos ilustrativos fictícios de 5/15 dias e áreas demonstrativas de 4 m²; não são parâmetros agronômicos. O desenho usa unidades livres e não foi convertido em m². A preparação ocorreu explicitamente pela API, sem seed automático ou migration. A panorâmica real foi conferida no navegador após persistir os dados.

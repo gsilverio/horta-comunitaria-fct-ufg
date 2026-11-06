@@ -39,7 +39,7 @@ export function cropDensity(crop: GardenCrop): 'Baixa' | 'Média' | 'Alta' | und
 export function cropSymbolCount(crop: GardenCrop) {
   const density = cropDensity(crop)
   if (!density || crop.stage === 'AwaitingPlanting') return 0
-  return Math.min(crop.initialQuantity ?? 0, density === 'Baixa' ? 3 : density === 'Média' ? 8 : 16)
+  return Math.min(crop.initialQuantity ?? 0, density === 'Baixa' ? 2 : density === 'Média' ? 4 : 6)
 }
 
 const assets: Record<string, { seedling: string; growing: string; harvest: string }> = manifest.assets
@@ -71,9 +71,9 @@ export function cropAsset(crop: GardenCrop) {
 export function bedCropSymbols(crops: readonly GardenCrop[]) {
   const visible = crops.filter(crop => cropSymbolCount(crop) > 0).slice().sort((a, b) => a.cycleId.localeCompare(b.cycleId))
   const symbols: { crop: GardenCrop; index: number }[] = []
-  for (let round = 0; round < 16 && symbols.length < 48; round++) {
+  for (let round = 0; round < 6 && symbols.length < 12; round++) {
     for (const crop of visible) {
-      if (round < cropSymbolCount(crop) && symbols.length < 48) symbols.push({ crop, index: round })
+      if (round < cropSymbolCount(crop) && symbols.length < 12) symbols.push({ crop, index: round })
     }
   }
   return symbols

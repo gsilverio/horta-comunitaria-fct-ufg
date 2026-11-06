@@ -312,3 +312,19 @@ Setores com plantio confirmado nos cultivos retornados pela API recebem grama tr
 ### Foco e detalhes na panorâmica
 
 A seleção de canteiros aproxima a câmera em uma transição de 320 ms, limitada pelo tamanho da peça e pelo espaço disponível ao lado das informações. Movimento reduzido aplica o enquadramento imediatamente. Interações manuais cancelam a animação; Enquadrar horta restaura a câmera geral. O painel fica abaixo da cena em telas pequenas. O link de detalhes usa gardenId e entityId do mapa confirmado, com retorno explícito ao panorama. A página existente do canteiro também apresenta código, medidas reais e início de vigência da área/setor, além dos cultivos, plantios e históricos já disponíveis. Nenhum contrato ou migration de backend mudou.
+
+## Revisão visual de 04/11/2026
+
+Reestruturadas a homepage e a gestão tradicional de hortas, setores e canteiros com Tailwind, sem mudanças de runtime, instalação, proxy ou contratos HTTP. Ver o plano em [Reestruturação visual](../planejamento/frontend/Reestruturacao_Visual_Horta.md). Build e lint aprovados. Testes de integração dispensados pelo responsável nesta etapa; não representam validação realizada desta revisão. Cadastro interativo e renderização panorâmica não receberam alterações de código.
+
+### Seleção de horta no header — 06/11/2026
+
+O contexto fica ao lado do operador no header. Ao entrar sem horta definida, a aplicação usa a primeira disponível na ordem retornada pela API; uma URL com horta explícita mantém essa escolha. Com uma única horta, não exibe seletor; com mais de uma, permite alternar. A listagem global e o cadastro continuam acessíveis sem redirecionamento. O catálogo de seleção mantém o carregamento de todas as páginas. Build e lint aprovados; checagem em navegador com respostas simuladas para 0/1/2 hortas, troca de contexto e larguras 320/390/1280 px aprovada, sem integração com API/banco reais.
+
+### DataGrid da listagem de hortas — 06/11/2026
+
+Componentes reutilizáveis Metronic disponíveis em `src/components/ui`, `data-grid`, `libs`, `helpers`, `image-input` e `stepper`, sem importar tema global ou layouts do EasyDFe. O uso nesta etapa se limita à listagem de hortas. A paginação continua na API, com tamanho e página na URL; status, ações de manutenção e histórico usam os contratos atuais. A integração com TanStack Table usa a diretiva `use no memo` nos componentes da tabela; o lint mantém um aviso informativo de incompatibilidade com memoização automática, sem desabilitar regras de hooks. Autenticação, cadastros fiscais e formulários específicos do EasyDFe não fazem parte dos componentes reutilizáveis copiados.
+
+### Navegação e catálogo de cultivo — 06/11/2026
+
+Miniaturas em Espécies/Cultivares e navegação de seções reorganizada, conforme o README do frontend. Mantidos runtime, proxy, contratos e endpoints existentes de espécie/imagem. Build aprovado e lint sem erros (aviso já existente do DataGrid). Validação no navegador com respostas simuladas; testes de integração continuam dispensados pelo responsável nesta fase.
