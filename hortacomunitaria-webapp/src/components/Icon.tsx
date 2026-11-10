@@ -7,6 +7,7 @@ const paths: Record<string, string> = {
   producao: 'M3 8l9-5 9 5-9 5z M3 8v10l9 4 9-4V8 M12 13v9 M7 5l10 6',
   atividades: 'M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8 M17 4a4 4 0 010 7 M22 21v-2a4 4 0 00-3-4',
   ocorrencias: 'M12 3L2 21h20z M12 9v5 M12 17v1',
+  fotos: 'M4 7h3l2-3h6l2 3h3v13H4z M12 17a4 4 0 100-8 4 4 0 000 8',
   custos: 'M12 2v20 M17 6H9a3 3 0 000 6h6a3 3 0 010 6H6',
   chevron: 'M9 5l7 7-7 7', menu: 'M4 6h16 M4 12h16 M4 18h16', close: 'M6 6l12 12 M18 6L6 18',
   plus: 'M12 5v14 M5 12h14', filter: 'M3 5h18 M6 12h12 M9 19h6',

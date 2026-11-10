@@ -9,11 +9,14 @@ import { gardenApi } from "../services/GardenApi";
 import { GardenForm, GardenReview } from "../components/GardenForm";
 import { CatalogStatusFilter } from "../components/CatalogStatusFilter";
 import {
+  CreateLink,
   OrganizationHeading,
   OrganizationTrail,
 } from "../components/OrganizationLayout";
 import { useOrganizationList } from "../hooks/useOrganizationList";
 import { GardenDataGrid } from "../components/GardenDataGrid";
+import { SectorCollection } from "./SectorCollection";
+import { routeHref } from "../../../hooks/useRoute";
 import { navigationItems } from "../../../components/navigationItems";
 
 export function GardenPage({
@@ -26,7 +29,7 @@ export function GardenPage({
   if (route.id === "novo")
     return (
       <>
-        <OrganizationTrail current="Nova horta" />
+        <OrganizationTrail current="Nova horta" withGarden={false} />
         <GardenForm
           garden=""
           saved={(record) => {
@@ -46,8 +49,7 @@ function GardenList({ route }: { route: RecordRoute }) {
   const load = useCallback((signal: AbortSignal) => gardenApi.list({ page, pageSize, isActive }, signal), [page, pageSize, isActive]);
   const result = useRemote(page + '/' + pageSize + '/' + status + '/' + revision, load);
   return <>
-    <OrganizationTrail />
-    <OrganizationHeading eyebrow="Organização" title="Hortas" description={destination ? 'Escolha uma horta para acessar ' + destination.label + '.' : 'Gerencie os dados, a situação e a configuração das suas hortas.'} />
+    <OrganizationHeading title="Hortas" description={destination ? 'Escolha uma horta para acessar ' + destination.label + '.' : 'Gerencie os dados, a situação e a configuração das suas hortas.'} action={<CreateLink href={routeHref('', 'horta', 'hortas', 'novo')}>Nova horta</CreateLink>} />
     <GardenDataGrid {...result} page={page} pageSize={pageSize} changePage={changePage} changePageSize={changePageSize} retry={retry} filter={<CatalogStatusFilter value={status} change={changeStatus} />} destination={destination ? { id: destination.id, label: destination.label, resource: destination.items[0].id } : undefined} />
   </>;
 }
@@ -104,6 +106,9 @@ function GardenDetail({
         active={record?.isActive === true}
         catalog
         deactivationInitiallyOpen={route.search.get('inactivate') === '1'}
+        hideBack
+        eyebrow="Horta"
+        actions={record?.isActive && route.garden === record.id ? <><a className="action-link secondary" href={routeHref(record.id, 'horta', 'interativa')}>Abrir mapa</a><CreateLink href={routeHref(record.id, 'horta', 'setores', 'novo')}>Novo setor</CreateLink></> : undefined}
         back={back}
         edit={() =>
           navigate(
@@ -124,6 +129,7 @@ function GardenDetail({
               ]
             : []
         }
+        sections={record && route.garden === record.id ? [{ id: "setores", label: "Setores", content: <SectorCollection route={route} /> }] : []}
       />
     </>
   );

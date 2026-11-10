@@ -22,6 +22,7 @@ const InstitutionPage = lazy(() => import("../features/activities/pages/Institut
 const ActivityPage = lazy(() => import("../features/activities/pages/ActivityPage").then(module => ({ default: module.ActivityPage })))
 const OccurrencePage = lazy(() => import("../features/occurrences/pages/OccurrencePage").then(module => ({ default: module.OccurrencePage })))
 const FinancialEntryPage = lazy(() => import("../features/costs/pages/FinancialEntryPage").then(module => ({ default: module.FinancialEntryPage })))
+const EvidenceGalleryPage = lazy(() => import("../features/evidence/pages/EvidenceGalleryPage").then(module => ({ default: module.EvidenceGalleryPage })))
 import type { RecordRoute } from "../types/records"
 export function FeatureContent(props: { route: RecordRoute; saved: (message: string) => void }) { return <Suspense fallback={<p role="status">Carregando área…</p>}><WorkflowPrerequisites key={`${props.route.garden}/${props.route.module}/${props.route.resource}/${props.route.id}`} route={props.route}><ResourceContent {...props} /></WorkflowPrerequisites></Suspense> }
 function ResourceContent({ route, saved }: { route: RecordRoute; saved: (message: string) => void }) { switch (route.module + "/" + route.resource) {
@@ -46,5 +47,6 @@ case "atividades/insumos": return <AgriculturalInputPage route={route} saved={sa
 case "atividades/instituicoes": return <InstitutionPage route={route} saved={saved} />
 case "atividades/registros": return <ActivityPage route={route} saved={saved} />
 case "ocorrencias/registros": return <OccurrencePage route={route} saved={saved} />
+case "fotos/galeria": return <EvidenceGalleryPage route={route} />
 case "custos/registros": return <FinancialEntryPage route={route} saved={saved} />
 default: return <section className="panel"><h2>Destino não encontrado</h2><p>Escolha uma área disponível na navegação.</p></section> } }

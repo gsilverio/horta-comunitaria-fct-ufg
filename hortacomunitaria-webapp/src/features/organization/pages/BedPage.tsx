@@ -1,3 +1,4 @@
+import { EvidenceSection } from "../../evidence/pages/EvidenceSection"
 import { BedCultivation } from '../../cultivation/pages/BedCultivation'
 import { CultivationCycleForm } from '../../cultivation/components/CultivationCycleForm'
 import { BedPlantingPage } from '../../cultivation/pages/BedPlantingPage'
@@ -18,6 +19,7 @@ import { organizationBrowseApi } from '../services/organizationBrowseApi'
 import { BedForm } from '../components/BedForm'
 import { BedContext } from '../components/BedContext'
 import { BedSetupForm } from '../components/BedSetupForm'
+import { BedRowAction } from '../components/BedRowAction'
 import { CatalogStatusFilter } from '../components/CatalogStatusFilter'
 import { OrganizationCollection, OrganizationHeading, OrganizationRow, OrganizationTrail } from '../components/OrganizationLayout'
 import { useOrganizationList } from '../hooks/useOrganizationList'
@@ -51,7 +53,7 @@ function BedList({ route }: { route: RecordRoute }) {
   return <><OrganizationTrail current="Todos os canteiros" /><OrganizationHeading eyebrow={garden.name} title="Todos os canteiros" description="Consulte os canteiros da horta, inclusive os cadastros que ainda precisam de área ou setor." />
     {options.error && <Failure error={options.error} retry={options.retry} />}
     <OrganizationCollection title="Canteiros da horta" {...result} retry={retry} changePage={changePage} emptyTitle="Nenhum canteiro nesta seleção" emptyText="Para cadastrar, volte aos setores e escolha onde o canteiro ficará." filter={<CatalogStatusFilter value={status} change={changeStatus} />}>
-      {result.data?.items.map(bed => { const sector = options.data?.irrigationSector?.find(item => item.id === bed.sectorAssignment?.sectorId); return <OrganizationRow key={bed.id} title={bed.name} description={`${bed.sectorAssignment ? sector?.label ?? 'Setor associado' : 'Sem setor na data atual'} · ${bed.configuration ? formatNumber(bed.configuration.cultivableAreaM2) + ' m²' : 'Área pendente'}`} status={!bed.isActive ? 'Inativo' : !bed.configuration || !bed.sectorAssignment ? 'Cadastro pendente' : undefined} href={routeHref(route.garden, 'horta', 'canteiros', bed.id)} action="Ver canteiro" /> })}
+      {result.data?.items.map(bed => { const sector = options.data?.irrigationSector?.find(item => item.id === bed.sectorAssignment?.sectorId); return <OrganizationRow key={bed.id} title={bed.name} description={`${bed.sectorAssignment ? sector?.label ?? 'Setor associado' : 'Sem setor na data atual'} · ${bed.configuration ? formatNumber(bed.configuration.cultivableAreaM2) + ' m²' : 'Área pendente'}`} status={!bed.isActive ? 'Inativo' : !bed.configuration || !bed.sectorAssignment ? 'Cadastro pendente' : undefined} statusTone={bed.isActive ? 'warning' : 'invalid'} actions={<BedRowAction garden={route.garden} bed={bed} sectorId={bed.sectorAssignment?.sectorId} writable={garden.isActive} />} href={routeHref(route.garden, 'horta', 'canteiros', bed.id)} action="Ver canteiro" /> })}
     </OrganizationCollection><div className="organization-secondary-links"><a href={routeHref(route.garden, 'horta', 'setores')}>← Voltar aos setores</a></div>
   </>
 }
@@ -71,9 +73,9 @@ function BedDetail({ route, saved }: { route: RecordRoute; saved: (message: stri
   if (plantingCycle && record && record.isActive && garden.isActive) return <><OrganizationTrail sector={sector.data} current={record.name} /><BedPlantingPage key={plantingCycle} garden={route.garden} bedId={record.id} cycleId={plantingCycle} saved={() => { saved('Plantio registrado neste canteiro.'); state.refresh(); detail() }} cancel={detail} /></>
   if (route.search.get('edit') === '1' && record) return <><OrganizationTrail sector={sector.data} current="Editar canteiro" /><BedForm garden={route.garden} original={record} saved={() => { saved('Canteiro atualizado.'); state.refresh(); detail() }} cancel={detail} /></>
   if (route.search.get('setup') === '1' && record && record.isActive && garden.isActive) return <><OrganizationTrail sector={sector.data} current={record.name} /><BedSetupForm garden={route.garden} bed={record} sectorId={sectorId} saved={confirmed => { saved('Canteiro cadastrado.'); state.refresh(); navigate(route.garden, 'horta', 'canteiros', confirmed.id, new URLSearchParams({ sectorId: confirmed.sectorAssignment?.sectorId ?? sectorId })) }} cancel={detail} /></>
-  return <>{fromPanorama && <a className="action-link secondary mb-4" href={routeHref(route.garden, 'visao-geral', 'painel')}>Voltar à panorâmica</a>}<OrganizationTrail sector={sector.data} current={record?.name ?? 'Canteiro'} />
+  return <>{fromPanorama && <a className="action-link secondary mb-3" href={routeHref(route.garden, 'visao-geral', 'painel')}>Voltar à panorâmica</a>}<OrganizationTrail sector={sector.data} current={record?.name ?? 'Canteiro'} />
     {sector.error && <Failure error={sector.error} />}
-    <RecordDetail compact state={state} title={record?.name ?? 'Canteiro'} version={record?.version ?? 0} active={record?.isActive === true} catalog back={() => fromPanorama ? navigate(route.garden, 'visao-geral', 'painel') : navigate(route.garden, 'horta', sectorId ? 'setores' : 'canteiros', sectorId)} edit={() => navigate(route.garden, 'horta', 'canteiros', route.id, new URLSearchParams({ ...(sectorId ? { sectorId } : {}), edit: '1' }))} items={record ? [
+    <RecordDetail attachments={record && <EvidenceSection garden={route.garden} targetType="Bed" targetId={record.id} active={record.isActive} />} compact hideBack={!fromPanorama} state={state} eyebrow={sector.data?.name ?? garden.name} title={record?.name ?? 'Canteiro'} description={record ? `${record.sectorAssignment ? sector.data?.name ?? 'Setor associado' : 'Sem setor associado'} · ${record.configuration ? `${formatNumber(record.configuration.cultivableAreaM2)} m² de área cultivável` : 'Área ainda não informada'}` : undefined} banner={record && record.isActive && garden.isActive && (!record.configuration || !record.sectorAssignment) ? <div className="next-step"><h3>Falta completar o cadastro</h3><p>Confirme a área e o setor para deixar este canteiro organizado.</p><a className="action-link" href={routeHref(route.garden, 'horta', 'canteiros', route.id, new URLSearchParams({ ...(sectorId ? { sectorId } : {}), setup: '1' }))}>Completar cadastro</a></div> : undefined} sections={record ? [{ id: 'cultivos', label: 'Cultivos', content: <BedCultivation garden={route.garden} bed={record} /> }, { id: 'vigencia', label: 'Área e setor', content: <BedContext garden={route.garden} bed={record} changed={state.refresh} /> }] : []} version={record?.version ?? 0} active={record?.isActive === true} catalog back={() => fromPanorama ? navigate(route.garden, 'visao-geral', 'painel') : navigate(route.garden, 'horta', sectorId ? 'setores' : 'canteiros', sectorId)} edit={() => navigate(route.garden, 'horta', 'canteiros', route.id, new URLSearchParams({ ...(sectorId ? { sectorId } : {}), edit: '1' }))} items={record ? [
       { label: 'Código do canteiro', value: record.code },
       { label: 'Setor atual', value: record.sectorAssignment ? sector.data?.name ?? 'Carregando setor…' : 'Ainda não associado' },
       { label: 'Área cultivável', value: record.configuration ? `${formatNumber(record.configuration.cultivableAreaM2)} m²` : 'Ainda não informada' },
@@ -82,10 +84,6 @@ function BedDetail({ route, saved }: { route: RecordRoute; saved: (message: stri
       ...(record.configuration ? [{ label: 'Área válida desde', value: formatDate(record.configuration.validFrom) }] : []),
       ...(record.sectorAssignment ? [{ label: 'Setor associado desde', value: formatDate(record.sectorAssignment.validFrom) }] : []),
       ...(record.location ? [{ label: 'Localização', value: record.location }] : []),
-    ] : []}>
-      {record && record.isActive && garden.isActive && (!record.configuration || !record.sectorAssignment) && <div className="next-step"><h3>Falta completar o cadastro</h3><p>Confirme a área e o setor para deixar este canteiro organizado.</p><a className="action-link" href={routeHref(route.garden, 'horta', 'canteiros', route.id, new URLSearchParams({ ...(sectorId ? { sectorId } : {}), setup: '1' }))}>Completar cadastro</a></div>}
-      {record && <BedCultivation garden={route.garden} bed={record} />}
-      {record && <details className="organization-disclosure"><summary>Consultar ou alterar área e setor por data</summary><BedContext garden={route.garden} bed={record} changed={state.refresh} /></details>}
-    </RecordDetail>
+    ] : []} />
   </>
 }

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import type { ColumnDef, VisibilityState } from '@tanstack/react-table'
-import { EllipsisVertical, Plus, RefreshCw, Settings2 } from 'lucide-react'
+import { EllipsisVertical, RefreshCw, Settings2 } from 'lucide-react'
 import { DataGrid } from '../../../components/data-grid/data-grid'
 import { DataGridTable } from '../../../components/data-grid/data-grid-table'
 import { DataGridColumnVisibility } from '../../../components/data-grid/data-grid-column-visibility'
@@ -10,7 +10,7 @@ import { DataGridPagination } from '../../../components/data-grid/data-grid-pagi
 import { Button } from '../../../components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '../../../components/ui/dropdown-menu'
 import { Failure } from '../../../components/Feedback'
-import { routeHref } from '../../../hooks/useRoute'
+import { navigate, routeHref } from '../../../hooks/useRoute'
 import type { Garden } from '../types/Garden'
 import type { ApiFailure, Page } from '../../../types/api'
 
@@ -33,12 +33,12 @@ export function GardenDataGrid({ data, loading, error, page, pageSize, changePag
   const columns = useMemo<ColumnDef<Garden>[]>(() => [
     { accessorKey: 'name', header: 'Horta', meta: { headerTitle: 'Horta' }, enableHiding: false, size: 260,
       cell: ({ row }) => <a className="font-semibold text-horta-forest hover:underline" href={routeHref(row.original.id, 'horta', 'hortas', row.original.id)}>{row.original.name}</a> },
-    { accessorKey: 'location', header: 'Localização', meta: { headerTitle: 'Localização' }, size: 260,
+    { accessorKey: 'location', header: 'Localização', meta: { headerTitle: 'Localização', headerClassName: 'hidden sm:table-cell', cellClassName: 'hidden sm:table-cell' }, size: 260,
       cell: ({ row }) => row.original.location || <span className="text-horta-muted">Não informada</span> },
     { accessorKey: 'isActive', header: 'Situação', meta: { headerTitle: 'Situação' }, size: 120,
-      cell: ({ row }) => <span className="badge">{row.original.isActive ? 'Ativa' : 'Inativa'}</span> },
+      cell: ({ row }) => <span className={row.original.isActive ? 'badge' : 'badge invalid'}>{row.original.isActive ? 'Ativa' : 'Inativa'}</span> },
     { id: 'actions', header: 'Ações', meta: { headerTitle: 'Ações' }, enableHiding: false, size: 90,
-      cell: ({ row }) => <GardenActions garden={row.original} destination={destination} /> },
+      cell: ({ row }) => <div onClick={event => event.stopPropagation()}><GardenActions garden={row.original} destination={destination} /></div> },
   ], [destination])
   const rows = !loading && !error ? data?.items ?? [] : []
   const table = useReactTable({
@@ -53,26 +53,25 @@ export function GardenDataGrid({ data, loading, error, page, pageSize, changePag
       else changePage(next.pageIndex + 1)
     },
   })
-  return <section className="garden-data-grid overflow-hidden rounded-xl border border-horta-line bg-white text-horta-ink shadow-xs" aria-label="Listagem de hortas" aria-busy={loading}>
-    <DataGrid table={table} recordCount={data?.totalCount ?? 0} isLoading={loading} loadingMode="skeleton" emptyMessage={error ? 'Não foi possível carregar as hortas.' : 'Nenhuma horta nesta seleção. Cadastre uma horta ou altere o filtro de situação.'} tableClassNames={{ base: 'min-w-[640px]', headerRow: '[&>th]:border-horta-line', bodyRow: '[&>td]:border-horta-line' }} tableLayout={{ headerBackground: true, headerBorder: true, rowBorder: true, width: 'auto' }}>
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-horta-line p-4 sm:px-5">
-        <Button asChild><a href={routeHref('', 'horta', 'hortas', 'novo')}><Plus />Nova horta</a></Button>
-        <div className="flex flex-wrap items-center gap-3">{filter}<DataGridColumnVisibility table={table} trigger={<Button variant="outline"><Settings2 />Colunas</Button>} onReset={() => table.resetColumnVisibility()} /></div>
+  return <section className="garden-data-grid panel flush text-horta-ink" aria-label="Listagem de hortas" aria-busy={loading}>
+    <DataGrid table={table} recordCount={data?.totalCount ?? 0} isLoading={loading} loadingMode="skeleton" emptyMessage={error ? 'Não foi possível carregar as hortas.' : 'Nenhuma horta nesta seleção. Cadastre uma horta ou altere o filtro de situação.'} onRowClick={garden => destination ? navigate(garden.id, destination.id, destination.resource) : navigate(garden.id, 'horta', 'hortas', garden.id)} tableClassNames={{ headerRow: '[&>th]:border-horta-line', bodyRow: '[&>td]:border-horta-line' }} tableLayout={{ headerBackground: true, headerBorder: true, rowBorder: true, width: 'auto' }}>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-horta-line px-1 py-2">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" type="button" className="size-11" disabled={loading} aria-label="Atualizar listagem de hortas" onClick={retry}><RefreshCw className={loading ? 'animate-spin' : ''} /></Button>
+          <span className="text-[13px] text-horta-muted" role="status">{loading ? 'Carregando hortas…' : error ? 'Consulta indisponível' : `${data?.totalCount ?? 0} horta(s)`}</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">{filter}<DataGridColumnVisibility table={table} trigger={<Button variant="outline" className="h-11"><Settings2 />Colunas</Button>} onReset={() => table.resetColumnVisibility()} /></div>
       </div>
-      <div className="flex items-center gap-3 border-b border-horta-line bg-horta-canvas/30 px-4 py-2">
-        <Button variant="ghost" size="icon" type="button" disabled={loading} aria-label="Atualizar listagem de hortas" onClick={retry}><RefreshCw className={loading ? 'animate-spin' : ''} /></Button>
-        <span className="text-sm text-horta-muted" role="status">{loading ? 'Carregando hortas…' : error ? 'Consulta indisponível' : `${data?.totalCount ?? 0} horta(s)`}</span>
-      </div>
-      {error && <div className="p-4"><Failure error={error} retry={retry} /></div>}
-      <div className="max-h-[60dvh] overflow-auto" role="region" aria-label="Tabela de hortas" tabIndex={0}><DataGridTable /></div>
-      <fieldset disabled={loading || !!error} className="min-w-0 border-t border-horta-line px-4 py-3"><DataGridPagination sizes={[10, 25, 50, 100]} info={data?.totalCount ? '{from}–{to} de {count} hortas' : 'Nenhuma horta encontrada'} /></fieldset>
+      {error && <div className="p-3"><Failure error={error} retry={retry} /></div>}
+      <div className="max-h-[68dvh] overflow-auto" role="region" aria-label="Tabela de hortas" tabIndex={0}><DataGridTable /></div>
+      <fieldset disabled={loading || !!error} className="min-w-0 border-t border-horta-line px-1 py-2"><DataGridPagination sizes={[10, 25, 50, 100]} info={data?.totalCount ? '{from}–{to} de {count} hortas' : 'Nenhuma horta encontrada'} /></fieldset>
     </DataGrid>
   </section>
 }
 
 function GardenActions({ garden, destination }: { garden: Garden; destination?: GardenDataGridProps['destination'] }) {
   const detail = routeHref(garden.id, 'horta', 'hortas', garden.id)
-  return <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label={`Ações da horta ${garden.name}`}><EllipsisVertical /></Button></DropdownMenuTrigger>
+  return <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="size-11" aria-label={`Ações da horta ${garden.name}`}><EllipsisVertical /></Button></DropdownMenuTrigger>
     <DropdownMenuContent align="end" className="w-52">
       {destination && <DropdownMenuItem asChild><a href={routeHref(garden.id, destination.id, destination.resource)}>Abrir {destination.label}</a></DropdownMenuItem>}
       <DropdownMenuItem asChild><a href={detail}>Dados e histórico</a></DropdownMenuItem>

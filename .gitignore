@@ -74,5 +74,14 @@ logs/
 Thumbs.db
 Desktop.ini
 
+# Preferências locais do Claude e cache Python das skills
+.claude/settings.local.json
+CLAUDE.local.md
+.claude/**/__pycache__/
+.claude/**/*.pyc
+
 # Versionar migrations do EF, arquivos de lock dos pacotes,
 # configurações compartilhadas e entregas finais PDF/DOCX em documentos/.
+
+# Fotografias armazenadas localmente pela API (protótipo)
+HortaComunitaria.Api/App_Data/

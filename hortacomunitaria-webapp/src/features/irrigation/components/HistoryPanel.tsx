@@ -124,7 +124,7 @@ export function HistoryPanel({
 }) {
   return (
     <section className="panel" aria-labelledby="history-title">
-      <span className="eyebrow">Rastreabilidade</span>
+      
       <h2 id="history-title">Histórico do registro</h2>
       <ol className="timeline">
         {data.items.map((entry) => (

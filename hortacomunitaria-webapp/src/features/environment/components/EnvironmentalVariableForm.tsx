@@ -1,7 +1,7 @@
 import { readRoute } from "../../../hooks/useRoute"
 import { useState } from "react"
 import { EditorFrame } from "../../../components/EditorFrame"
-import { Field, Facts, Toggle } from "../../../components/Fields"
+import { Field, Facts, Toggle, Group } from "../../../components/Fields"
 import { Failure } from "../../../components/Feedback"
 import { useEditor } from "../../../hooks/useEditor"
 import { useLookups } from "../../../hooks/useLookups"
@@ -26,14 +26,18 @@ quantity: draft.quantity.trim(),
 referenceUnit: draft.referenceUnit.trim(),
 description: optionalText(draft.description),
 } }
-return <EditorFrame dependenciesReady={!options.loading && !options.error} requireActiveGarden={false} title={original ? "Corrigir: Variável ambiental" : "Novo: Variável ambiental"} busy={editor.busy} uncertain={!!editor.attempt || editor.catalogUncertain} catalogUncertain={editor.catalogUncertain} error={editor.error} reason={original ? editor.reason : undefined} changeReason={original ? editor.setReason : undefined} submit={() => void editor.submit(values)} cancel={cancel} conflict={original ? () => void editor.reloadConflict() : undefined} review={editor.review && <Facts items={[{ label: "Versão", value: editor.review.version }, { label: "Valores atuais", value: <EnvironmentalVariableReview record={editor.review} /> }]} />} acceptReview={editor.acceptReview}>
+return <EditorFrame dependenciesReady={!options.loading && !options.error} requireActiveGarden={false} title={original ? "Corrigir variável ambiental" : "Nova variável ambiental"} busy={editor.busy} uncertain={!!editor.attempt || editor.catalogUncertain} catalogUncertain={editor.catalogUncertain} error={editor.error} reason={original ? editor.reason : undefined} changeReason={original ? editor.setReason : undefined} submit={() => void editor.submit(values)} cancel={cancel} conflict={original ? () => void editor.reloadConflict() : undefined} review={editor.review && <Facts items={[{ label: "Versão", value: editor.review.version }, { label: "Valores atuais", value: <EnvironmentalVariableReview record={editor.review} /> }]} />} acceptReview={editor.acceptReview}>
 {options.loading && <p role="status">Carregando cadastros de apoio…</p>}{options.error && <Failure error={options.error} retry={options.retry} />}
-<div className="grid min-w-0 gap-4 sm:grid-cols-2">
-<Toggle label="Esta variável mede umidade do solo" checked={draft.isSoilMoisture} change={value => change("isSoilMoisture", value)} />
+<div className="grid min-w-0 gap-5">
+<Group title="Identificação">
 <Field name="name" label="Nome" required type="text" value={draft.name} change={value => change("name", value)} error={editor.error} />
+<Field name="description" label="Descrição" type="textarea" value={draft.description} change={value => change("description", value)} error={editor.error} />
+</Group>
+<Group title="Medição">
 <Field name="quantity" label="Grandeza" required type="text" value={draft.quantity} change={value => change("quantity", value)} error={editor.error} />
 <Field name="referenceUnit" label="Unidade de referência" required type="text" value={draft.referenceUnit} change={value => change("referenceUnit", value)} error={editor.error} />
-<Field name="description" label="Descrição" type="textarea" value={draft.description} change={value => change("description", value)} error={editor.error} />
+<Toggle label="Esta variável mede umidade do solo" checked={draft.isSoilMoisture} change={value => change("isSoilMoisture", value)} />
+</Group>
 </div></EditorFrame>
 }
 export function EnvironmentalVariableReview({ record }: { record: EnvironmentalVariable }) { const options = useLookups(readRoute().garden, []); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Nome', value: record.name }, { label: 'Umidade do solo', value: record.isSoilMoisture ? 'Sim' : 'Não' }, { label: 'Grandeza', value: record.quantity }, { label: 'Unidade de referência', value: record.referenceUnit }, { label: 'Descrição', value: record.description }]} /></> }

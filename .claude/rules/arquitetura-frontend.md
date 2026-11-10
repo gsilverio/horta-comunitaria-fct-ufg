@@ -1,0 +1,120 @@
+---
+paths:
+  - "hortacomunitaria-webapp/**/*"
+  - ".codex/arquitetura-frontend.mdc"
+  - "documentos/planejamento/frontend/**/*"
+---
+
+<!-- Gerado de .codex/arquitetura-frontend.mdc. Não editar este espelho; executar .claude/scripts/sync-architecture.ps1. -->
+
+# Regras de arquitetura do frontend da horta
+
+Este arquivo adapta `dotnet-btsa-frontend.mdc`, fornecido pelo responsável pelo projeto, ao domínio da horta e aos contratos existentes. O projeto de referência não é uma dependência; suas regras financeiras, nomes e caminhos não se aplicam aqui.
+
+O `AGENTS.md` da raiz orienta a leitura integral deste documento antes de planejar, implementar ou revisar o frontend. Os metadados MDC delimitam o escopo para ferramentas compatíveis; o Codex segue a referência explícita do `AGENTS.md`, sem depender de aplicação automática pela extensão.
+
+## 1. Escopo e stack
+
+- React, TypeScript, Vite e Tailwind CSS no projeto existente `hortacomunitaria-webapp/`. Tailwind é a base obrigatória de estilização, por decisão do responsável em 08/10/2026. Preservar esse nome e localização; não criar uma segunda aplicação em `frontend/`.
+- Fontes funcionais: [requisitos 0.0.1](../../documentos/Documento_Tecnico_Requisitos_Horta.md), [planejamento do MVP](../../documentos/planejamento/mvp/README.md), [planejamento completo do frontend](../../documentos/planejamento/frontend/README.md) e plano autorizado do fluxo. Para irrigação, ler o [contrato](../../documentos/planejamento/mvp-irrigacao/Contrato_Fluxo.md), a [etapa 4](../../documentos/planejamento/mvp-irrigacao/Etapa_04_Interface_PO.md) e o OpenAPI real da API. A [modelagem preliminar](../../documentos/arquitetura/Modelagem_Preliminar_Dados_Horta.md) não define contratos TypeScript.
+- Consumir a API HTTP existente. Regras de integridade, autoria, persistência, auditoria e cálculo dos indicadores permanecem no servidor, conforme a [arquitetura do backend](arquitetura-backend.md).
+- Priorizar o fluxo autorizado completo e utilizável. No primeiro fluxo: contexto, registro manual, lista, detalhe, consumo, correção, invalidação e histórico. Não criar telas de módulos futuros apenas para preencher navegação.
+- Autenticação e autorização pertencem ao pós-MVP. A interface local identifica dados fictícios e autoria demonstrativa; responsável pelo trabalho e autor do registro são papéis distintos. Não adicionar login, tokens ou administração de usuários nesta etapa.
+- Estas regras não iniciam a implementação nem aprovam hipóteses funcionais pendentes. Mudanças na API exigem leitura integral das regras do backend e verificação dos contratos afetados.
+- Preservar a stack existente. Na implementação, fixar versões compatíveis das dependências diretas e do runtime Node, versionar o lockfile e documentar instalação reproduzível com `npm ci`. Não atualizar majors ou adicionar roteador, estado global, cache, biblioteca visual/formulários ou gerador de clientes sem necessidade concreta.
+
+## 2. Organização por responsabilidade e fluxo
+
+- `src/features/{feature}/` reúne páginas, componentes, hooks, serviços e tipos específicos de um fluxo. Criar somente as pastas que tiverem consumidores reais; isso não espelha entidades ou camadas internas do backend.
+- `pages/` compõe telas e conecta hooks a componentes. `App.tsx` compõe a aplicação e sua navegação mínima, sem concentrar todo o fluxo.
+- `components/` contém apresentação: dados e callbacks por props, sem chamadas HTTP. Componentes compartilhados entre fluxos ficam em `src/components/`; componentes usados apenas na irrigação permanecem nessa feature.
+- `hooks/` coordena estado de tela, consultas e comandos pelos serviços. Não renderiza UI, define rotas HTTP ou acessa Axios diretamente.
+- `services/` da feature define operações HTTP e contratos de entrada/saída, usando o cliente comum de `src/services/http.ts`. Não guarda estado de formulário nem importa páginas, componentes ou hooks.
+- `types/` da feature contém contratos e tipos utilizados por mais de um arquivo dela. Tipos de uma única implementação ficam próximos ao consumidor; `src/types/` recebe apenas contratos realmente compartilhados, como paginação e erros.
+- Conversão de formulário, apresentação de datas e números ficam em funções pequenas próximas ao fluxo; extrair compartilhamento somente quando houver uso real. Não criar services/repositories genéricos ou uma interface para cada função.
+
+Estrutura ilustrativa, a evoluir durante a implementação:
+
+```text
+hortacomunitaria-webapp/
+  src/
+    features/
+      irrigation/
+        pages/
+        components/
+        hooks/
+        services/
+        types/
+    components/
+    services/http.ts
+    types/
+    App.tsx
+    main.tsx
+```
+
+## 3. Contratos e cliente HTTP
+
+- Usar uma instância Axios comum, com URL base, timeout e tratamento central de erros. Instalar essa dependência quando a integração HTTP for implementada; estas regras não exigem modificar agora o template existente.
+- Serviços constroem métodos, rotas e parâmetros. Componentes/páginas não chamam `axios`/`fetch` diretamente. Receber contexto explícito, incluindo `gardenId`, em operações que dependem da horta; não ocultá-lo em estado global do cliente HTTP.
+- Tipos refletem o JSON real: camelCase, UUIDs como strings, instantes/datas como strings no transporte, enums como uniões dos valores PascalCase aceitos e campos nullable explícitos. Não reutilizar entidades C# ou inventar endpoints/campos a partir da modelagem.
+- `Page<T>` segue os campos da API: items, page, pageSize, totalCount, totalPages, hasPreviousPage e hasNextPage. Listas/histórico são paginados; seletores carregam todas as páginas necessárias ou oferecem busca/paginação explícita. Não assumir que a primeira página contém todo o catálogo.
+- Normalizar `ProblemDetails`, status HTTP, code, errors por campo e traceId, além de falhas de rede e timeout. Tratar o payload de erro como desconhecido até conferir seu formato; um generic TypeScript ou uma coerção não valida dados em runtime.
+- Apresentar erros de campo junto aos controles, mensagem geral útil e opção de tentar novamente quando cabível. Preservar traceId da resposta/cabeçalho `X-Trace-Id` para diagnóstico. Cancelamento intencional não aparece como falha ao usuário.
+- Consultas recebem `AbortSignal`. Cancelar ao desmontar ou mudar o contexto e descartar respostas antigas por contexto/tentativa, inclusive quando o transporte já concluiu. Cancelar uma requisição de escrita não prova que a transação no servidor foi desfeita.
+- Configurações públicas usam `VITE_*` ou proxy local. Variáveis do Vite expostas ao cliente não guardam senhas, connection strings ou tokens secretos. Preferir proxy Vite para a API local; se houver acesso direto entre origens, configurar CORS somente para a origem efetivamente usada.
+
+## 4. Estado e coordenação React
+
+- Distinguir carregamento, sucesso com dados, vazio e erro. Dados de um filtro/contexto anterior não podem aparecer como resultado atualizado; se forem mantidos enquanto recarrega, indicar essa condição e bloquear ações incompatíveis.
+- Estado local contém seleção, filtros e rascunho; estado remoto representa respostas confirmadas da API. Derivar apresentação dos dados existentes sem duplicar valores em estado por Effects desnecessários.
+- Effects sincronizam sistemas externos, com cleanup e dependências corretas. Envio de comandos ocorre por interação explícita, nunca por Effect de montagem ou mudança de estado. Manter hooks compatíveis com StrictMode e as regras de hooks/lint.
+- Compartilhar um recorte explícito de período/setor entre lista e consumo. Requisições distintas não prometem um snapshot único; após gravar, recarregar as consultas afetadas.
+- Ao mudar horta, limpar setor, canteiros e responsável incompatíveis. Ao mudar setor ou início, refazer a seleção de canteiros pela data local do fato e remover escolhas incompatíveis. Impedir que respostas antigas restaurem seleções da horta anterior.
+- Após sucesso confirmado, atualizar detalhe, histórico, lista e consumo pela API. Não simular persistência em localStorage, fabricar entradas de histórico ou recalcular indicadores para aparentar confirmação. Rascunhos locais, se necessários, devem ser identificados como não salvos.
+- Se a gravação confirmou, mas uma consulta posterior falhou, informar que o registro foi salvo e oferecer recarregar. Não apresentar esse caso como falha de gravação que incentiva outra criação.
+
+## 5. Formulários, medidas e datas
+
+- Formulários controlados, com estado de edição separado do contrato de envio. Preservar texto enquanto a pessoa digita; converter apenas valores completos e válidos na fronteira HTTP. Validar formato/campos antes do envio sem substituir as regras do servidor ou impor novos limites agronômicos.
+- Texto e números vazios representam desconhecido quando o contrato permite null; zero informado permanece 0. Não usar `Number('')`, coerção por falsidade ou valor default que transforme ausência em zero. Mostrar erros sem truncar/arredondar silenciosamente medidas.
+- Entrada e apresentação em pt-BR, com unidades explícitas e conversão decimal consistente. Medidas podem usar number no JSON conforme a API, mas o browser não calcula totais de consumo, fórmulas agronômicas ou volume automático a partir da vazão. Formatar com `Intl.NumberFormat` sem alterar o valor enviado.
+- Datas de calendário usam `YYYY-MM-DD` sem conversão para meia-noite UTC. Instantes de entrada exigem offset; a UI converte explicitamente entre o fuso do fluxo, `America/Sao_Paulo`, e UTC. `datetime-local` não contém fuso: não interpretar silenciosamente seu valor como o fuso do navegador nem fixar um offset para qualquer data.
+- Exibir instantes com fuso explícito e centralizar as conversões usadas pelo formulário. Escolher uma solução de fuso compatível com os navegadores alvo e testá-la com o navegador em outro fuso. Os filtros from/to continuam datas locais inclusivas enviadas à API.
+- Na correção, inicializar com o detalhe confirmado e enviar o formulário completo, inclusive campos nullable explicitamente como null, expectedVersion observada e motivo. Invalidação envia somente os campos definidos pelo seu contrato. Nenhum comando envia autoria arbitrária do cliente.
+
+## 6. Repetição, conflitos e indicadores
+
+- Gerar operationId UUID uma vez por tentativa lógica de criação. Preservar chave e conteúdo em retry após falha de rede/timeout; bloquear envio duplo enquanto aguarda. Uma nova criação legítima usa nova chave. Se o resultado anterior for incerto, resolver essa tentativa antes de tratar conteúdo alterado como outro registro.
+- Em 409, interpretar o code: versão desatualizada, registro invalidado e chave de operação com conteúdo diferente são situações distintas. Preservar rascunho e oferecer recarregar/revisar; nunca trocar expectedVersion e reenviar automaticamente, nem contornar conflito gerando outra operationId sem revisão.
+- Registro invalidado permanece consultável no detalhe/histórico, mas não oferece correção ou reativação. Não expor exclusão física. Histórico vem do endpoint paginado e apresenta autor demonstrativo, motivo, instante e valores antes/depois.
+- Apresentar unidade, período, fuso, cobertura e estimativas do indicador conforme a API. Diferenciar NoData, Unavailable, Partial e Available; null não vira 0 L. Paginar bySector mantém o resumo retornado do recorte inteiro; não somar a página para substituí-lo.
+- Os quatro canteiros do exemplo não multiplicam o volume de uma irrigação. Quantidades do contexto de teste não são limites de catálogo ou dados reais. Não acrescentar cartões de indicadores ainda inexistentes.
+
+## 7. Acessibilidade e apresentação
+
+- HTML semântico, labels vinculados, foco visível e navegação por teclado. Usar elementos nativos antes de implementar controles próprios; associar erros por campo com aria-describedby e aria-invalid.
+- Mensagens de carregamento/resultado relevantes são anunciadas com aria-live quando necessário. Diálogos têm identificação, foco inicial, restauração do foco e funcionamento por teclado. Não depender apenas de cor para informar situação.
+- Layout utilizável em celular e desktop, com campos, unidades, ações e mensagens legíveis. Não exigir rolagem horizontal para registrar irrigação; adaptar listas/tabelas preservando contexto e ações.
+- Usar Tailwind CSS com o plugin oficial de Vite, versões fixas e import no CSS da aplicação. Layout, espaçamento, responsividade e estados usam utilitários nos componentes. Tokens de cores/tipografia ficam em `@theme`; estilos base e padrões visuais realmente reutilizados podem usar `@layer`/`@apply`. Evitar folhas CSS paralelas que recriem a base do Tailwind ou classes montadas dinamicamente que o scanner não detecte. Não instalar outro design system apenas para o primeiro formulário.
+- Textos destinados às pessoas e documentação em pt-BR; identificadores e código em inglês. Exibir explicitamente a autoria demonstrativa, sem representar o operador técnico como pessoa autenticada.
+
+## 8. Qualidade, diagnóstico e entrega
+
+- TypeScript estrito (`strict: true`), sem any ou coerções/non-null assertions para esconder contratos incompletos. Habilitar essa configuração no projeto existente durante a implementação; não silenciar erros de tipos ou regras de hooks para concluir o build.
+- Componentes pequenos, chaves estáveis dos recursos e props/estado tratados como imutáveis. Não adicionar memoização ou estado global por padrão; usar quando houver necessidade demonstrável.
+- Erros técnicos têm diagnóstico no cliente comum com code, status e traceId, sem registrar corpos, motivos, observações, nomes, credenciais ou URLs completas com query. Não serializar indiscriminadamente AxiosError. Não instalar Serilog no browser, sink remoto ou coletor de telemetria apenas para reproduzir o backend; seus logs permanecem no servidor.
+- Rodar `npm run build` e `npm run lint` em `hortacomunitaria-webapp/` após alterações relevantes. O build deve verificar TypeScript e produzir os assets de produção. Conferir a interface em largura de celular e navegação por teclado.
+- Cobrir comportamento significativo: null/zero, conversão de fuso, respostas antigas, paginação dos seletores, retry da criação e conflito que preserva rascunho. Testes de componentes podem complementar, mas não substituir o percurso E2E com API/PostgreSQL reais e dados isolados exigido pela etapa 4: 120 L → 100 L → invalidação/NoData, com histórico.
+- Usar esperas por estados observáveis e dados isolados nos testes, sem sleeps arbitrários ou dependência de banco operacional. Não criar testes para verificar apenas a existência de pastas ou espelhar a implementação.
+- Atualizar README do frontend e [execução local](../../documentos/arquitetura/Execucao_Local.md) com runtime, instalação, URL/proxy, comandos, rotas consumidas e limitações verificadas. Preservar UTF-8; não versionar node_modules, dist, segredos ou artefatos temporários de testes.
+- Registrar evidências da etapa e pendências reais da PO. Build/testes aprovados não equivalem a aceite funcional ou autorização de publicar o protótipo local.
+
+## Referências técnicas
+
+- [React: uso de Effects e estado derivado](https://react.dev/learn/you-might-not-need-an-effect).
+- [Axios: cancelamento com AbortSignal](https://axios-http.com/docs/cancellation).
+- [Vite: variáveis e modos de ambiente](https://vite.dev/guide/env-and-mode).
+- [TypeScript: strict](https://www.typescriptlang.org/tsconfig/strict.html).
+- [Tailwind CSS: integração oficial com Vite](https://tailwindcss.com/docs/installation/using-vite).
+
+Mudanças nestas regras devem acompanhar a justificativa e o alcance da decisão. Evitar arquiteturas paralelas ou exceções silenciosas; manter as decisões internas do frontend neste arquivo e as do backend em seu documento próprio.

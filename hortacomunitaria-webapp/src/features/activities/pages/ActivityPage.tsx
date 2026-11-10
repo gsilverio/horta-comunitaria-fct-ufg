@@ -1,3 +1,5 @@
+import { EvidenceSection } from "../../evidence/pages/EvidenceSection"
+import { RecordRow } from '../../../components/RecordRow'
 import { formatInstant } from "../../irrigation/formValues"
 import { useCallback } from "react"
 import { RecordList } from "../../../components/RecordList"
@@ -39,7 +41,7 @@ return <RecordList title="Atividades" hint="Período da data do registro. Consul
 <SelectField name="isEducational" label="Educacional" value={filters.draft.isEducational} change={value => filters.change("isEducational", value)} options={[{ id: 'true', label: 'Sim' }, { id: 'false', label: 'Não' }]} />
 <SelectField name="institutionId" label="Instituição" value={filters.draft.institutionId} change={value => filters.change("institutionId", value)} options={options.data?.institution ?? []} />
 {options.error && <Failure error={options.error} retry={options.retry} />}</>}>
-{result.data?.items.map(item => <li className="py-4" key={item.id}><a className="font-semibold underline decoration-horta-line underline-offset-4" href={routeHref(route.garden, route.module, route.resource, item.id, route.search)}>{item.title}</a><span className="ml-3 text-sm text-horta-muted">{enumLabels[item.validity]} · v{item.version}</span><small className="record-description">{item.category} · {item.performedOn.split("-").reverse().join("/")}</small></li>)}
+{result.data?.items.map(item => <RecordRow key={item.id} href={routeHref(route.garden, route.module, route.resource, item.id, route.search)} title={item.title} description={`${item.category} · ${item.performedOn.split("-").reverse().join("/")}`} status={item.validity === "Invalid" ? enumLabels[item.validity] : undefined} statusTone="invalid" />)}
 </RecordList>
 }
 function ActivityDetail({ route, saved }: { route: RecordRoute; saved: (message: string) => void }) {
@@ -48,5 +50,5 @@ const audit = useCallback((page: number, signal: AbortSignal) => activityApi.his
 const state = useRecord<Activity>(route.id, get, audit, (version, reason) => activityApi.deactivate(route.garden, route.id, version, reason), () => saved("Alteração confirmada."))
 const record = state.detail.data
 if (route.search.get("edit") === "1" && record) return <ActivityForm garden={route.garden} original={record} saved={record => { saved("Registro salvo. Dados e indicadores serão recarregados."); const query = new URLSearchParams(route.search); query.delete("edit"); navigate(route.garden, route.module, route.resource, record.id, query); state.refresh() }} cancel={() => { const query = new URLSearchParams(route.search); query.delete("edit"); navigate(route.garden, route.module, route.resource, route.id, query) }} />
-return <RecordDetail state={state} title="Atividade" version={record?.version ?? 0} active={record?.validity === "Valid"} catalog={false} back={() => { const query = new URLSearchParams(route.search); query.delete("edit"); navigate(route.garden, route.module, route.resource, "", query) }} edit={() => { const query = new URLSearchParams(route.search); query.set("edit", "1"); navigate(route.garden, route.module, route.resource, route.id, query) }} items={record ? [{ label: "Valores do registro", value: <ActivityReview record={record} /> }, { label: "Incluído em", value: formatInstant(record.recordedAt) }, { label: "Autor técnico (demonstração)", value: record.recordedByUserId }] : []}>{record && <></>}</RecordDetail>
+return <RecordDetail attachments={record && <EvidenceSection garden={route.garden} targetType="Activity" targetId={record.id} active={record.validity === "Valid"} />} state={state} title="Atividade" version={record?.version ?? 0} active={record?.validity === "Valid"} catalog={false} back={() => { const query = new URLSearchParams(route.search); query.delete("edit"); navigate(route.garden, route.module, route.resource, "", query) }} edit={() => { const query = new URLSearchParams(route.search); query.set("edit", "1"); navigate(route.garden, route.module, route.resource, route.id, query) }} items={record ? [{ label: "Valores do registro", value: <ActivityReview record={record} /> }, { label: "Incluído em", value: formatInstant(record.recordedAt) }, { label: "Autor técnico (demonstração)", value: record.recordedByUserId }] : []}>{record && <></>}</RecordDetail>
 }

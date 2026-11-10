@@ -1,7 +1,7 @@
 import { readRoute } from "../../../hooks/useRoute"
 import { useState } from "react"
 import { EditorFrame } from "../../../components/EditorFrame"
-import { Field, Facts } from "../../../components/Fields"
+import { Field, Facts, Group } from "../../../components/Fields"
 import { Failure } from "../../../components/Feedback"
 import { useEditor } from "../../../hooks/useEditor"
 import { useLookups } from "../../../hooks/useLookups"
@@ -22,12 +22,13 @@ commonName: draft.commonName.trim(),
 scientificName: optionalText(draft.scientificName),
 description: optionalText(draft.description),
 } }
-return <EditorFrame dependenciesReady={!options.loading && !options.error} requireActiveGarden={false} title={original ? "Corrigir: Espécie" : "Nova espécie"} submitLabel={original ? "Salvar alterações" : "Cadastrar espécie"} description="Informe o nome da planta, por exemplo Alface. Nome científico e descrição são opcionais." busy={editor.busy} uncertain={!!editor.attempt || editor.catalogUncertain} catalogUncertain={editor.catalogUncertain} error={editor.error} reason={original ? editor.reason : undefined} changeReason={original ? editor.setReason : undefined} submit={() => void editor.submit(values)} cancel={cancel} conflict={original ? () => void editor.reloadConflict() : undefined} review={editor.review && <Facts items={[{ label: "Versão", value: editor.review.version }, { label: "Valores atuais", value: <SpeciesReview record={editor.review} /> }]} />} acceptReview={editor.acceptReview}>
+return <EditorFrame dependenciesReady={!options.loading && !options.error} requireActiveGarden={false} title={original ? "Corrigir espécie" : "Nova espécie"} submitLabel={original ? "Salvar alterações" : "Cadastrar espécie"} description="Informe o nome da planta, por exemplo Alface. Nome científico e descrição são opcionais." busy={editor.busy} uncertain={!!editor.attempt || editor.catalogUncertain} catalogUncertain={editor.catalogUncertain} error={editor.error} reason={original ? editor.reason : undefined} changeReason={original ? editor.setReason : undefined} submit={() => void editor.submit(values)} cancel={cancel} conflict={original ? () => void editor.reloadConflict() : undefined} review={editor.review && <Facts items={[{ label: "Versão", value: editor.review.version }, { label: "Valores atuais", value: <SpeciesReview record={editor.review} /> }]} />} acceptReview={editor.acceptReview}>
 {options.loading && <p role="status">Carregando cadastros de apoio…</p>}{options.error && <Failure error={options.error} retry={options.retry} />}
-<div className="grid min-w-0 gap-4 sm:grid-cols-2">
+<div className="grid min-w-0 gap-5">
+<Group title="Identificação">
 <Field name="commonName" label="Nome comum" required type="text" value={draft.commonName} change={value => change("commonName", value)} error={editor.error} />
 <Field name="scientificName" label="Nome científico" type="text" value={draft.scientificName} change={value => change("scientificName", value)} error={editor.error} />
 <Field name="description" label="Descrição" type="textarea" value={draft.description} change={value => change("description", value)} error={editor.error} />
-</div></EditorFrame>
+</Group></div></EditorFrame>
 }
 export function SpeciesReview({ record }: { record: Species }) { const options = useLookups(readRoute().garden, []); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Nome comum', value: record.commonName }, { label: 'Nome científico', value: record.scientificName }, { label: 'Descrição', value: record.description }]} /></> }

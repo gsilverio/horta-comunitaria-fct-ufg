@@ -2,7 +2,7 @@ import { routeHref } from "../../../hooks/useRoute"
 import { readRoute } from "../../../hooks/useRoute"
 import { useState } from "react"
 import { EditorFrame } from "../../../components/EditorFrame"
-import { Field, SelectField, Facts } from "../../../components/Fields"
+import { Field, SelectField, Facts, Group } from "../../../components/Fields"
 import { Failure } from "../../../components/Feedback"
 import { useEditor } from "../../../hooks/useEditor"
 import { useLookups } from "../../../hooks/useLookups"
@@ -30,15 +30,19 @@ usableMassKg: numeric(draft.usableMassKg, 'usableMassKg', false, 3, false),
 lossReason: optionalText(draft.lossReason),
 responsibleParticipantId: optionalText(draft.responsibleParticipantId),
 } }
-return <EditorFrame dependenciesReady={!options.loading && !options.error} title={original ? "Corrigir: Colheita" : "Novo: Colheita"} busy={editor.busy} uncertain={!!editor.attempt || editor.catalogUncertain} catalogUncertain={editor.catalogUncertain} error={editor.error} reason={original ? editor.reason : undefined} changeReason={original ? editor.setReason : undefined} submit={() => void editor.submit(values)} cancel={cancel} conflict={original ? () => void editor.reloadConflict() : undefined} review={editor.review && <Facts items={[{ label: "Versão", value: editor.review.version }, { label: "Valores atuais", value: <HarvestReview record={editor.review} /> }]} />} acceptReview={editor.acceptReview}>
+return <EditorFrame dependenciesReady={!options.loading && !options.error} title={original ? "Corrigir colheita" : "Nova colheita"} busy={editor.busy} uncertain={!!editor.attempt || editor.catalogUncertain} catalogUncertain={editor.catalogUncertain} error={editor.error} reason={original ? editor.reason : undefined} changeReason={original ? editor.setReason : undefined} submit={() => void editor.submit(values)} cancel={cancel} conflict={original ? () => void editor.reloadConflict() : undefined} review={editor.review && <Facts items={[{ label: "Versão", value: editor.review.version }, { label: "Valores atuais", value: <HarvestReview record={editor.review} /> }]} />} acceptReview={editor.acceptReview}>
 {options.loading && <p role="status">Carregando cadastros de apoio…</p>}{options.error && <Failure error={options.error} retry={options.retry} />}
-<div className="grid min-w-0 gap-4 sm:grid-cols-2">
+<div className="grid min-w-0 gap-5">
+<Group title="Colheita">
 <SelectField name="cycleId" label="Ciclo" required value={draft.cycleId} change={value => change("cycleId", value)} options={options.data?.cultivationCycle ?? []} error={editor.error} />
 <Field name="harvestedOn" label="Data da colheita" required type="date" value={draft.harvestedOn} change={value => change("harvestedOn", value)} error={editor.error} />
+<SelectField name="responsibleParticipantId" label="Responsável pelo trabalho" value={draft.responsibleParticipantId} change={value => change("responsibleParticipantId", value)} options={options.data?.participant ?? []} error={editor.error} />
+</Group>
+<Group title="Pesagem" hint="Massa aproveitável vazia significa não pesada, não zero.">
 <Field name="freshMassKg" label="Massa fresca (kg)" required type="decimal" value={draft.freshMassKg} change={value => change("freshMassKg", value)} error={editor.error} />
 <Field name="usableMassKg" label="Massa aproveitável (kg)" type="decimal" value={draft.usableMassKg} change={value => change("usableMassKg", value)} error={editor.error} />
 <Field name="lossReason" label="Motivo da perda" type="text" value={draft.lossReason} change={value => change("lossReason", value)} error={editor.error} />
-<SelectField name="responsibleParticipantId" label="Responsável pelo trabalho" value={draft.responsibleParticipantId} change={value => change("responsibleParticipantId", value)} options={options.data?.participant ?? []} error={editor.error} />
+</Group>
 </div></EditorFrame>
 }
 export function HarvestReview({ record }: { record: Harvest }) { const options = useLookups(record.gardenId, ['cultivationCycle', 'participant']); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Ciclo', value: record.cycleId ? <a className="underline" href={routeHref(readRoute().garden, 'cultivo', 'ciclos', record.cycleId)}>{options.data?.cultivationCycle?.find(x => x.id === record.cycleId)?.label ?? record.cycleId}</a> : "Não informado" }, { label: 'Data da colheita', value: record.harvestedOn ? record.harvestedOn.split("-").reverse().join("/") : "Não informado" }, { label: 'Massa fresca (kg)', value: record.freshMassKg === null ? "Não informado" : formatNumber(record.freshMassKg) }, { label: 'Massa aproveitável (kg)', value: record.usableMassKg === null ? "Não informado" : formatNumber(record.usableMassKg) }, { label: 'Motivo da perda', value: record.lossReason }, { label: 'Responsável pelo trabalho', value: record.responsibleParticipantId ? <a className="underline" href={routeHref(readRoute().garden, 'atividades', 'participantes', record.responsibleParticipantId)}>{options.data?.participant?.find(x => x.id === record.responsibleParticipantId)?.label ?? record.responsibleParticipantId}</a> : "Não informado" }]} /></> }

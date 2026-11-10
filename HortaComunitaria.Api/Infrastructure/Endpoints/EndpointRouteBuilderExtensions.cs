@@ -6,6 +6,7 @@ using HortaComunitaria.Api.Features.Gardens;
 using HortaComunitaria.Api.Features.Activities;
 using HortaComunitaria.Api.Features.Irrigation;
 using HortaComunitaria.Api.Features.Indicators;
+using HortaComunitaria.Api.Features.Evidence;
 
 namespace HortaComunitaria.Api.Infrastructure.Endpoints;
 
@@ -25,6 +26,7 @@ internal static class EndpointRouteBuilderExtensions
         app.MapGroup("/api/v1").MapActivitiesGlobalEndpoints();
         group.MapCostsEndpoints();
         group.MapOccurrencesEndpoints();
+        group.MapEvidenceEndpoints();
         return app;
     }
 }

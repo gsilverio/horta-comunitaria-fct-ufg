@@ -316,6 +316,11 @@ internal static class ApplicationExtensions
         services.AddScoped<HortaComunitaria.Api.Features.Cultivation.ConfigureSpeciesVisualGrowth.ConfigureSpeciesVisualGrowthCommandHandler>();
         services.AddScoped<HortaComunitaria.Api.Features.Cultivation.ConfigureCultivarVisualGrowth.ConfigureCultivarVisualGrowthCommandHandler>();
         services.AddScoped<HortaComunitaria.Api.Features.Cultivation.ListGardenCrops.ListGardenCropsQueryHandler>();
+        services.AddScoped<HortaComunitaria.Api.Features.Evidence.UploadEvidence.UploadEvidenceCommandHandler>();
+        services.AddScoped<HortaComunitaria.Api.Features.Evidence.ListEvidences.ListEvidencesQueryHandler>();
+        services.AddScoped<HortaComunitaria.Api.Features.Evidence.GetEvidenceContent.GetEvidenceContentQueryHandler>();
+        services.AddScoped<HortaComunitaria.Api.Features.Evidence.CorrectEvidence.CorrectEvidenceCommandHandler>();
+        services.AddScoped<HortaComunitaria.Api.Features.Evidence.InvalidateEvidence.InvalidateEvidenceCommandHandler>();
         return services;
     }
 }

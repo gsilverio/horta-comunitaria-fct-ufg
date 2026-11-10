@@ -1,3 +1,5 @@
+import { EvidenceSection } from "../../evidence/pages/EvidenceSection"
+import { RecordRow } from '../../../components/RecordRow'
 import { formatInstant } from "../../irrigation/formValues"
 import { useCallback } from "react"
 import { RecordList } from "../../../components/RecordList"
@@ -38,7 +40,7 @@ return <RecordList title="Ocorrências" hint="Período da data do registro. Cons
 <SelectField name="cycleId" label="Ciclo" value={filters.draft.cycleId} change={value => filters.change("cycleId", value)} options={options.data?.cultivationCycle ?? []} />
 <SelectField name="irrigationId" label="Irrigação" value={filters.draft.irrigationId} change={value => filters.change("irrigationId", value)} options={options.data?.irrigation ?? []} />
 {options.error && <Failure error={options.error} retry={options.retry} />}</>}>
-{result.data?.items.map(item => <li className="py-4" key={item.id}><a className="font-semibold underline decoration-horta-line underline-offset-4" href={routeHref(route.garden, route.module, route.resource, item.id, route.search)}>{item.description}</a><span className="ml-3 text-sm text-horta-muted">{enumLabels[item.validity]} · v{item.version}</span></li>)}
+{result.data?.items.map(item => <RecordRow key={item.id} href={routeHref(route.garden, route.module, route.resource, item.id, route.search)} title={item.description} description={`${item.category} · ${formatInstant(item.openedAt)}`} meta={<span className="text-xs text-horta-muted">{enumLabels[item.status] ?? item.status}</span>} status={item.validity === "Invalid" ? enumLabels[item.validity] : undefined} statusTone="invalid" />)}
 </RecordList>
 }
 function OccurrenceDetail({ route, saved }: { route: RecordRoute; saved: (message: string) => void }) {
@@ -47,5 +49,5 @@ const audit = useCallback((page: number, signal: AbortSignal) => occurrenceApi.h
 const state = useRecord<Occurrence>(route.id, get, audit, (version, reason) => occurrenceApi.deactivate(route.garden, route.id, version, reason), () => saved("Alteração confirmada."))
 const record = state.detail.data
 if (route.search.get("edit") === "1" && record) return <OccurrenceForm garden={route.garden} original={record} saved={record => { saved("Registro salvo. Dados e indicadores serão recarregados."); const query = new URLSearchParams(route.search); query.delete("edit"); navigate(route.garden, route.module, route.resource, record.id, query); state.refresh() }} cancel={() => { const query = new URLSearchParams(route.search); query.delete("edit"); navigate(route.garden, route.module, route.resource, route.id, query) }} />
-return <RecordDetail state={state} title="Ocorrência" version={record?.version ?? 0} active={record?.validity === "Valid"} catalog={false} back={() => { const query = new URLSearchParams(route.search); query.delete("edit"); navigate(route.garden, route.module, route.resource, "", query) }} edit={() => { const query = new URLSearchParams(route.search); query.set("edit", "1"); navigate(route.garden, route.module, route.resource, route.id, query) }} items={record ? [{ label: "Valores do registro", value: <OccurrenceReview record={record} /> }, { label: "Incluído em", value: formatInstant(record.recordedAt) }, { label: "Autor técnico (demonstração)", value: record.recordedByUserId }] : []}>{record && <><OccurrenceActions route={route} record={record} changed={state.refresh} /></>}</RecordDetail>
+return <RecordDetail attachments={record && <EvidenceSection garden={route.garden} targetType="Occurrence" targetId={record.id} active={record.validity === "Valid"} />} state={state} title="Ocorrência" version={record?.version ?? 0} active={record?.validity === "Valid"} catalog={false} back={() => { const query = new URLSearchParams(route.search); query.delete("edit"); navigate(route.garden, route.module, route.resource, "", query) }} edit={() => { const query = new URLSearchParams(route.search); query.set("edit", "1"); navigate(route.garden, route.module, route.resource, route.id, query) }} items={record ? [{ label: "Valores do registro", value: <OccurrenceReview record={record} /> }, { label: "Incluído em", value: formatInstant(record.recordedAt) }, { label: "Autor técnico (demonstração)", value: record.recordedByUserId }] : []}>{record && <><OccurrenceActions route={route} record={record} changed={state.refresh} /></>}</RecordDetail>
 }

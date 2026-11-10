@@ -1,3 +1,5 @@
+import { formatDate } from "../../../services/dates"
+import { RecordRow } from '../../../components/RecordRow'
 import { formatNumber } from "../../irrigation/formValues"
 import { formatInstant } from "../../irrigation/formValues"
 import { useCallback } from "react"
@@ -36,7 +38,7 @@ return <RecordList title="Lançamentos financeiros" hint="Período da data do re
 <SelectField name="bedId" label="Canteiro" value={filters.draft.bedId} change={value => filters.change("bedId", value)} options={options.data?.bed ?? []} />
 <SelectField name="cycleId" label="Ciclo" value={filters.draft.cycleId} change={value => filters.change("cycleId", value)} options={options.data?.cultivationCycle ?? []} />
 {options.error && <Failure error={options.error} retry={options.retry} />}</>}>
-{result.data?.items.map(item => <li className="py-4" key={item.id}><a className="font-semibold underline decoration-horta-line underline-offset-4" href={routeHref(route.garden, route.module, route.resource, item.id, route.search)}>{item.description}</a><span className="ml-3 text-sm text-horta-muted">{enumLabels[item.validity]} · v{item.version}</span><small className="record-description">{enumLabels[item.nature]} · R$ {formatNumber(item.amountBrl)} · {item.category}</small></li>)}
+{result.data?.items.map(item => <RecordRow key={item.id} href={routeHref(route.garden, route.module, route.resource, item.id, route.search)} title={item.description} description={`${enumLabels[item.nature]} · ${item.category} · ${formatDate(item.entryDate)}`} meta={<strong className="text-sm">R$ {formatNumber(item.amountBrl)}</strong>} status={item.validity === "Invalid" ? enumLabels[item.validity] : undefined} statusTone="invalid" />)}
 </RecordList>
 }
 function FinancialEntryDetail({ route, saved }: { route: RecordRoute; saved: (message: string) => void }) {

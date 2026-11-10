@@ -31,6 +31,7 @@ O backend utiliza .NET 10, EF Core/Npgsql e logs estruturados com console legív
 
 ## Documentação
 
+- [Configuração do Claude Code](.claude/CLAUDE.md): regras de arquitetura sincronizadas com `.codex` e skill UI/UX adaptada à identidade e aos fluxos existentes.
 - [Contrato implementado do backend](documentos/arquitetura/Contrato_Backend_MVP.md): operações de criação/gestão, indicadores, conflitos e decisões de persistência.
 - [Get Started](documentos/Get_Started.md): iniciar a aplicação, preparar um ambiente sem seed e testar as features disponíveis; lacunas em relação aos requisitos ficam explícitas.
 - [Planejamento completo do frontend](documentos/planejamento/frontend/README.md): telas, criação/gestão, dependências, etapas e aceite de todos os requisitos atuais e nove indicadores.

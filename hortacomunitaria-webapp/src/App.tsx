@@ -13,7 +13,7 @@ import { navigate, routeHref, useRoute } from './hooks/useRoute'
 import { GardenState } from './hooks/useGardenState'
 import { InteractiveGardenPage } from './features/interactive-garden/pages/InteractiveGardenPage'
 const DashboardPage = lazy(() => import('./features/indicators/pages/DashboardPage').then(module => ({ default: module.DashboardPage })))
-const defaults: Record<string, string> = { horta: 'interativa', irrigacao: 'registros', 'visao-geral': 'painel', ambiente: 'medicoes', cultivo: 'ciclos', producao: 'colheitas', atividades: 'registros', ocorrencias: 'registros', custos: 'registros' }
+const defaults: Record<string, string> = { horta: 'interativa', irrigacao: 'registros', 'visao-geral': 'painel', ambiente: 'medicoes', cultivo: 'ciclos', producao: 'colheitas', atividades: 'registros', ocorrencias: 'registros', custos: 'registros', fotos: 'galeria' }
 
 export default function App() {
   const route = useRoute()
@@ -35,28 +35,29 @@ export default function App() {
   const pendingArea = navigationItems.find(item => item.id === route.search.get('nextModule'))
   const catalogRoute = route.module === 'horta' && route.resource === 'hortas' && !pendingArea
   const defaultGarden = !route.garden && !catalogRoute && !gardens.loading && !gardens.error ? gardens.data?.[0]?.id : undefined
-  const defaultModule = pendingArea?.id ?? route.module
+  const atRoot = !route.gardenSpecified && route.module === 'horta' && !route.resource
+  const defaultModule = pendingArea?.id ?? (atRoot ? 'visao-geral' : route.module)
   const defaultResource = pendingArea ? defaults[defaultModule] : route.resource || defaults[defaultModule]
   useEffect(() => {
     if (defaultGarden) navigate(defaultGarden, defaultModule, defaultResource)
   }, [defaultGarden, defaultModule, defaultResource])
   function selectGarden(id: string) {
-    const module = route.garden ? route.module : pendingArea?.id ?? 'horta'
+    const module = route.garden ? route.module : pendingArea?.id ?? 'visao-geral'
     if (!id) { navigate('', 'horta', 'hortas', '', module === 'horta' ? undefined : new URLSearchParams({ nextModule: module })); return }
-    const target = module === 'horta' ? 'interativa' : route.garden ? resource : pendingArea?.items[0].id ?? defaults[module]
-    navigate(id, module, target)
+    if (route.garden && module === 'horta' && resource === 'hortas') { navigate(id, 'horta', 'hortas', route.id ? id : ''); return }
+    navigate(id, module, route.garden ? resource : pendingArea?.items[0].id ?? defaults[module])
   }
   const noGardens = !gardens.loading && !gardens.error && gardens.data?.length === 0
   const showGardenSelect = (gardens.data?.length ?? 0) > 1
-  return <AppShell route={effectiveRoute} gardenSelect={showGardenSelect ? <label className="min-w-0 gap-1 text-xs text-horta-muted">Horta<select aria-label="Horta" className="min-h-10 w-full min-w-0 bg-white py-2 text-sm" value={route.garden || defaultGarden || ''} disabled={gardens.loading || !!gardens.error || inFlow && route.module === 'irrigacao'} onChange={event => selectGarden(event.target.value)}>{!route.garden && !defaultGarden && <option value="" disabled>Todas as hortas</option>}{gardens.data?.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}{garden && !gardens.data?.some(item => item.id === garden.id) && <option value={garden.id}>{garden.name}{!garden.isActive ? ' (inativa)' : ''}</option>}</select></label> : gardens.loading ? <span className="text-xs text-horta-muted" role="status">Carregando hortas…</span> : noGardens && !catalogRoute ? <a className="text-xs underline" href={routeHref('', 'horta', 'hortas', 'novo')}>Cadastrar horta</a> : undefined}>
+  return <AppShell route={effectiveRoute} gardenName={garden?.name} gardenSelect={showGardenSelect ? <label className="garden-picker"><span className="hidden sm:inline">Horta</span><select aria-label="Horta" value={route.garden || defaultGarden || ''} disabled={gardens.loading || !!gardens.error || inFlow && route.module === 'irrigacao'} onChange={event => selectGarden(event.target.value)}>{!route.garden && !defaultGarden && <option value="" disabled>Todas as hortas</option>}{gardens.data?.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}{garden && !gardens.data?.some(item => item.id === garden.id) && <option value={garden.id}>{garden.name}{!garden.isActive ? ' (inativa)' : ''}</option>}</select></label> : gardens.loading ? <span className="text-xs text-horta-muted" role="status">Carregando hortas…</span> : noGardens && !catalogRoute ? <a className="inline-flex min-h-11 items-center text-sm underline" href={routeHref('', 'horta', 'hortas', 'novo')}>Cadastrar horta</a> : undefined}>
     <GardenState.Provider value={{ id: garden?.id ?? '', name: garden?.name ?? '', isActive: garden?.isActive ?? true, institutionalAreaM2: garden?.institutionalAreaM2 ?? null, operationalAreaM2: garden?.operationalAreaM2 ?? null, experimentalAreaM2: garden?.experimentalAreaM2 ?? null }}>
       {notice && notice.garden === route.garden && <div className="feedback success" role="status"><span>{notice.message}</span><button type="button" className="text-button" onClick={() => setNotice(undefined)} aria-label="Dispensar confirmação">Fechar</button></div>}
       {route.garden && selected.loading && <p role="status">Carregando horta…</p>}
-      {selected.error && <><Failure error={selected.error} retry={() => setRevision(value => value + 1)} /><a className="action-link" href={routeHref('', 'horta', 'hortas')}>Voltar às hortas</a></>}
+      {selected.error && <><Failure error={selected.error} retry={() => setRevision(value => value + 1)} /><a className="action-link secondary" href={routeHref('', 'horta', 'hortas')}>Voltar às hortas</a></>}
       {gardens.error && <Failure error={gardens.error} retry={() => setRevision(value => value + 1)} />}
       {garden && !garden.isActive && <p className="notice">Horta inativa. Seus cadastros continuam disponíveis para consulta.</p>}
-      {returnBedId && <a className="mb-5 block font-semibold underline" href={routeHref(route.garden, 'horta', 'canteiros', returnBedId)}>← Voltar ao canteiro</a>}
-      {indicatorBack && <a className="mb-5 block font-semibold underline" href={indicatorBack}>Voltar ao indicador com os mesmos filtros</a>}
+      {returnBedId && <a className="mb-3 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4" href={routeHref(route.garden, 'horta', 'canteiros', returnBedId)}>← Voltar ao canteiro</a>}
+      {indicatorBack && <a className="mb-3 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4" href={indicatorBack}>Voltar ao indicador com os mesmos filtros</a>}
       {defaultGarden && <p role="status">Abrindo horta…</p>}
       {!defaultGarden && (!route.garden || garden) && <Suspense fallback={<p role="status">Carregando área…</p>}>
         {interactive && garden ? <InteractiveGardenPage key={garden.id} route={effectiveRoute} />

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
-import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from 'react'
+import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent, ReactNode } from 'react'
+import { Info, Layers, Maximize2, Minimize2, Minus, Plus, Scan } from 'lucide-react'
 import { routeHref } from '../../../hooks/useRoute'
 import { useCanvasWheel, wheelZoomFactor } from '../hooks/useCanvasWheel'
 import { elementArea, elementBounds, pointInPolygon } from '../geometry'
@@ -372,30 +373,77 @@ function SceneElement({ element, crops, camera, selected, hovered, onSelect, onH
   </g>
 }
 
-function elementRole(element: DemoElement) {
+function elementRole(element: Pick<DemoElement, 'role'>) {
   return element.role === 'sector' ? 'Setor' : element.role === 'bed' ? 'Canteiro' : 'Referência'
 }
 
-function SceneLabels({ elements, camera, selectedId, scale }: { elements: DemoElement[]; camera: Camera; selectedId?: string; scale: number }) {
-  const occupied: { x: number; y: number }[] = []
-  const width = 154 * scale, height = 38 * scale, gap = 8 * scale
-  const sorted = [...elements].sort((a, b) => Number(b.id === selectedId) - Number(a.id === selectedId))
-  return <g aria-label="Informações dos elementos" pointerEvents="none">{sorted.map(element => {
-    const center = project(elementCenter(element), camera)
-    const anchor = { x: center.x, y: center.y - (element.role === 'bed' ? camera.scale * 0.35 : 0) }
+interface SceneLabelItem { id: string; role: DemoElement['role']; name: string; center: Point }
+interface LabelBox { x: number; y: number; width: number; height: number }
+
+const LABEL_FONT = '"Segoe UI", Inter, Arial, sans-serif'
+let measureContext: CanvasRenderingContext2D | null | undefined
+/** Mede o texto com a fonte real da placa; sem canvas disponível, usa uma estimativa conservadora. */
+function textWidth(text: string, size: number, weight: number, tracking = 0) {
+  if (measureContext === undefined) measureContext = typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d')
+  if (!measureContext) return text.length * size * 0.6 + text.length * tracking
+  measureContext.font = `${weight} ${size}px ${LABEL_FONT}`
+  return measureContext.measureText(text).width + text.length * tracking
+}
+
+const LABEL_HEIGHT = 22
+function labelLayout(kind: string, name: string) {
+  const kindWidth = textWidth(kind.toLocaleUpperCase('pt-BR'), 8.5, 700, 0.8)
+  const nameWidth = textWidth(name, 11.5, 600)
+  return { kindX: 19, nameX: 19 + kindWidth + 6, width: Math.ceil(19 + kindWidth + 6 + nameWidth + 11) }
+}
+
+function overlaps(a: LabelBox, b: LabelBox, gap: number) {
+  return !(a.x + a.width + gap <= b.x || b.x + b.width + gap <= a.x || a.y + a.height + gap <= b.y || b.y + b.height + gap <= a.y)
+}
+
+/**
+ * Placas de identificação: pílula do tamanho do texto, marcador por tipo e conector curto até o canteiro.
+ * Selecionado e canteiros têm prioridade; uma placa sem espaço livre é omitida em vez de cobrir outra.
+ */
+function SceneLabels({ items, camera, selectedId, scale }: { items: SceneLabelItem[]; camera: Camera; selectedId?: string; scale: number }) {
+  const occupied: LabelBox[] = []
+  const height = LABEL_HEIGHT * scale, gap = 5 * scale, margin = 6 * scale
+  const priority = (item: SceneLabelItem) => item.id === selectedId ? 0 : item.role === 'bed' ? 1 : 2
+  const sorted = [...items].sort((a, b) => priority(a) - priority(b))
+  return <g aria-label="Informações dos elementos" pointerEvents="none">{sorted.map(item => {
+    const kind = elementRole(item)
+    const name = item.name.length > 28 ? item.name.slice(0, 27) + '…' : item.name
+    const layout = labelLayout(kind, name)
+    const width = layout.width * scale
+    const isBed = item.role === 'bed'
+    const center = project(item.center, camera)
+    const anchor = { x: center.x, y: center.y - (isBed ? camera.scale * 0.35 : 0) }
     if (anchor.x < 0 || anchor.x > VIEWBOX.width || anchor.y < 0 || anchor.y > VIEWBOX.height) return null
-    const candidates = [-1, 1, -2, 2, -3, 3].map(row => ({ x: Math.max(8, Math.min(VIEWBOX.width - width - 8, anchor.x - width / 2)), y: anchor.y + row * (height + gap) - height / 2 }))
-    const position = candidates.find(p => p.y > 8 && p.y + height < VIEWBOX.height - 42 && occupied.every(o => p.x + width + gap < o.x || p.x > o.x + width + gap || p.y + height + gap < o.y || p.y > o.y + height + gap))
+    const lift = isBed ? 12 * scale : 0
+    const baseY = isBed ? anchor.y - lift - height : anchor.y - height / 2
+    const rows = isBed ? [0, -1, -2, 1, 2, 3] : [0, 1, -1, 2, -2]
+    const shifts = [0, -0.55, 0.55, -1.05, 1.05]
+    const preferredX = anchor.x - width / 2
+    // Prefere a posição mais próxima do canteiro: subir ou descer antes de deslocar para o lado.
+    const candidates = rows.flatMap(row => shifts.map(shift => ({
+      x: Math.max(margin, Math.min(VIEWBOX.width - width - margin, preferredX + shift * width)),
+      y: baseY + row * (height + gap), width, height,
+    }))).sort((a, b) => Math.abs(a.x - preferredX) * 1.4 + Math.abs(a.y - baseY) - (Math.abs(b.x - preferredX) * 1.4 + Math.abs(b.y - baseY)))
+    const position = candidates.find(box => box.y > margin && box.y + height < VIEWBOX.height - 58 && occupied.every(other => !overlaps(box, other, gap)))
     if (!position) return null
     occupied.push(position)
-    const name = element.name.length > 22 ? element.name.slice(0, 21) + '…' : element.name
-    return <g key={element.id} className={element.id === selectedId ? 'garden-scene-label selected' : 'garden-scene-label'}>
-      <path d={`M ${anchor.x} ${anchor.y} L ${position.x + width / 2} ${position.y + height / 2}`} />
-      <circle cx={anchor.x} cy={anchor.y} r="2.5" />
-      <g transform={`translate(${position.x}, ${position.y}) scale(${scale})`}><rect width="154" height="38" rx="4" />
-      <text x="10" y="13" className="garden-scene-label-kind">{elementRole(element)}</text>
-      <text x="10" y="29" className="garden-scene-label-name">{name}</text></g>
-      <title>{elementRole(element)}: {element.name}</title>
+    const selected = item.id === selectedId
+    const below = position.y > anchor.y
+    const connector = { x: Math.max(position.x + height / 2, Math.min(position.x + width - height / 2, anchor.x)), y: below ? position.y : position.y + height }
+    return <g key={item.id} className={selected ? 'garden-scene-label selected' : 'garden-scene-label'} data-role={item.role}>
+      {isBed && <><line className="garden-scene-label-leader" x1={connector.x} y1={connector.y} x2={anchor.x} y2={anchor.y} /><circle className="garden-scene-label-anchor" cx={anchor.x} cy={anchor.y} r={2.2 * Math.min(scale, 1.6)} /></>}
+      <g transform={`translate(${position.x}, ${position.y}) scale(${scale})`}>
+        <rect width={layout.width} height={LABEL_HEIGHT} rx={LABEL_HEIGHT / 2} />
+        <circle className="garden-scene-label-marker" cx="10.5" cy={LABEL_HEIGHT / 2} r="3.2" />
+        <text x={layout.kindX} y="14.4" className="garden-scene-label-kind">{kind}</text>
+        <text x={layout.nameX} y="15.2" className="garden-scene-label-name">{name}</text>
+      </g>
+      <title>{kind}: {item.name}</title>
     </g>
   })}</g>
 }
@@ -409,7 +457,21 @@ function elementKind(element: DemoElement) {
 
 const EMPTY_CROPS: readonly GardenCrop[] = []
 
-export function GardenOverviewScene({ gardenId, garden, crops }: { gardenId: string; garden: DemoGarden; crops?: readonly GardenCrop[] }) {
+/**
+ * Viewport da panorâmica: a cena ocupa a área inteira e os controles ficam em um HUD sobreposto.
+ * O motor (projeção, câmera, assets, fases e densidade) permanece o mesmo; muda apenas a moldura e a interação ao redor.
+ */
+export function GardenOverviewScene({ gardenId, garden, crops, heading, actions, legendNote }: { gardenId: string; garden: DemoGarden; crops?: readonly GardenCrop[]; heading?: ReactNode; actions?: ReactNode; legendNote?: ReactNode }) {
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const [fullscreen, setFullscreen] = useState(false)
+  const [legendOpen, setLegendOpen] = useState(false)
+  const canFullscreen = typeof document !== 'undefined' && document.fullscreenEnabled
+  useEffect(() => {
+    const sync = () => setFullscreen(document.fullscreenElement === wrapperRef.current)
+    document.addEventListener('fullscreenchange', sync)
+    return () => document.removeEventListener('fullscreenchange', sync)
+  }, [])
+  const toggleFullscreen = () => { if (document.fullscreenElement) void document.exitFullscreen(); else void wrapperRef.current?.requestFullscreen() }
   const cropsByBed = useMemo(() => {
     const grouped = new Map<string, GardenCrop[]>()
     for (const crop of crops ?? []) grouped.set(crop.bedId, [...(grouped.get(crop.bedId) ?? []), crop])
@@ -538,16 +600,42 @@ export function GardenOverviewScene({ gardenId, garden, crops }: { gardenId: str
     if (current.moved) setCamera(panCamera(current.camera, deltaX, deltaY))
   }
 
+  const sceneCenter = { x: VIEWBOX.width / 2, y: VIEWBOX.height / 2 }
+  const onSceneKeyDown = (event: ReactKeyboardEvent<SVGSVGElement>) => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return
+    const step = 48
+    const commands: Record<string, () => void> = {
+      '+': () => changeCamera(zoomCamera(camera, 1.22, sceneCenter)),
+      '=': () => changeCamera(zoomCamera(camera, 1.22, sceneCenter)),
+      '-': () => changeCamera(zoomCamera(camera, 0.82, sceneCenter)),
+      '0': () => changeCamera(fitCamera),
+      ArrowLeft: () => changeCamera(panCamera(camera, step, 0)),
+      ArrowRight: () => changeCamera(panCamera(camera, -step, 0)),
+      ArrowUp: () => changeCamera(panCamera(camera, 0, step)),
+      ArrowDown: () => changeCamera(panCamera(camera, 0, -step)),
+      Escape: () => selectElement(undefined),
+    }
+    const command = commands[event.key]
+    if (!command) return
+    event.preventDefault()
+    command()
+  }
+  const sectorCount = garden.elements.filter(element => element.role === 'sector').length || (garden.sectors?.length ?? 0)
+  const bedCount = garden.elements.filter(element => element.role === 'bed').length
   const selectedArea = selectedElement ? elementArea(selectedElement) : 0
   const ground = groundPoints(garden, camera)
   const sceneSectors = garden.elements.some((element) => element.role === 'sector') ? [] : visibleSectors(garden)
   const plantedBeds = garden.elements.filter(element => element.role === 'bed' && element.entityId && (cropsByBed.get(element.entityId) ?? []).some(crop => Boolean(crop.firstPlantedOn) && crop.stage !== 'AwaitingPlanting'))
   const soilAreas = garden.elements.filter(element => element.role === 'sector' && plantedBeds.some(bed => bed.sectorId === element.id)).map(element => ({ id: element.id, points: element.shape === 'rectangle' ? rectanglePoints(element) : Array.from({ length: 64 }, (_, i) => ({ x: element.centerX + Math.cos(i * Math.PI / 32) * element.radius, y: element.centerY + Math.sin(i * Math.PI / 32) * element.radius })) }))
   const cultivated = [...soilAreas, ...sceneSectors.filter(sector => plantedBeds.some(bed => sector.bedIds.includes(bed.entityId ?? bed.id))).map(sector => ({ id: sector.id, points: [{ x: sector.x, y: sector.y }, { x: sector.x + sector.width, y: sector.y }, { x: sector.x + sector.width, y: sector.y + sector.height }, { x: sector.x, y: sector.y + sector.height }] }))]
-  return <div className="garden-scene-wrapper relative"><div className="garden-scene" aria-label="Visão panorâmica interativa da implantação da horta">
-    <svg viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`} preserveAspectRatio="xMidYMid meet" role="application" aria-label="Mapa panorâmico interativo da horta" ref={attachCanvas} data-dragging={dragging} data-camera-moving={focusing} onClickCapture={(event) => { if (suppressClick.current) { event.preventDefault(); event.stopPropagation(); suppressClick.current = false } }} onClick={(event) => { if (!(event.target instanceof Element && event.target.closest('[role="button"]'))) selectElement(undefined) }} onLostPointerCapture={endPointerInteraction} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endPointerInteraction} onPointerCancel={endPointerInteraction}>
+  const labelItems: SceneLabelItem[] = showInformation ? [
+    ...sceneElements.filter(element => showSectors || element.role !== 'sector').map(element => ({ id: element.id, role: element.role, name: element.name, center: elementCenter(element) })),
+    ...(showSectors ? sceneSectors.map(sector => ({ id: `sector-${sector.id}`, role: 'sector' as const, name: sector.name, center: { x: sector.x + sector.width / 2, y: sector.y + sector.height / 2 } })) : []),
+  ] : []
+  return <div ref={wrapperRef} className="garden-scene-wrapper relative" data-fullscreen={fullscreen}><div className="garden-scene" aria-label="Visão panorâmica interativa da implantação da horta">
+    <svg viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`} preserveAspectRatio="xMidYMid meet" role="application" tabIndex={0} aria-label="Mapa panorâmico interativo da horta" aria-describedby="garden-scene-keys" onKeyDown={onSceneKeyDown} ref={attachCanvas} data-dragging={dragging} data-camera-moving={focusing} onClickCapture={(event) => { if (suppressClick.current) { event.preventDefault(); event.stopPropagation(); suppressClick.current = false } }} onClick={(event) => { if (!(event.target instanceof Element && event.target.closest('[role="button"]'))) selectElement(undefined) }} onLostPointerCapture={endPointerInteraction} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endPointerInteraction} onPointerCancel={endPointerInteraction}>
       <defs>
-        <linearGradient id="garden-scene-sky" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#b7d3d0" /><stop offset=".6" stopColor="#edf2d9" /><stop offset="1" stopColor="#9ab67a" /></linearGradient>
+        <radialGradient id="garden-scene-backdrop" cx="50%" cy="46%" r="75%"><stop offset="0" stopColor="#2c4637" /><stop offset=".55" stopColor="#1a2d23" /><stop offset="1" stopColor="#0f1c16" /></radialGradient>
         <pattern id="garden-scene-ground-texture" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform={textureTransform(camera)}>
           <image href={GROUND_TEXTURE_URL} x="0" y="0" width="5" height="5" preserveAspectRatio="none" style={{ imageRendering: 'pixelated' }} />
         </pattern>
@@ -562,36 +650,56 @@ export function GardenOverviewScene({ gardenId, garden, crops }: { gardenId: str
         <pattern id="garden-scene-cultivated-texture" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform={textureTransform(camera)}><image href={CULTIVATED_GRASS_URL} width="5" height="5" preserveAspectRatio="none" style={{ imageRendering: 'pixelated' }} /></pattern>
         <filter id="garden-scene-soft-shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7" /></filter>
       </defs>
-      <rect width={VIEWBOX.width} height={VIEWBOX.height} fill="url(#garden-scene-sky)" />
-      <ellipse cx={VIEWBOX.width / 2} cy="510" rx="440" ry="90" fill="#173d2e" opacity=".28" filter="url(#garden-scene-soft-shadow)" />
-      <polygon points={pointsAttribute(ground)} fill="#4b8246" stroke="#d2e5ae" strokeWidth="4" strokeLinejoin="round" />
-      <polygon points={pointsAttribute(ground)} fill="url(#garden-scene-ground-texture)" opacity=".84" stroke="#d2e5ae" strokeWidth="4" strokeLinejoin="round" />
+      <rect width={VIEWBOX.width} height={VIEWBOX.height} fill="url(#garden-scene-backdrop)" />
+      <polygon points={pointsAttribute(ground.map(point => ({ x: point.x, y: point.y + camera.scale * .45 + 10 })))} fill="#050c08" opacity=".45" filter="url(#garden-scene-soft-shadow)" />
+      <polygon points={pointsAttribute(ground.map(point => ({ x: point.x, y: point.y + camera.scale * .45 })))} fill="#4a3424" stroke="#2b1e14" strokeWidth="1" strokeLinejoin="round" />
+      <polygon points={pointsAttribute(ground)} fill="#4b8246" stroke="#1f3a2a" strokeWidth="1.5" strokeLinejoin="round" />
+      <polygon points={pointsAttribute(ground)} fill="url(#garden-scene-ground-texture)" opacity=".84" stroke="#a9c98a" strokeOpacity=".45" strokeWidth="1.2" strokeLinejoin="round" />
       <g className="garden-scene-soil" clipPath="url(#garden-scene-terrain-clip)" pointerEvents="none">{cultivated.map((area, index) => <polygon key={area.id} data-sector-soil={area.id} mask={`url(#garden-scene-worked-grass-${index})`} opacity=".85" points={pointsAttribute(area.points.map(point => project(point, camera)))} fill="url(#garden-scene-cultivated-texture)" />)}</g>
       <GrassBreeze garden={garden} camera={camera} cultivated={cultivated.map(area => area.points)} />
       {showSectors && sceneSectors.map((sector) => {
         const points = sectorPoints(sector, camera)
-        const center = project({ x: sector.x + sector.width / 2, y: sector.y + sector.height / 2 }, camera)
         return <g key={`overview-sector-${sector.id}`} className="garden-scene-sector" pointerEvents="none">
           <polygon points={pointsAttribute(points)} fill="none" stroke="#e4edc5" strokeWidth="1.5" strokeDasharray="5 5" />
-          {showInformation && <g className="garden-scene-label" transform={`translate(${center.x - 77}, ${center.y - 19})`}><rect width="154" height="38" rx="4" /><text x="10" y="13" className="garden-scene-label-kind">Setor</text><text x="10" y="29" className="garden-scene-label-name">{sector.name.length > 22 ? sector.name.slice(0, 21) + "…" : sector.name}</text></g>}
         </g>
       })}
       {sceneElements.filter((element) => showSectors || element.role !== 'sector').map((element) => <SceneElement key={element.id} element={element} crops={element.entityId ? cropsByBed.get(element.entityId) ?? EMPTY_CROPS : EMPTY_CROPS} camera={camera} selected={selectedId === element.id} hovered={hoveredId === element.id} onSelect={selectElement} onHover={setHoveredId} />)}
-      {showInformation && <SceneLabels elements={sceneElements.filter(element => showSectors || element.role !== 'sector')} camera={camera} selectedId={selectedId} scale={labelScale} />}
-      <g className="garden-scene-compass" aria-hidden="true"><circle cx="82" cy="78" r="28" fill="#173d2e" opacity=".72" /><path d="M82 56 L88 84 82 79 76 84 Z" fill="#e8c68f" /><text x="82" y="102" textAnchor="middle">N</text></g>
-      <g className="garden-scene-vignette" aria-hidden="true"><rect x="0" y="0" width={VIEWBOX.width} height={VIEWBOX.height} /></g>
+      {showInformation && <SceneLabels items={labelItems} camera={camera} selectedId={selectedId} scale={labelScale} />}
     </svg>
-    <div className="garden-scene-controls" role="group" aria-label="Controles da câmera panorâmica">
-      <label className="flex basis-full cursor-pointer flex-row items-center whitespace-nowrap gap-2 border-b border-white/20 px-2 py-1 text-[11px] sm:basis-auto sm:border-0"><input type="checkbox" className="!size-4 !min-h-4 shrink-0 !p-0 accent-[#b8d98c]" checked={showInformation} onChange={event => setShowInformation(event.target.checked)} />Mostrar informações no mapa</label>
-      <button type="button" aria-label="Afastar câmera" onClick={() => changeCamera(zoomCamera(camera, 0.82, { x: VIEWBOX.width / 2, y: VIEWBOX.height / 2 }))}>−</button>
-      <span aria-live={focusing ? 'off' : 'polite'}>{zoomPercent}%</span>
-      <button type="button" className="garden-scene-fit" aria-pressed={showSectors} aria-label="Mostrar limites dos setores" onClick={() => setShowSectors((current) => !current)}>Setores {showSectors ? "✓" : "–"}</button>
-      <button type="button" aria-label="Aproximar câmera" onClick={() => changeCamera(zoomCamera(camera, 1.22, { x: VIEWBOX.width / 2, y: VIEWBOX.height / 2 }))}>+</button>
-      <button type="button" className="garden-scene-fit" onClick={() => changeCamera(fitCamera)}>Enquadrar horta</button>
+    <p id="garden-scene-keys" className="sr-only">Arraste para mover. Use as setas para mover, mais e menos para aproximar ou afastar, zero para reenquadrar e Esc para fechar os detalhes.</p>
+    <div className="scene-hud-top">
+      {heading && <div className={`scene-hud-title${selectedElement ? ' max-sm:hidden sm:invisible' : ''}`}>
+        {heading}
+        <ul className="scene-hud-stats" aria-label="Resumo da cena">
+          <li><strong>{sectorCount}</strong> {sectorCount === 1 ? 'setor' : 'setores'}</li>
+          <li><strong>{bedCount}</strong> {bedCount === 1 ? 'canteiro' : 'canteiros'}</li>
+          <li><strong>{plantedBeds.length}</strong> com cultivo</li>
+        </ul>
+      </div>}
+      <div className="scene-hud-actions">
+        {actions}
+        {canFullscreen && <button type="button" className="scene-hud-button" aria-pressed={fullscreen} aria-label={fullscreen ? 'Sair da tela cheia' : 'Abrir panorâmica em tela cheia'} onClick={toggleFullscreen}>{fullscreen ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}<span className="max-md:sr-only">{fullscreen ? 'Sair' : 'Tela cheia'}</span></button>}
+      </div>
     </div>
-
-    {!selectedElement && <div className="garden-scene-hint hidden sm:block">Arraste para explorar · clique em um elemento para ver detalhes</div>}
-    <div className="garden-scene-caption"><span>Panorâmica da horta · desenho sem escala métrica</span><span>{garden.elements.length} {garden.elements.length === 1 ? 'objeto configurado' : 'objetos configurados'}</span></div>
+    <div className="garden-scene-controls scene-dock" role="group" aria-label="Controles da câmera panorâmica">
+      <button type="button" aria-label="Afastar câmera" title="Afastar (−)" onClick={() => changeCamera(zoomCamera(camera, 0.82, sceneCenter))}><Minus aria-hidden="true" /></button>
+      <span className="scene-dock-zoom" aria-live={focusing ? 'off' : 'polite'}>{zoomPercent}%</span>
+      <button type="button" aria-label="Aproximar câmera" title="Aproximar (+)" onClick={() => changeCamera(zoomCamera(camera, 1.22, sceneCenter))}><Plus aria-hidden="true" /></button>
+      <button type="button" className="garden-scene-fit" title="Reenquadrar (0)" onClick={() => changeCamera(fitCamera)}><Scan aria-hidden="true" /><span className="max-sm:sr-only">Enquadrar horta</span></button>
+      <span className="scene-dock-divider" aria-hidden="true" />
+      <button type="button" className="scene-dock-toggle" aria-pressed={showSectors} aria-label="Mostrar limites dos setores" onClick={() => setShowSectors((current) => !current)}><Layers aria-hidden="true" /><span className="max-sm:hidden">Setores</span></button>
+      <label className="scene-dock-toggle" data-checked={showInformation}><input type="checkbox" className="scene-switch" aria-label="Mostrar informações no mapa" checked={showInformation} onChange={event => setShowInformation(event.target.checked)} /><span className="max-sm:hidden" aria-hidden="true">Rótulos</span></label>
+      <button type="button" className="scene-dock-toggle" aria-expanded={legendOpen} aria-controls="garden-scene-legend" onClick={() => setLegendOpen(current => !current)}><Info aria-hidden="true" /><span className="max-sm:sr-only">Legenda</span></button>
+    </div>
+    {legendOpen && <section id="garden-scene-legend" className="scene-legend" aria-label="Legenda da cena">
+      <h3>Fases do cultivo</h3>
+      <ul>{Object.entries(stageLabels).map(([stage, label]) => <li key={stage}>{label}</li>)}</ul>
+      <h3>Como ler</h3>
+      <p>Norte para o topo da cena. Desenho sem escala métrica; posições e formas vêm da última configuração salva.</p>
+      {legendNote}
+      <h3>Navegação</h3>
+      <p>Arraste para mover · roda do mouse, + e − para zoom · 0 reenquadra · setas movem a câmera · Esc fecha detalhes.</p>
+    </section>}
   </div>
     {selectedElement && <aside className="garden-scene-inspector" aria-live="polite" aria-label={`Dados de ${selectedElement.name}`}>
       <div className="garden-scene-inspector-header"><div><span className="eyebrow">{elementRole(selectedElement)} selecionado</span><strong>{selectedElement.name}</strong></div><button type="button" aria-label="Fechar detalhes do elemento" onClick={() => selectElement(undefined)}>×</button></div>

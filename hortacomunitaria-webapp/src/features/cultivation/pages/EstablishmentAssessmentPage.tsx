@@ -1,3 +1,6 @@
+import { EvidenceSection } from "../../evidence/pages/EvidenceSection"
+import { RecordRow } from '../../../components/RecordRow'
+import { choiceLabel } from '../../../services/lookups'
 import { formatNumber } from "../../irrigation/formValues"
 import { formatDate } from "../../../services/dates"
 import { formatInstant } from "../../irrigation/formValues"
@@ -37,7 +40,7 @@ return <RecordList title="Avaliações de pegamento" hint="Período da data do r
 <SelectField name="cycleId" label="Ciclo" value={filters.draft.cycleId} change={value => filters.change("cycleId", value)} options={options.data?.cultivationCycle ?? []} />
 <SelectField name="speciesId" label="Espécie" value={filters.draft.speciesId} change={value => filters.change("speciesId", value)} options={options.data?.species ?? []} />
 {options.error && <Failure error={options.error} retry={options.retry} />}</>}>
-{result.data?.items.map(item => <li className="py-4" key={item.id}><a className="font-semibold underline decoration-horta-line underline-offset-4" href={routeHref(route.garden, route.module, route.resource, item.id, route.search)}>{formatDate(item.assessedOn)}</a><span className="ml-3 text-sm text-horta-muted">{enumLabels[item.validity]} · v{item.version}</span><small className="record-description">{formatNumber(item.survivingQuantity)} sobreviventes · {item.method}</small></li>)}
+{result.data?.items.map(item => <RecordRow key={item.id} href={routeHref(route.garden, route.module, route.resource, item.id, route.search)} title={choiceLabel(options.data?.planting, item.plantingId) ?? "Plantio"} description={`${formatDate(item.assessedOn)} · ${formatNumber(item.survivingQuantity)} sobreviventes · ${item.method}`} status={item.validity === "Invalid" ? enumLabels[item.validity] : undefined} statusTone="invalid" />)}
 </RecordList>
 }
 function EstablishmentAssessmentDetail({ route, saved }: { route: RecordRoute; saved: (message: string) => void }) {
@@ -46,5 +49,5 @@ const audit = useCallback((page: number, signal: AbortSignal) => establishmentAs
 const state = useRecord<EstablishmentAssessment>(route.id, get, audit, (version, reason) => establishmentAssessmentApi.deactivate(route.garden, route.id, version, reason), () => saved("Alteração confirmada."))
 const record = state.detail.data
 if (route.search.get("edit") === "1" && record) return <EstablishmentAssessmentForm garden={route.garden} original={record} saved={record => { saved("Registro salvo. Dados e indicadores serão recarregados."); const query = new URLSearchParams(route.search); query.delete("edit"); navigate(route.garden, route.module, route.resource, record.id, query); state.refresh() }} cancel={() => { const query = new URLSearchParams(route.search); query.delete("edit"); navigate(route.garden, route.module, route.resource, route.id, query) }} />
-return <RecordDetail state={state} title="Avaliação de pegamento" version={record?.version ?? 0} active={record?.validity === "Valid"} catalog={false} back={() => { const query = new URLSearchParams(route.search); query.delete("edit"); navigate(route.garden, route.module, route.resource, "", query) }} edit={() => { const query = new URLSearchParams(route.search); query.set("edit", "1"); navigate(route.garden, route.module, route.resource, route.id, query) }} items={record ? [{ label: "Valores do registro", value: <EstablishmentAssessmentReview record={record} /> }, { label: "Incluído em", value: formatInstant(record.recordedAt) }, { label: "Autor técnico (demonstração)", value: record.recordedByUserId }] : []}>{record && <></>}</RecordDetail>
+return <RecordDetail attachments={record && <EvidenceSection garden={route.garden} targetType="EstablishmentAssessment" targetId={record.id} active={record.validity === "Valid"} />} state={state} title="Avaliação de pegamento" version={record?.version ?? 0} active={record?.validity === "Valid"} catalog={false} back={() => { const query = new URLSearchParams(route.search); query.delete("edit"); navigate(route.garden, route.module, route.resource, "", query) }} edit={() => { const query = new URLSearchParams(route.search); query.set("edit", "1"); navigate(route.garden, route.module, route.resource, route.id, query) }} items={record ? [{ label: "Valores do registro", value: <EstablishmentAssessmentReview record={record} /> }, { label: "Incluído em", value: formatInstant(record.recordedAt) }, { label: "Autor técnico (demonstração)", value: record.recordedByUserId }] : []}>{record && <></>}</RecordDetail>
 }

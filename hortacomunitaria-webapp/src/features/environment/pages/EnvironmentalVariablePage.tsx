@@ -1,3 +1,4 @@
+import { RecordRow } from '../../../components/RecordRow'
 import { useCallback } from "react"
 import { RecordList } from "../../../components/RecordList"
 import { RecordDetail } from "../../../components/RecordDetail"
@@ -27,7 +28,7 @@ const result = useRemote(queryKey + "/" + filters.revision, load)
 return <RecordList requireActiveGarden={false} title="Variáveis ambientais" hint="Cadastros de apoio com identificação, versão e histórico." create={() => navigate(route.garden, route.module, route.resource, "novo", route.search)} apply={filters.apply} loading={result.loading} error={filters.error ?? result.error} retry={filters.retry} data={result.data} page={filters.changePage} filters={<>
 <SelectField name="isActive" label="Situação cadastral" value={filters.draft.isActive} change={value => filters.change("isActive", value)} options={[{ id: 'true', label: 'Ativo' }, { id: 'false', label: 'Inativo' }]} />
 {options.error && <Failure error={options.error} retry={options.retry} />}</>}>
-{result.data?.items.map(item => <li className="py-4" key={item.id}><a className="font-semibold underline decoration-horta-line underline-offset-4" href={routeHref(route.garden, route.module, route.resource, item.id, route.search)}>{item.name}</a><span className="ml-3 text-sm text-horta-muted">{item.isActive ? "Ativo" : "Inativo"} · v{item.version}</span></li>)}
+{result.data?.items.map(item => <RecordRow key={item.id} href={routeHref(route.garden, route.module, route.resource, item.id, route.search)} title={item.name} description={`${item.quantity} · ${item.referenceUnit}`} status={item.isActive ? undefined : "Inativo"} statusTone="invalid" />)}
 </RecordList>
 }
 function EnvironmentalVariableDetail({ route, saved }: { route: RecordRoute; saved: (message: string) => void }) {

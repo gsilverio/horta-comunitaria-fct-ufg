@@ -1,3 +1,6 @@
+import { EvidenceSection } from "../../evidence/pages/EvidenceSection"
+import { RecordRow } from '../../../components/RecordRow'
+import { choiceLabel } from '../../../services/lookups'
 import { formatDate } from "../../../services/dates"
 import { formatInstant } from "../../irrigation/formValues"
 import { useCallback } from "react"
@@ -36,7 +39,7 @@ return <RecordList title="Observações agronômicas" hint="Período da data do 
 <SelectField name="bedId" label="Canteiro" value={filters.draft.bedId} change={value => filters.change("bedId", value)} options={options.data?.bed ?? []} />
 <SelectField name="speciesId" label="Espécie" value={filters.draft.speciesId} change={value => filters.change("speciesId", value)} options={options.data?.species ?? []} />
 {options.error && <Failure error={options.error} retry={options.retry} />}</>}>
-{result.data?.items.map(item => <li className="py-4" key={item.id}><a className="font-semibold underline decoration-horta-line underline-offset-4" href={routeHref(route.garden, route.module, route.resource, item.id, route.search)}>{formatDate(item.observedOn)}</a><span className="ml-3 text-sm text-horta-muted">{enumLabels[item.validity]} · v{item.version}</span><small className="record-description">{item.category} · {item.description}</small></li>)}
+{result.data?.items.map(item => <RecordRow key={item.id} href={routeHref(route.garden, route.module, route.resource, item.id, route.search)} title={item.category} description={`${formatDate(item.observedOn)} · ${choiceLabel(options.data?.cultivationCycle, item.cycleId) ?? "Ciclo"} · ${item.description}`} status={item.validity === "Invalid" ? enumLabels[item.validity] : undefined} statusTone="invalid" />)}
 </RecordList>
 }
 function AgronomicObservationDetail({ route, saved }: { route: RecordRoute; saved: (message: string) => void }) {
@@ -45,5 +48,5 @@ const audit = useCallback((page: number, signal: AbortSignal) => agronomicObserv
 const state = useRecord<AgronomicObservation>(route.id, get, audit, (version, reason) => agronomicObservationApi.deactivate(route.garden, route.id, version, reason), () => saved("Alteração confirmada."))
 const record = state.detail.data
 if (route.search.get("edit") === "1" && record) return <AgronomicObservationForm garden={route.garden} original={record} saved={record => { saved("Registro salvo. Dados e indicadores serão recarregados."); const query = new URLSearchParams(route.search); query.delete("edit"); navigate(route.garden, route.module, route.resource, record.id, query); state.refresh() }} cancel={() => { const query = new URLSearchParams(route.search); query.delete("edit"); navigate(route.garden, route.module, route.resource, route.id, query) }} />
-return <RecordDetail state={state} title="Observação agronômica" version={record?.version ?? 0} active={record?.validity === "Valid"} catalog={false} back={() => { const query = new URLSearchParams(route.search); query.delete("edit"); navigate(route.garden, route.module, route.resource, "", query) }} edit={() => { const query = new URLSearchParams(route.search); query.set("edit", "1"); navigate(route.garden, route.module, route.resource, route.id, query) }} items={record ? [{ label: "Valores do registro", value: <AgronomicObservationReview record={record} /> }, { label: "Incluído em", value: formatInstant(record.recordedAt) }, { label: "Autor técnico (demonstração)", value: record.recordedByUserId }] : []}>{record && <></>}</RecordDetail>
+return <RecordDetail attachments={record && <EvidenceSection garden={route.garden} targetType="AgronomicObservation" targetId={record.id} active={record.validity === "Valid"} />} state={state} title="Observação agronômica" version={record?.version ?? 0} active={record?.validity === "Valid"} catalog={false} back={() => { const query = new URLSearchParams(route.search); query.delete("edit"); navigate(route.garden, route.module, route.resource, "", query) }} edit={() => { const query = new URLSearchParams(route.search); query.set("edit", "1"); navigate(route.garden, route.module, route.resource, route.id, query) }} items={record ? [{ label: "Valores do registro", value: <AgronomicObservationReview record={record} /> }, { label: "Incluído em", value: formatInstant(record.recordedAt) }, { label: "Autor técnico (demonstração)", value: record.recordedByUserId }] : []}>{record && <></>}</RecordDetail>
 }

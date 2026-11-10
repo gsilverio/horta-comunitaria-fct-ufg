@@ -20,6 +20,7 @@ import type { Species } from "../features/cultivation/types/Species"
 import type { IrrigationSummary } from "../features/irrigation/types/irrigation"
 export interface LookupChoice extends Choice { speciesId?: string; cultivarId?: string | null; cycleId?: string | null; bedId?: string | null; referenceUnit?: string; usableMassKg?: number | null }
 export type LookupKey = 'agriculturalInput' | 'bed' | 'cultivar' | 'cultivationCycle' | 'dryingLot' | 'environmentalVariable' | 'harvest' | 'institution' | 'irrigation' | 'irrigationSector' | 'occurrence' | 'participant' | 'planting' | 'propagationLot' | 'samplingPoint' | 'species'
+export function choiceLabel(choices: Choice[] | undefined, id: string | null | undefined) { return id ? choices?.find(choice => choice.id === id)?.label : undefined }
 export const lookupApi = { async load(garden: string, key: string, signal: AbortSignal): Promise<Partial<Record<LookupKey, LookupChoice[]>>> {
 const result: Partial<Record<LookupKey, LookupChoice[]>> = {}
 await Promise.all(key.split("|").map(async item => { switch(item) {

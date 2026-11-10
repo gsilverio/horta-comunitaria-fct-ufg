@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { EditorFrame } from "../../../components/EditorFrame"
-import { Field, Facts } from "../../../components/Fields"
+import { Field, Facts, Group } from "../../../components/Fields"
 import { Failure } from "../../../components/Feedback"
 import { useEditor } from "../../../hooks/useEditor"
 import { useLookups } from "../../../hooks/useLookups"
@@ -19,11 +19,12 @@ function values(): ParticipantValues { if (options.loading || options.error) thr
 displayName: draft.displayName.trim(),
 category: optionalText(draft.category),
 } }
-return <EditorFrame dependenciesReady={!options.loading && !options.error} title={original ? "Corrigir: Participante" : "Novo: Participante"} busy={editor.busy} uncertain={!!editor.attempt || editor.catalogUncertain} catalogUncertain={editor.catalogUncertain} error={editor.error} reason={original ? editor.reason : undefined} changeReason={original ? editor.setReason : undefined} submit={() => void editor.submit(values)} cancel={cancel} conflict={original ? () => void editor.reloadConflict() : undefined} review={editor.review && <Facts items={[{ label: "Versão", value: editor.review.version }, { label: "Valores atuais", value: <ParticipantReview record={editor.review} /> }]} />} acceptReview={editor.acceptReview}>
+return <EditorFrame dependenciesReady={!options.loading && !options.error} title={original ? "Corrigir participante" : "Novo participante"} busy={editor.busy} uncertain={!!editor.attempt || editor.catalogUncertain} catalogUncertain={editor.catalogUncertain} error={editor.error} reason={original ? editor.reason : undefined} changeReason={original ? editor.setReason : undefined} submit={() => void editor.submit(values)} cancel={cancel} conflict={original ? () => void editor.reloadConflict() : undefined} review={editor.review && <Facts items={[{ label: "Versão", value: editor.review.version }, { label: "Valores atuais", value: <ParticipantReview record={editor.review} /> }]} />} acceptReview={editor.acceptReview}>
 {options.loading && <p role="status">Carregando cadastros de apoio…</p>}{options.error && <Failure error={options.error} retry={options.retry} />}
-<div className="grid min-w-0 gap-4 sm:grid-cols-2">
+<div className="grid min-w-0 gap-5">
+<Group title="Identificação">
 <Field name="displayName" label="Nome de exibição" required type="text" value={draft.displayName} change={value => change("displayName", value)} error={editor.error} />
 <Field name="category" label="Categoria" type="text" value={draft.category} change={value => change("category", value)} error={editor.error} />
-</div></EditorFrame>
+</Group></div></EditorFrame>
 }
 export function ParticipantReview({ record }: { record: Participant }) { const options = useLookups(record.gardenId, []); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Nome de exibição', value: record.displayName }, { label: 'Categoria', value: record.category }]} /></> }

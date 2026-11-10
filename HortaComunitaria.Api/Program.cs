@@ -1,5 +1,6 @@
 using HortaComunitaria.Api.Infrastructure.DependencyInjection;
 using HortaComunitaria.Api.Infrastructure.Endpoints;
+using HortaComunitaria.Api.Infrastructure.Files;
 using HortaComunitaria.Api.Infrastructure.Observability;
 using HortaComunitaria.Api.Infrastructure.Persistence;
 using Serilog;
@@ -17,6 +18,8 @@ try
     var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddObservability(builder.Configuration, builder.Environment);
     builder.Services.AddPersistence(builder.Configuration, builder.Environment);
+    builder.Services.AddFileStorage(builder.Configuration);
+    builder.Services.AddFileStorage(builder.Configuration);
     builder.Services.AddApplication();
     builder.Services.AddTechnicalEndpoints();
 

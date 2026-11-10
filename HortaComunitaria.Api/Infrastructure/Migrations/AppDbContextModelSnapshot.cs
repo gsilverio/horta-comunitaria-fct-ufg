@@ -502,8 +502,6 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("GardenId", "Id");
-
                     b.HasIndex("RecordedByUserId");
 
                     b.HasIndex("GardenId", "CycleId");
@@ -821,8 +819,6 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasAlternateKey("GardenId", "Id");
 
                     b.HasIndex("RecordedByUserId");
 
@@ -1334,6 +1330,139 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                             t.HasCheckConstraint("ck_sampling_point_context", "num_nonnulls(\"BedId\", \"SectorId\") <= 1");
 
                             t.HasCheckConstraint("ck_sampling_points_version", "\"Version\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("HortaComunitaria.Api.Domain.Evidence.EvidenceFile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ActivityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AgronomicObservationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("BedId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly?>("CapturedOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("CycleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("DryingLotId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("EstablishmentAssessmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GardenId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("HarvestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("OccurrenceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<Guid?>("PlantingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RecordedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .IsFixedLength();
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<RecordValidity>("Validity")
+                        .HasColumnType("record_validity");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecordedByUserId");
+
+                    b.HasIndex("StorageKey")
+                        .IsUnique()
+                        .HasDatabaseName("ux_evidence_files_storage_key");
+
+                    b.HasIndex("GardenId", "ActivityId");
+
+                    b.HasIndex("GardenId", "AgronomicObservationId");
+
+                    b.HasIndex("GardenId", "BedId");
+
+                    b.HasIndex("GardenId", "CycleId");
+
+                    b.HasIndex("GardenId", "DryingLotId");
+
+                    b.HasIndex("GardenId", "EstablishmentAssessmentId");
+
+                    b.HasIndex("GardenId", "HarvestId");
+
+                    b.HasIndex("GardenId", "OccurrenceId");
+
+                    b.HasIndex("GardenId", "OperationId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_evidence_files_garden_operation");
+
+                    b.HasIndex("GardenId", "PlantingId");
+
+                    b.HasIndex("GardenId", "RecordedAt", "Id")
+                        .IsDescending(false, true, true);
+
+                    b.ToTable("evidence_files", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_evidence_files_single_target", "num_nonnulls(\"BedId\", \"CycleId\", \"PlantingId\", \"EstablishmentAssessmentId\", \"AgronomicObservationId\", \"HarvestId\", \"DryingLotId\", \"ActivityId\", \"OccurrenceId\") = 1");
+
+                            t.HasCheckConstraint("ck_evidence_files_size", "\"SizeBytes\" > 0");
+
+                            t.HasCheckConstraint("ck_evidence_files_version", "\"Version\" > 0");
                         });
                 });
 
@@ -2315,6 +2444,75 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                     b.HasOne("HortaComunitaria.Api.Domain.Gardens.IrrigationSector", null)
                         .WithMany()
                         .HasForeignKey("GardenId", "SectorId")
+                        .HasPrincipalKey("GardenId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("HortaComunitaria.Api.Domain.Evidence.EvidenceFile", b =>
+                {
+                    b.HasOne("HortaComunitaria.Api.Domain.Gardens.Garden", null)
+                        .WithMany()
+                        .HasForeignKey("GardenId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("RecordedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HortaComunitaria.Api.Domain.Activities.Activity", null)
+                        .WithMany()
+                        .HasForeignKey("GardenId", "ActivityId")
+                        .HasPrincipalKey("GardenId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HortaComunitaria.Api.Domain.Cultivation.AgronomicObservation", null)
+                        .WithMany()
+                        .HasForeignKey("GardenId", "AgronomicObservationId")
+                        .HasPrincipalKey("GardenId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HortaComunitaria.Api.Domain.Gardens.Bed", null)
+                        .WithMany()
+                        .HasForeignKey("GardenId", "BedId")
+                        .HasPrincipalKey("GardenId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HortaComunitaria.Api.Domain.Cultivation.CultivationCycle", null)
+                        .WithMany()
+                        .HasForeignKey("GardenId", "CycleId")
+                        .HasPrincipalKey("GardenId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HortaComunitaria.Api.Domain.Cultivation.DryingLot", null)
+                        .WithMany()
+                        .HasForeignKey("GardenId", "DryingLotId")
+                        .HasPrincipalKey("GardenId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HortaComunitaria.Api.Domain.Cultivation.EstablishmentAssessment", null)
+                        .WithMany()
+                        .HasForeignKey("GardenId", "EstablishmentAssessmentId")
+                        .HasPrincipalKey("GardenId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HortaComunitaria.Api.Domain.Cultivation.Harvest", null)
+                        .WithMany()
+                        .HasForeignKey("GardenId", "HarvestId")
+                        .HasPrincipalKey("GardenId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HortaComunitaria.Api.Domain.Occurrences.Occurrence", null)
+                        .WithMany()
+                        .HasForeignKey("GardenId", "OccurrenceId")
+                        .HasPrincipalKey("GardenId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HortaComunitaria.Api.Domain.Cultivation.Planting", null)
+                        .WithMany()
+                        .HasForeignKey("GardenId", "PlantingId")
                         .HasPrincipalKey("GardenId", "Id")
                         .OnDelete(DeleteBehavior.Restrict);
                 });

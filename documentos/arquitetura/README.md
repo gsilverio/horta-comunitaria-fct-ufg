@@ -19,5 +19,6 @@ Os modelos são preliminares e se baseiam nos requisitos 0.0.1 e no anexo da pro
 - [Observabilidade](Observabilidade.md): contrato dos eventos implementados e diagnóstico com Serilog.
 - [Catálogo Embrapa](Catalogo_Embrapa.md): 113 cultivares, imagens licenciadas e importação explícita offline.
 - [Cultivos no panorama](Cultivos_no_Panorama.md): pixel art, fases configuráveis e densidade ilustrativa.
+- [Fotografias de campo](Fotografias_Campo.md): recorte de RF12, armazenamento local atrás de `IFileStorage`, vínculo único e contrato HTTP.
 
 Novos detalhamentos e decisões de arquitetura ficam nesta pasta. As regras de desenvolvimento ficam em [.codex/arquitetura-backend.md](../../.codex/arquitetura-backend.md) e [.codex/arquitetura-frontend.mdc](../../.codex/arquitetura-frontend.mdc), vinculadas pelo `AGENTS.md`; os requisitos e documentos gerais permanecem na [pasta de documentos](../).

@@ -2,7 +2,7 @@ import { routeHref } from "../../../hooks/useRoute"
 import { readRoute } from "../../../hooks/useRoute"
 import { useState } from "react"
 import { EditorFrame } from "../../../components/EditorFrame"
-import { Field, SelectField, Facts } from "../../../components/Fields"
+import { Field, SelectField, Facts, Group } from "../../../components/Fields"
 import { Failure } from "../../../components/Feedback"
 import { useEditor } from "../../../hooks/useEditor"
 import { useLookups } from "../../../hooks/useLookups"
@@ -30,15 +30,19 @@ method: draft.method.trim(),
 notes: optionalText(draft.notes),
 responsibleParticipantId: optionalText(draft.responsibleParticipantId),
 } }
-return <EditorFrame dependenciesReady={!options.loading && !options.error} title={original ? "Corrigir: Avaliação de pegamento" : "Novo: Avaliação de pegamento"} busy={editor.busy} uncertain={!!editor.attempt || editor.catalogUncertain} catalogUncertain={editor.catalogUncertain} error={editor.error} reason={original ? editor.reason : undefined} changeReason={original ? editor.setReason : undefined} submit={() => void editor.submit(values)} cancel={cancel} conflict={original ? () => void editor.reloadConflict() : undefined} review={editor.review && <Facts items={[{ label: "Versão", value: editor.review.version }, { label: "Valores atuais", value: <EstablishmentAssessmentReview record={editor.review} /> }]} />} acceptReview={editor.acceptReview}>
+return <EditorFrame dependenciesReady={!options.loading && !options.error} title={original ? "Corrigir avaliação de pegamento" : "Nova avaliação de pegamento"} busy={editor.busy} uncertain={!!editor.attempt || editor.catalogUncertain} catalogUncertain={editor.catalogUncertain} error={editor.error} reason={original ? editor.reason : undefined} changeReason={original ? editor.setReason : undefined} submit={() => void editor.submit(values)} cancel={cancel} conflict={original ? () => void editor.reloadConflict() : undefined} review={editor.review && <Facts items={[{ label: "Versão", value: editor.review.version }, { label: "Valores atuais", value: <EstablishmentAssessmentReview record={editor.review} /> }]} />} acceptReview={editor.acceptReview}>
 {options.loading && <p role="status">Carregando cadastros de apoio…</p>}{options.error && <Failure error={options.error} retry={options.retry} />}
-<div className="grid min-w-0 gap-4 sm:grid-cols-2">
+<div className="grid min-w-0 gap-5">
+<Group title="Avaliação">
 <SelectField name="plantingId" label="Plantio avaliado" required value={draft.plantingId} change={value => change("plantingId", value)} options={options.data?.planting ?? []} error={editor.error} />
 <Field name="assessedOn" label="Data da avaliação" required type="date" value={draft.assessedOn} change={value => change("assessedOn", value)} error={editor.error} />
+<SelectField name="responsibleParticipantId" label="Responsável pelo trabalho" value={draft.responsibleParticipantId} change={value => change("responsibleParticipantId", value)} options={options.data?.participant ?? []} error={editor.error} />
+</Group>
+<Group title="Resultado">
 <Field name="survivingQuantity" label="Quantidade sobrevivente" required type="integer" value={draft.survivingQuantity} change={value => change("survivingQuantity", value)} error={editor.error} />
 <Field name="method" label="Método" required type="text" value={draft.method} change={value => change("method", value)} error={editor.error} />
 <Field name="notes" label="Observações" type="textarea" value={draft.notes} change={value => change("notes", value)} error={editor.error} />
-<SelectField name="responsibleParticipantId" label="Responsável pelo trabalho" value={draft.responsibleParticipantId} change={value => change("responsibleParticipantId", value)} options={options.data?.participant ?? []} error={editor.error} />
+</Group>
 </div></EditorFrame>
 }
 export function EstablishmentAssessmentReview({ record }: { record: EstablishmentAssessment }) { const options = useLookups(record.gardenId, ['participant', 'planting']); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Plantio avaliado', value: record.plantingId ? <a className="underline" href={routeHref(readRoute().garden, 'cultivo', 'plantios', record.plantingId)}>{options.data?.planting?.find(x => x.id === record.plantingId)?.label ?? record.plantingId}</a> : "Não informado" }, { label: 'Data da avaliação', value: record.assessedOn ? record.assessedOn.split("-").reverse().join("/") : "Não informado" }, { label: 'Quantidade sobrevivente', value: record.survivingQuantity === null ? "Não informado" : formatNumber(record.survivingQuantity) }, { label: 'Método', value: record.method }, { label: 'Observações', value: record.notes }, { label: 'Responsável pelo trabalho', value: record.responsibleParticipantId ? <a className="underline" href={routeHref(readRoute().garden, 'atividades', 'participantes', record.responsibleParticipantId)}>{options.data?.participant?.find(x => x.id === record.responsibleParticipantId)?.label ?? record.responsibleParticipantId}</a> : "Não informado" }]} /></> }

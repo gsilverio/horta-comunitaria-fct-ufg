@@ -20,7 +20,7 @@ export function BedSetupForm({ garden, bed, sectorId, saved, cancel }: { garden:
       {command.conflict && <p className="notice">Use Cancelar para voltar ao canteiro e revisar o estado atual antes de continuar.</p>}
       {options.error && <Failure error={options.error} retry={options.retry} />}
       {options.loading && <p role="status">Carregando setores…</p>}
-      <fieldset disabled={command.pending || command.conflict} className="grid gap-5">
+      <fieldset disabled={command.pending || command.conflict} className="grid gap-4 sm:grid-cols-2">
         <Field name="cultivableAreaM2" label="Área cultivável (m²)" required type="decimal" value={area} change={setArea} error={command.error} hint="Informe a área disponível para cultivo, por exemplo 5,5." />
         <SelectField name="sectorId" label="Setor" required value={sector} change={setSector} options={options.data?.irrigationSector ?? []} error={command.error} />
         <Field name="validFrom" label="Válido a partir de" required type="date" value={validFrom} change={setValidFrom} error={command.error} hint="Data a partir da qual esta área e este setor passam a valer." />

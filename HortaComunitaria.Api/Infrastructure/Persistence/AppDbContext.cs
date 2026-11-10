@@ -77,6 +77,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<DryingLot> DryingLots => Set<DryingLot>();
     /// <summary>Registros Activities do MVP.</summary>
     public DbSet<Activity> Activities => Set<Activity>();
+    /// <summary>Metadados das fotografias vinculadas aos registros.</summary>
+    public DbSet<HortaComunitaria.Api.Domain.Evidence.EvidenceFile> EvidenceFiles => Set<HortaComunitaria.Api.Domain.Evidence.EvidenceFile>();
     /// <summary>Aplica mapeamentos separados do domínio.</summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

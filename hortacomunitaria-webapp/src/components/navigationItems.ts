@@ -1,3 +1,5 @@
+import type { RecordRoute } from '../types/records'
+
 export const navigationItems = [
   {
     "id": "visao-geral",
@@ -148,6 +150,16 @@ export const navigationItems = [
     ]
   },
   {
+    "id": "fotos",
+    "label": "Fotos",
+    "items": [
+      {
+        "id": "galeria",
+        "label": "Galeria"
+      }
+    ]
+  },
+  {
     "id": "atividades",
     "label": "Atividades",
     "items": [
@@ -190,3 +202,25 @@ export const navigationItems = [
     ]
   }
 ]
+
+/** Páginas de gestão de uma horta. A listagem de hortas fica no próprio item Horta. */
+const gardenPages = [
+  { id: 'setores', label: 'Setores' },
+  { id: 'canteiros', label: 'Canteiros' },
+  { id: 'interativa', label: 'Mapa da horta' },
+  { id: 'hortas', label: 'Dados da horta' },
+]
+
+export function modulePages(module: string) {
+  if (module === 'horta') return gardenPages
+  const items = navigationItems.find(item => item.id === module)?.items ?? []
+  return items.length > 1 ? items : []
+}
+
+/** Localização atual: módulo e página, para o header e leitores de tela. */
+export function currentLocation(route: RecordRoute) {
+  const area = navigationItems.find(item => item.id === route.module)?.label
+  const isCatalog = route.module === 'horta' && route.resource === 'hortas' && !route.id
+  const page = isCatalog ? 'Todas as hortas' : route.module === 'horta' && route.resource === 'hortas' && route.id === 'novo' ? 'Nova horta' : modulePages(route.module).find(item => item.id === route.resource)?.label
+  return { area, page }
+}

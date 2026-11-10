@@ -1,3 +1,6 @@
+import { formatNumber } from "../../irrigation/formValues"
+import { RecordRow } from '../../../components/RecordRow'
+import { choiceLabel } from '../../../services/lookups'
 import { formatInstant } from "../../irrigation/formValues"
 import { useCallback } from "react"
 import { RecordList } from "../../../components/RecordList"
@@ -36,7 +39,7 @@ return <RecordList title="Medições ambientais" hint="Período da data do regis
 <Field name="method" label="Método" type="text" value={filters.draft.method} change={value => filters.change("method", value)} />
 <SelectField name="quality" label="Qualidade" value={filters.draft.quality} change={value => filters.change("quality", value)} options={[{ id: 'Normal', label: enumLabels['Normal'] }, { id: 'Questionable', label: enumLabels['Questionable'] }]} />
 {options.error && <Failure error={options.error} retry={options.retry} />}</>}>
-{result.data?.items.map(item => <li className="py-4" key={item.id}><a className="font-semibold underline decoration-horta-line underline-offset-4" href={routeHref(route.garden, route.module, route.resource, item.id, route.search)}>{formatInstant(item.collectedAt)}</a><span className="ml-3 text-sm text-horta-muted">{enumLabels[item.validity]} · v{item.version}</span></li>)}
+{result.data?.items.map(item => <RecordRow key={item.id} href={routeHref(route.garden, route.module, route.resource, item.id, route.search)} title={choiceLabel(options.data?.environmentalVariable, item.variableId) ?? "Medição"} description={`${formatInstant(item.collectedAt)} · ${choiceLabel(options.data?.samplingPoint, item.samplingPointId) ?? "Ponto de coleta"}`} meta={<strong className="text-sm">{formatNumber(item.value)} {item.unit}</strong>} status={item.validity === "Invalid" ? enumLabels[item.validity] : undefined} statusTone="invalid" />)}
 </RecordList>
 }
 function EnvironmentalMeasurementDetail({ route, saved }: { route: RecordRoute; saved: (message: string) => void }) {

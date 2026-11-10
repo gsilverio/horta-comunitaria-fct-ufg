@@ -5,7 +5,7 @@
   --color-horta-forest: #1c4939;
   --color-horta-forest-hover: #2c634b;
   --color-horta-ink: #24372d;
-  --color-horta-muted: #617069;
+  --color-horta-muted: #5a6962;
   --color-horta-canvas: #f4f5ef;
   --color-horta-line: #dce3d9;
   --color-horta-soft: #e8f1db;
@@ -17,27 +17,453 @@
   body { @apply m-0 min-w-80 bg-horta-canvas font-sans text-horta-ink antialiased; }
   button, input, select, textarea { font: inherit; }
   button, a, input, select, textarea, summary { @apply touch-manipulation; }
-  button { @apply min-h-11 cursor-pointer rounded-md border border-horta-forest bg-horta-forest px-5 py-3 text-sm font-semibold text-white transition-colors; }
+  button { @apply min-h-11 cursor-pointer rounded-md border border-horta-forest bg-horta-forest px-4 py-2 text-sm font-semibold text-white transition-colors; }
   button:hover:not(:disabled) { @apply bg-horta-forest-hover; }
   button:disabled { @apply cursor-default opacity-50; }
-  :focus-visible { @apply outline-3 outline-offset-3 outline-horta-focus; }
+  :focus-visible { @apply outline-3 outline-offset-2 outline-horta-focus; }
+  [tabindex="-1"]:focus-visible { @apply outline-none; }
   a { @apply text-horta-forest; }
-  h1 { @apply mb-3 text-3xl leading-tight font-semibold tracking-tight; }
-  h2 { @apply mt-1 mb-5 text-xl font-bold tracking-tight; }
-  h3 { @apply mt-5 mb-3 text-base font-semibold; }
+  h1 { @apply mb-1 text-2xl leading-tight font-semibold tracking-tight; }
+  h2 { @apply mt-0 mb-3 text-base leading-snug font-semibold; }
+  h3 { @apply mt-4 mb-2 text-sm font-semibold; }
+  h4 { @apply mt-3 mb-2 text-sm font-semibold; }
   p { @apply mb-3 text-sm leading-relaxed; }
   small { @apply text-xs leading-relaxed text-horta-muted; }
-  label { @apply flex flex-col gap-2 text-xs leading-relaxed font-semibold; }
-  input, select, textarea { @apply block min-h-11 w-full min-w-0 rounded-md border border-[#c9d4cc] bg-white px-3 py-2.5 text-sm font-normal text-horta-ink; }
+  label { @apply flex flex-col gap-1.5 text-[13px] leading-snug font-medium; }
+  input, select, textarea { @apply block min-h-11 w-full min-w-0 rounded-md border border-[#c9d4cc] bg-white px-3 py-2 text-sm font-normal text-horta-ink; }
   textarea { @apply resize-y; }
+  input:hover:not(:disabled), select:hover:not(:disabled), textarea:hover:not(:disabled) { @apply border-[#9fb0a5]; }
   input:disabled, select:disabled, textarea:disabled { @apply bg-horta-canvas text-horta-muted; }
   [aria-invalid=true] { @apply border-horta-danger; }
   fieldset { @apply m-0 min-w-0 border-0 p-0; }
-  details { @apply my-2 text-xs break-words; }
-  summary { @apply min-h-8 cursor-pointer py-1 text-horta-forest; }
-  footer { @apply mx-auto flex max-w-7xl flex-col justify-between gap-2 border-t border-horta-line px-5 py-6 text-xs text-horta-muted sm:flex-row sm:px-12; }
+  details { @apply my-2 text-sm break-words; }
+  summary { @apply min-h-11 cursor-pointer py-3 font-medium text-horta-forest; }
+  footer { @apply flex flex-col justify-between gap-2 border-t border-horta-line px-5 py-3 text-xs text-horta-muted sm:flex-row; }
 }
 
+/* Estrutura da aplicação */
+@layer components {
+  .ui-icon { @apply size-5 shrink-0; }
+  .skip-link { @apply sr-only; }
+  .skip-link:focus { @apply not-sr-only fixed top-3 left-3 z-50 rounded-md bg-white p-3 shadow; }
+  .workspace-layout { @apply grid min-h-dvh lg:grid-cols-[224px_minmax(0,1fr)]; }
+  .workspace-sidebar { @apply sticky top-0 hidden h-dvh flex-col overflow-y-auto border-r border-horta-line bg-[#f9faf6] lg:flex; }
+  .sidebar-brand { @apply flex min-h-14 items-center border-b border-horta-line px-4; }
+  .workspace-sidebar .primary-navigation { @apply px-2 py-3; }
+  .workspace-content { @apply flex min-w-0 flex-col bg-white; }
+  .workspace-header { @apply flex min-h-14 min-w-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-horta-line bg-[#f9faf6] px-3 py-1.5 sm:flex-nowrap sm:px-5; }
+  .workspace-location { @apply order-last m-0 flex w-full min-w-0 items-center gap-1.5 text-[13px] sm:order-none sm:w-auto; }
+  .workspace-location strong { @apply truncate font-semibold text-horta-ink; }
+  .workspace-location span { @apply truncate text-horta-muted; }
+  .workspace-location .ui-icon { @apply size-3 text-horta-muted; }
+  .garden-picker { @apply min-w-0 flex-row items-center gap-2 text-xs font-medium text-horta-muted; }
+  .garden-picker select { @apply bg-white; }
+  .workspace-content main { @apply w-full flex-1 px-4 py-5 sm:px-5 xl:px-6; min-height: 70vh; }
+  .workspace-content main > * { @apply max-w-[1400px]; }
+  .workspace-wide .workspace-content main > * { @apply max-w-none; }
+  .workspace-footer { @apply w-full shrink-0; }
+
+  .brand { @apply flex items-center gap-2 text-sm font-semibold tracking-tight no-underline; }
+  .brand svg { @apply size-7 shrink-0 fill-[#d5e6bc] stroke-horta-forest; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+  .brand small { @apply block text-[10px] leading-tight font-normal tracking-wide; }
+
+  .nav-group { @apply mb-3; }
+  .nav-group-title { @apply mb-1 px-3 pt-1 text-[11px] leading-5 font-semibold tracking-wide text-horta-muted uppercase; }
+  .nav-link { @apply flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm text-horta-ink no-underline transition-colors hover:bg-horta-canvas; }
+  .nav-link .ui-icon { @apply size-4.5 text-horta-muted; }
+  .nav-link[aria-current=page] { @apply bg-horta-soft font-semibold text-horta-forest; box-shadow: inset 3px 0 0 var(--color-horta-forest); }
+  .nav-link[aria-current=page] .ui-icon, .nav-link[data-open=true] .ui-icon { @apply text-horta-forest; }
+  .nav-link[data-open=true] { @apply font-semibold text-horta-forest; }
+  .nav-pages { @apply m-0 mb-1 ml-5 list-none border-l border-horta-line p-0 pl-2; }
+  .nav-page { @apply flex min-h-10 items-center rounded-md px-2.5 py-1.5 text-[13px] text-horta-muted no-underline transition-colors hover:bg-horta-canvas hover:text-horta-forest max-lg:min-h-11; }
+  .nav-page[aria-current=page] { @apply bg-horta-soft font-semibold text-horta-forest; }
+  .navigation-dialog { @apply fixed inset-y-0 left-0 m-0 h-dvh max-h-none w-[min(20rem,calc(100%-3rem))] max-w-none overflow-y-auto border-0 border-r border-horta-line bg-[#f9faf6] p-0 shadow-xl; }
+  .navigation-dialog::backdrop { background: rgb(24 47 35 / 45%); }
+  .navigation-dialog .primary-navigation { @apply px-2 py-3; }
+
+}
+
+/* Padrões de página: cabeçalho, seções, filtros, listas, formulários, detalhes e mensagens */
+@layer components {
+  .eyebrow { @apply block text-xs font-medium text-horta-muted; }
+  .muted, .hint { @apply text-horta-muted; }
+  .hint { @apply text-xs leading-relaxed; }
+  .hint:empty, .field-error:empty { @apply hidden; }
+  .field-error { @apply text-xs font-medium text-horta-danger; }
+
+  .page-heading { @apply mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row; }
+  .page-heading > div:first-child { @apply min-w-0; }
+  .page-heading h1, .page-heading h2 { @apply m-0 break-words; }
+  .page-heading h2 { @apply text-lg; }
+  .page-title { @apply flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1; }
+  .page-heading > div:first-child > p { @apply mt-0.5; }
+  .page-heading p { @apply mb-0 max-w-3xl text-horta-muted; }
+  .page-actions { @apply flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto sm:justify-end; }
+  .page-heading > button, .page-heading > .action-link, .page-actions > * { @apply w-full justify-center whitespace-nowrap sm:w-auto; }
+  .page-heading > button { @apply flex items-center gap-2; }
+
+  .panel { @apply mb-6 min-w-0; }
+  .panel + .panel { @apply border-t border-horta-line pt-5; }
+
+  .action-link { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-horta-forest bg-horta-forest px-4 py-2 text-sm font-semibold text-white no-underline transition-colors hover:bg-horta-forest-hover; }
+  .secondary, .action-link.secondary { @apply border-[#cbd7ce] bg-white text-horta-forest; }
+  .secondary:hover:not(:disabled), .action-link.secondary:hover { @apply bg-[#edf3e9]; }
+  .danger { @apply border-horta-danger bg-horta-danger; }
+  .danger:hover:not(:disabled) { @apply bg-[#742b27]; }
+  .danger-outline { @apply border-[#d9aaa6] bg-white text-horta-danger; }
+  .danger-outline:hover:not(:disabled) { @apply bg-horta-danger text-white; }
+  .text-button { @apply mb-2 min-h-11 border-0 bg-transparent px-0 py-2 text-horta-forest; }
+  .text-button:hover:not(:disabled) { @apply bg-transparent underline; }
+
+  .badge { @apply inline-block rounded bg-horta-soft px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap text-[#3b5730]; }
+  .badge.warning { @apply bg-[#fbf0dc] text-[#7a5316]; }
+  .badge.invalid { @apply bg-[#f7e9e6] text-[#91463e]; }
+
+  .filter-toggle { @apply mb-3 flex w-full items-center justify-center gap-2 sm:hidden; }
+  .filter-panel { @apply mb-4 grid min-w-0 items-end gap-3 border-y border-horta-line bg-[#fafbf8] p-3 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]; }
+  .filter-panel > button { @apply w-full; }
+  .filter-panel > .feedback { @apply col-span-full mb-0; }
+  .filter-panel[data-collapsed=true] { @apply hidden sm:grid; }
+
+  .results-heading { @apply flex items-center justify-between gap-4 border-b border-horta-line pb-2; }
+  .results-heading h2 { @apply m-0 text-sm; }
+  .record-results { @apply m-0 list-none p-0; }
+  .record-results > li { @apply relative flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-horta-line px-2 py-3 text-sm transition-colors hover:bg-[#f6f8f2]; }
+  .record-results > li > a { @apply min-w-0 flex-1 font-semibold underline-offset-4; }
+  .record-results > li > a:first-child::after { @apply absolute inset-0; content: ''; }
+  .record-results > li > a:first-child:focus-visible { @apply outline-none; }
+  .record-results > li:has(> a:first-child:focus-visible) { @apply outline-3 -outline-offset-3 outline-horta-focus; }
+  .record-results > li button, .record-results > li > a:not(:first-child) { @apply relative z-10; }
+  .record-results > li > span { @apply text-xs text-horta-muted; }
+  .record-meta { @apply flex shrink-0 flex-wrap items-center gap-2; }
+  .record-description { @apply order-3 basis-full text-xs font-normal text-horta-muted; }
+  .origin-results > li { @apply border-b border-horta-line py-3 text-sm; }
+
+  .pagination { @apply mt-3 flex items-center justify-between gap-2 text-xs text-horta-muted; }
+  .pagination button { @apply px-3 py-1.5 text-xs; }
+
+  .empty { @apply px-4 py-10 text-center text-horta-muted; }
+  .empty .ui-icon { @apply mx-auto mb-2 size-7; }
+  .empty h3 { @apply mt-0 text-[#425847]; }
+  .empty .action-link { @apply mt-2; }
+
+  .feedback { @apply mb-4 border-l-3 border-[#d8b65e] bg-[#fff8e6] px-3 py-2.5 text-sm wrap-anywhere; }
+  .feedback p:last-child { @apply mb-0; }
+  .feedback button { @apply mt-2; }
+  .feedback.error { @apply border-horta-danger bg-[#fff2ef] text-[#7a2f25]; }
+  .feedback.success { @apply flex flex-wrap items-center justify-between gap-2 border-[#7c9c63] bg-[#eef5e6] text-[#34512e]; }
+  .feedback.success .text-button { @apply m-0 min-h-8 px-2 py-1; }
+  .feedback code { @apply block text-xs wrap-anywhere; }
+  .feedback ul { @apply my-1 list-none p-0; }
+  .feedback .feedback-field { @apply m-0 min-h-8 border-0 bg-transparent p-0 text-left text-sm font-normal text-inherit underline underline-offset-2 hover:!bg-transparent; }
+  .notice { @apply mb-3 border-l-3 border-[#a8bd8c] bg-[#f4f7ee] px-3 py-2 text-sm text-[#44603a]; }
+  main p[role=status]:not([class]) { @apply flex items-center gap-2 py-2 text-horta-muted; }
+  main p[role=status]:not([class])::before { @apply size-3.5 shrink-0 animate-spin rounded-full border-2 border-horta-line border-t-horta-forest; content: ''; }
+
+  .facts { @apply m-0 text-sm; }
+  .facts > div { @apply min-w-0; }
+  .facts dt { @apply mb-0.5 text-xs text-horta-muted; }
+  .facts dd { @apply m-0 leading-relaxed whitespace-pre-wrap wrap-anywhere; }
+  .detail-facts { @apply my-4 grid grid-cols-1 gap-x-8 gap-y-3 border-y border-horta-line py-3 sm:grid-cols-2 xl:grid-cols-3; }
+  .detail-header { @apply mb-3 flex flex-col items-start justify-between gap-3 sm:flex-row; }
+  .detail-title { @apply flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1; }
+  .detail-title h1, .detail-title h2 { @apply m-0 break-words; }
+  .record-tabs-list { @apply mb-4 flex overflow-x-auto border-b border-horta-line; }
+  .record-tab { @apply -mb-px min-h-11 shrink-0 rounded-none border-0 border-b-2 border-transparent bg-transparent px-3 py-2 text-sm font-normal whitespace-nowrap text-horta-muted hover:!bg-transparent hover:text-horta-forest data-[state=active]:border-horta-forest data-[state=active]:font-semibold data-[state=active]:text-horta-forest; }
+  .record-tab:focus-visible { @apply -outline-offset-3; }
+  .record-tab-panel[data-state=inactive] { @apply hidden; }
+  .maintenance-section { @apply max-w-2xl; }
+  .maintenance-section h2 { @apply text-horta-danger; }
+  .organization-disclosure { @apply my-4 border-y border-horta-line text-sm; }
+  .organization-disclosure[open] { @apply pb-4; }
+  .organization-disclosure > summary { @apply font-semibold; }
+
+  .timeline { @apply my-3 list-none p-0; }
+  .timeline > li { @apply relative ml-1 border-l border-horta-line py-3 pl-5; }
+  .timeline > li::before { @apply absolute top-4.5 -left-1 size-2 rounded-full bg-[#6d9254] ring-4 ring-white; content: ''; }
+  .timeline p { @apply my-1 text-sm; }
+  .timeline details section { @apply mt-2 bg-[#f5f7f2] p-3; }
+  .timeline details h3 { @apply mt-0 mb-2; }
+  .history-head { @apply flex flex-col justify-between gap-2 text-sm sm:flex-row; }
+  .history-head > span { @apply text-xs text-horta-muted; }
+  .invalidation { @apply mt-5 border-t border-horta-line pt-2; }
+
+  .editor-panel { @apply mb-4 max-w-5xl @container; }
+  .editor-panel > h1 { @apply mb-1; }
+  .editor-panel > p { @apply mb-5 text-horta-muted; }
+  .editor-panel legend:not(.sr-only) { @apply mb-3 w-full border-b border-horta-line pb-2 text-sm font-semibold text-horta-forest; }
+  .form-section { @apply grid min-w-0 gap-x-8 gap-y-3 border-t border-horta-line pt-4 @3xl:grid-cols-[12rem_minmax(0,1fr)]; }
+  .form-section-heading { @apply flex min-w-0 flex-col gap-0.5; }
+  .form-section-heading strong { @apply text-sm font-semibold text-horta-forest; }
+  .form-section-heading span { @apply text-xs leading-relaxed text-horta-muted; }
+  .form-section-fields { @apply grid min-w-0 gap-4 sm:grid-cols-2; }
+  .form-section-fields > label:has(textarea) { @apply col-span-full; }
+  .form-repeat { @apply border-t border-horta-line pt-4; }
+  .form-repeat > h3 { @apply mt-0 text-horta-forest; }
+  .field-label { @apply font-medium text-horta-ink; }
+  .field-optional { @apply font-normal text-horta-muted; }
+  .form-actions-status { @apply mr-auto flex min-h-11 w-full items-center text-[13px] text-horta-muted sm:w-auto; }
+  .form-actions-status[data-dirty=true] { @apply font-medium text-[#7a5316]; }
+  .editor-panel input[type=checkbox] { @apply accent-horta-forest; }
+  .editor-panel fieldset fieldset { @apply mt-1; }
+  .editor-actions { @apply sticky bottom-0 z-10 mt-6 flex flex-wrap justify-end gap-2 border-t border-horta-line bg-white/95 py-3 backdrop-blur-sm; }
+  .editor-actions button { @apply flex-1 sm:flex-none; }
+  .form-section-title { @apply col-span-full mt-3 mb-1 border-b border-horta-line pb-2 text-sm; }
+  .form-panel { @apply max-w-4xl; }
+  .form-panel .hint { @apply mt-2; }
+
+  .organization-trail { @apply mb-2 text-xs text-horta-muted; }
+  .organization-trail ol { @apply m-0 flex list-none flex-wrap items-center gap-x-1.5 gap-y-1 p-0; }
+  .organization-trail li { @apply flex min-w-0 items-center gap-1.5; }
+  .organization-trail a { @apply inline-flex min-h-6 items-center text-horta-muted underline-offset-4 hover:text-horta-forest hover:underline; }
+  .organization-trail [aria-current=page] { @apply font-medium text-horta-ink; }
+  .organization-trail .ui-icon { @apply size-3 shrink-0; }
+  .organization-path { @apply mb-4 flex list-none flex-wrap items-center gap-x-4 gap-y-1 border-b border-horta-line p-0 pb-3 text-sm text-horta-muted; }
+  .organization-collection { @apply min-w-0; }
+  .organization-collection-heading { @apply flex flex-wrap items-center justify-between gap-3 border-b border-horta-line pb-2; }
+  .organization-rows { @apply m-0 list-none divide-y divide-horta-line border-b border-horta-line p-0; }
+  .organization-rows > li { @apply relative flex flex-col justify-between gap-2 px-2 py-3 transition-colors hover:bg-[#f6f8f2] sm:flex-row sm:items-center sm:gap-6; }
+  .organization-rows h3 { @apply m-0 inline-flex flex-wrap items-center gap-2 text-sm font-semibold break-words; }
+  .organization-rows h3 a { @apply underline-offset-4 hover:underline; }
+  .organization-rows h3 a::after { @apply absolute inset-0; content: ''; }
+  .organization-rows h3 a:focus-visible { @apply outline-none; }
+  .organization-rows > li:has(h3 a:focus-visible) { @apply outline-3 -outline-offset-3 outline-horta-focus; }
+  .organization-rows p { @apply mt-0.5 mb-0 max-w-3xl text-[13px] break-words text-horta-muted; }
+  .organization-row-actions { @apply relative z-10 flex min-w-0 shrink-0 flex-wrap items-center gap-x-4 gap-y-1 sm:justify-end; }
+  .organization-row-action { @apply inline-flex min-h-11 items-center gap-1.5 text-sm font-medium no-underline hover:underline; }
+  .organization-row-action .ui-icon { @apply size-3.5; }
+  .organization-secondary-links { @apply mt-3 flex flex-wrap gap-x-5; }
+  .organization-secondary-links a { @apply inline-flex min-h-11 items-center text-sm underline underline-offset-4; }
+
+  .next-step { @apply my-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-l-3 border-[#7c9c63] bg-horta-soft/40 px-4 py-3; }
+  .next-step h3, .next-step p { @apply m-0 basis-full; }
+  .next-step > a:not(.action-link) { @apply inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4; }
+  .setup-steps { @apply m-0 list-none divide-y divide-horta-line border-y border-horta-line p-0; }
+  .setup-steps > li { @apply flex gap-3 py-4; }
+  .setup-steps h2 { @apply mb-1; }
+  .step-number { @apply flex size-7 shrink-0 items-center justify-center rounded-full bg-horta-soft text-sm font-semibold text-horta-forest; }
+  .setup-steps li > div { @apply min-w-0 flex-1; }
+  .setup-steps a { @apply mr-4 mb-1 inline-flex min-h-11 items-center text-sm font-medium underline-offset-4; }
+  .setup-beds { @apply m-0 mt-2 list-none divide-y divide-horta-line p-0; }
+  .setup-beds li { @apply flex flex-wrap items-center justify-between gap-2 py-2 text-sm; }
+  .setup-beds span { @apply text-xs text-horta-muted; }
+  .bed-setup { @apply pt-1; }
+  .setup-form { @apply border-t-2 border-horta-line pt-3; }
+  .setup-form h3 { @apply mt-0; }
+  .bed-picker { @apply my-4 border-t border-horta-line pt-3; }
+  .bed-picker legend { @apply text-sm font-semibold; }
+  .bed-options { @apply grid grid-cols-1 gap-2 sm:grid-cols-2; }
+  .check-card { @apply flex min-h-11 cursor-pointer flex-row items-center gap-3 rounded-md border border-horta-line px-3 py-2 font-normal; }
+  .check-card input { @apply size-4.5 min-h-4.5 w-4.5 shrink-0 accent-horta-forest; }
+  .check-card span { @apply flex flex-col text-xs text-horta-muted; }
+  .check-card strong { @apply text-sm text-horta-forest; }
+  .count { @apply pt-2 text-xs whitespace-nowrap text-horta-muted; }
+  .filters { @apply mb-4 grid grid-cols-2 items-end gap-3 border-y border-horta-line bg-[#fafbf8] p-3 lg:grid-cols-[1fr_1fr_1.4fr_1fr_auto]; }
+  .filters label:nth-of-type(3), .filters label:nth-of-type(4), .filters button { @apply col-span-full sm:col-span-1; }
+  .filters button { @apply sm:col-span-full lg:col-span-1; }
+  .consumption-value { @apply my-3 text-3xl leading-tight font-semibold tracking-tight text-horta-forest; }
+  .consumption-value > span { @apply ml-2 text-base font-normal tracking-normal text-horta-muted; }
+  .sector-list { @apply mt-3 border-t border-horta-line; }
+  .sector-row { @apply flex items-center justify-between gap-4 border-b border-horta-line py-3 text-sm; }
+  .sector-row small { @apply mt-0.5 block; }
+  .sector-row > strong { @apply whitespace-nowrap; }
+  .record { @apply relative flex items-start justify-between gap-4 border-b border-horta-line px-2 py-3 text-sm transition-colors hover:bg-[#f6f8f2] sm:items-center; }
+  .record-end button::after { @apply absolute inset-0; content: ''; }
+  .record p { @apply mt-0.5 mb-1 text-xs text-horta-muted; }
+  .record-end { @apply flex flex-col items-end gap-2 text-right; }
+  .record-end button { @apply px-3 py-1.5 text-xs; }
+  .indicator-summary .facts { @apply mt-3 grid grid-cols-1 gap-x-8 gap-y-3 border-y border-horta-line py-3 sm:grid-cols-2 xl:grid-cols-3; }
+  .indicator-summary .facts dd { @apply text-lg font-semibold text-horta-forest; }
+  .indicator-summary > p { @apply mt-3 text-xs text-horta-muted; }
+  .indicator-definition { @apply my-1; }
+
+  /* Homepage: jornada da horta e indicadores em grade plana */
+  .journey { @apply m-0 mb-5 grid list-none grid-cols-2 gap-px border-y border-horta-line bg-horta-line p-0 lg:grid-cols-4; }
+  .journey > li { @apply min-w-0 bg-white; }
+  .journey a { @apply flex h-full min-h-14 flex-col justify-center px-3 py-2.5 no-underline transition-colors hover:bg-[#f6f8f2]; }
+  .journey-label { @apply flex items-center justify-between gap-2 text-xs text-horta-muted; }
+  .journey-label .ui-icon { @apply size-3.5; }
+  .journey-value { @apply text-lg leading-7 font-semibold text-horta-forest; }
+  .journey-detail { @apply text-xs text-horta-muted; }
+  .journey-detail[data-pending=true] { @apply font-medium text-[#7a5316]; }
+  .dashboard-group { @apply my-6; }
+  .dashboard-group > h2 { @apply mb-0 border-b border-horta-line pb-2; }
+  .dashboard-grid { @apply grid xl:grid-cols-2; }
+  .dashboard-card { @apply flex min-w-0 flex-col border-b border-horta-line px-1 py-3 xl:px-3 xl:even:border-l; }
+  .dashboard-card h3 { @apply m-0 text-sm; }
+  .dashboard-card > .hint { @apply mt-0.5 mb-0; }
+  .dashboard-value { @apply my-2 text-xl leading-tight font-semibold text-horta-forest; }
+  .dashboard-detail { @apply mt-auto inline-flex min-h-11 items-center text-[13px] font-medium underline-offset-4 hover:underline; }
+  .dashboard-bars { @apply my-2 list-none space-y-2 p-0; }
+  .dashboard-bars li { @apply grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-xs; }
+  .dashboard-bars meter { @apply col-span-full h-2 w-full; }
+  .dashboard-bars meter::-webkit-meter-bar { background: #edf1e8; border: 0; }
+  .dashboard-bars meter::-webkit-meter-optimum-value { background: #48765a; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main p[role=status]:not([class])::before { animation: none; }
+}
+
+/* Superfícies: fundo da horta, painéis brancos com cabeçalho, resumo numérico e tabelas de dados. */
+@layer components {
+  .workspace-sidebar, .navigation-dialog, .workspace-header { @apply bg-white; }
+  .workspace-content { @apply bg-horta-canvas; }
+  .workspace-content main { @apply py-5 sm:py-6; }
+  .page-heading { @apply mb-5; }
+
+  .panel { @apply mb-4 rounded-lg border border-horta-line bg-white p-4 shadow-[0_1px_2px_rgb(28_73_57/0.05)] sm:p-5; }
+  .panel + .panel { @apply border-t pt-4 sm:pt-5; }
+  .panel.flush { @apply overflow-hidden p-0; }
+  .panel > h2:first-child { @apply mb-3 text-[15px]; }
+  .panel-header { @apply flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-horta-line px-4 py-3 sm:px-5; }
+  .panel-header h2 { @apply m-0 text-[15px]; }
+  .panel-header p { @apply m-0 mt-0.5 text-xs text-horta-muted; }
+  .panel-body { @apply p-4 sm:p-5; }
+  .panel .detail-facts { @apply my-0 border-0 py-0; }
+  .panel.flush .pagination { @apply m-0 border-t border-horta-line px-4 py-2 sm:px-5; }
+  .panel .organization-disclosure:last-child { @apply mb-0 border-b-0; }
+
+  .filter-panel { @apply rounded-lg border border-horta-line bg-white p-3 shadow-[0_1px_2px_rgb(28_73_57/0.05)] sm:p-4; }
+
+  .results-heading { @apply border-b border-horta-line px-4 py-3 sm:px-5; }
+  .results-heading h2 { @apply text-[15px]; }
+  .record-results > li { @apply px-4 sm:px-5; }
+  .record-results > li:last-child, .organization-rows > li:last-child { @apply border-b-0; }
+  .organization-collection-heading { @apply border-b border-horta-line px-4 py-3 sm:px-5; }
+  .organization-collection-heading h2 { @apply text-[15px]; }
+  .organization-rows { @apply border-b-0; }
+  .organization-rows > li { @apply px-4 sm:px-5; }
+  .record { @apply px-4 sm:px-5; }
+  .record:last-child { @apply border-b-0; }
+  .panel > .empty { @apply py-10; }
+
+  .stat-grid { @apply m-0 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-horta-line bg-horta-line min-[420px]:grid-cols-2 xl:grid-cols-4; }
+  .stat { @apply flex min-w-0 flex-col gap-0.5 bg-white p-3 sm:p-4; }
+  .stat-label { @apply text-xs font-medium text-horta-muted; }
+  .stat-value { @apply m-0 text-xl leading-tight font-semibold text-horta-forest tabular-nums sm:text-2xl; }
+  .stat-value small { @apply ml-1 text-sm font-normal text-horta-muted; }
+  .stat-hint { @apply m-0 text-xs text-horta-muted; }
+  .indicator-summary .facts { @apply m-0 mt-3 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-horta-line bg-horta-line py-0 min-[420px]:grid-cols-2 xl:grid-cols-3; }
+  .indicator-summary .facts > div { @apply bg-white p-3 sm:p-4; }
+  .indicator-summary .facts dt { @apply text-xs font-medium; }
+  .indicator-summary .facts dd { @apply text-xl font-semibold text-horta-forest tabular-nums; }
+
+  .table-scroll { @apply min-w-0 overflow-x-auto; }
+  .data-table { @apply w-full border-collapse text-sm; }
+  .data-table th, .data-table td { @apply border-b border-horta-line px-4 py-2.5 text-left align-middle sm:px-5; }
+  .data-table thead th { @apply bg-[#fafbf8] py-2 text-xs font-medium text-horta-muted; }
+  .data-table tbody th { @apply font-semibold; }
+  .data-table tbody tr:last-child > * { @apply border-b-0; }
+  .data-table tbody tr:hover { @apply bg-[#f8faf5]; }
+  .data-table .num { @apply text-right whitespace-nowrap tabular-nums; }
+  @media (width < 40rem) {
+    .data-table thead { @apply sr-only; }
+    .data-table tbody tr { @apply block border-b border-horta-line px-4 py-2; }
+    .data-table tbody tr:last-child { @apply border-b-0; }
+    .data-table tbody th, .data-table tbody td { @apply flex items-center justify-between gap-3 border-0 px-0 py-1 text-right; }
+    .data-table tbody th::before, .data-table tbody td::before { @apply text-left text-xs font-normal text-horta-muted; content: attr(data-label); }
+  }
+
+  .editor-panel { @apply max-w-4xl p-4 sm:p-6; }
+  .editor-panel > p { @apply mb-1; }
+  .editor-panel form { @apply mt-4; }
+  .form-section { @apply pt-5; }
+  .editor-actions { @apply -mx-4 mt-6 rounded-b-lg bg-[#fafbf8]/95 px-4 sm:-mx-6 sm:px-6; }
+  .editor-actions:last-child { @apply -mb-4 sm:-mb-6; }
+
+  .journey { @apply overflow-hidden rounded-lg border border-horta-line shadow-[0_1px_2px_rgb(28_73_57/0.05)]; }
+  .journey a { @apply min-h-18 px-4 py-3; }
+  .journey-value { @apply text-xl; }
+  .dashboard-group { @apply my-5; }
+  .dashboard-group > h2 { @apply mb-2 border-0 pb-0; }
+  .dashboard-grid { @apply grid gap-3 md:grid-cols-2 xl:grid-cols-3; }
+  .dashboard-card { @apply rounded-lg border border-horta-line bg-white p-4 shadow-[0_1px_2px_rgb(28_73_57/0.05)] xl:px-4 xl:even:border-l; }
+  .dashboard-detail { @apply -mb-2; }
+
+  .maintenance-section { @apply max-w-none border-l-4 border-l-horta-danger; }
+  .record-tabs-list { @apply mb-3; }
+  .interactive-status-bar { @apply rounded-lg border bg-white; }
+}
+
+/* Encaixe por faixa de tela e acabamento dos componentes compartilhados. */
+@layer components {
+  /* Estrutura: barra lateral proporcional e conteúdo centralizado com largura máxima */
+  .workspace-layout { @apply lg:grid-cols-[232px_minmax(0,1fr)] 2xl:grid-cols-[256px_minmax(0,1fr)]; }
+  .workspace-header { @apply sm:px-6 2xl:px-10; }
+  .workspace-content main { @apply px-4 sm:px-6 lg:py-7 2xl:px-10; }
+  .workspace-content main > .main-inner { @apply mx-auto w-full max-w-[1440px]; }
+  .workspace-wide .workspace-content main > .main-inner { @apply max-w-none; }
+  .workspace-footer { @apply sm:px-6 2xl:px-10; }
+
+  /* Tipografia por faixa */
+  h1 { @apply text-xl sm:text-2xl; }
+  .page-heading { @apply gap-x-6; }
+  .page-heading p { @apply text-[13px] sm:text-sm; }
+  .eyebrow { @apply mb-0.5 tracking-wide uppercase text-[11px] font-semibold; }
+
+  /* Barra lateral */
+  .sidebar-brand { @apply min-h-14 px-5; }
+  .workspace-sidebar .primary-navigation { @apply px-3 py-4; }
+  .nav-group { @apply mb-4; }
+  .nav-link { @apply min-h-10 font-medium max-lg:min-h-11; }
+  .nav-link:hover { @apply bg-[#f2f5ee]; }
+
+  /* Painéis e superfícies */
+  .panel { @apply rounded-xl shadow-[0_1px_2px_rgb(28_73_57/0.05),0_1px_8px_-4px_rgb(28_73_57/0.08)]; }
+  .panel-header { @apply bg-[#fbfcf9]; }
+  .filter-panel, .journey, .dashboard-card, .stat-grid { @apply rounded-xl; }
+
+  /* Filtros: campos com largura proporcional e ação compacta ao fim */
+  .filter-panel { @apply flex flex-wrap items-end gap-3; }
+  .filter-panel > label { @apply min-w-0 flex-[1_1_11rem] sm:max-w-80; }
+  .filter-panel > button { @apply w-full sm:w-auto sm:min-w-36; }
+  .filter-panel > .feedback, .filter-panel > .field-error { @apply basis-full; }
+  .filter-panel[data-collapsed=true] { @apply hidden sm:flex; }
+
+  /* Grades que se ajustam à largura disponível */
+  /* Divisórias por célula: linhas incompletas ficam brancas, sem blocos cinza. */
+  .stat-grid, .indicator-summary .facts { @apply gap-0 bg-white grid-cols-[repeat(auto-fill,minmax(min(100%,12rem),1fr))] min-[420px]:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]; }
+  .stat, .indicator-summary .facts > div { @apply -mr-px -mb-px border-r border-b border-horta-line; }
+  .detail-facts { @apply grid-cols-[repeat(auto-fill,minmax(min(100%,13rem),1fr))] sm:grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(13rem,1fr))]; }
+  .dashboard-grid { @apply grid-cols-[repeat(auto-fill,minmax(min(100%,19rem),1fr))] md:grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(19rem,1fr))]; }
+  .journey { @apply md:grid-cols-4; }
+  .form-section-fields { @apply @5xl:grid-cols-3; }
+  .form-section-fields > label:has(textarea) { @apply col-span-full; }
+
+  /* Ações e controles */
+  button:not(.secondary, .text-button, .danger-outline, .record-tab, [class*="interactive"], [class*="garden-scene"], [data-slot]) , .action-link:not(.secondary) { @apply shadow-[0_1px_2px_rgb(28_73_57/0.18)]; }
+  .secondary, .action-link.secondary { @apply shadow-[0_1px_1px_rgb(28_73_57/0.06)]; }
+  .secondary:hover:not(:disabled), .action-link.secondary:hover { @apply border-[#b4c4b8]; }
+  input:focus-visible, select:focus-visible, textarea:focus-visible { @apply border-horta-forest outline-2 outline-offset-0 outline-horta-focus/70; }
+  input::placeholder, textarea::placeholder { @apply text-[#8a968f]; }
+  .badge { @apply ring-1 ring-[#cfe0bf] ring-inset; }
+  .badge.warning { @apply ring-[#ecd6a8]; }
+  .badge.invalid { @apply ring-[#ebc9c3]; }
+
+  /* Estados vazios e mensagens */
+  .empty .ui-icon { @apply box-content size-6 rounded-full bg-horta-soft p-3 text-horta-forest; }
+  .empty h3 { @apply mb-1 text-[15px]; }
+  .empty p { @apply text-[13px]; }
+  .feedback, .notice { @apply rounded-md; }
+
+  /* Linhas de lista */
+  .record-results > li, .organization-rows > li { @apply min-h-14; }
+  .record-results > li > a { @apply text-[14px]; }
+
+  /* Abas do registro */
+  .record-tab { @apply h-auto px-3.5 sm:px-4 max-sm:!min-h-10 max-sm:!px-2.5 max-sm:!py-1.5; }
+  .record-tabs-list { @apply [scrollbar-width:none] max-sm:!h-auto max-sm:!gap-y-0 max-sm:flex-wrap max-sm:content-start max-sm:items-stretch max-sm:!gap-x-1 max-sm:overflow-visible [&::-webkit-scrollbar]:hidden; }
+  .stat-grid { @apply min-[420px]:grid-cols-2 lg:grid-cols-4; }
+
+  /* Formulário em telas pequenas: rodapé fixo com ações lado a lado */
+  @media (width < 40rem) {
+    .editor-actions { @apply bottom-0 gap-2 py-2.5; }
+    .editor-actions .form-actions-status:empty { @apply hidden; }
+  }
+}
+
+/* Cadastro integrado ao editor: mantém a identidade própria do modo construção. */
 @layer components {
   .interactive-cultivation { @apply min-w-0 text-horta-ink; }
   .interactive-cultivation .editor-panel { @apply m-0 max-w-none rounded-none border-0 bg-transparent p-0 shadow-none; }
@@ -48,209 +474,15 @@
   .interactive-cultivation button { @apply rounded-none; box-shadow: 0 2px 0 #1c49392b; }
   .interactive-cultivation input, .interactive-cultivation select, .interactive-cultivation textarea { @apply rounded-none; }
   .interactive-cultivation li[aria-current=step] { @apply bg-[#1c4939] text-[#fff8de]; }
-  .secondary { @apply border-[#cbd7ce] bg-white text-horta-forest; }
-  .secondary:hover:not(:disabled) { @apply bg-[#edf3e9]; }
-  .danger { @apply border-horta-danger bg-horta-danger; }
-  .danger:hover:not(:disabled) { @apply bg-[#742b27]; }
-  .danger-outline { @apply border-[#d9aaa6] bg-white text-horta-danger; }
-  .danger-outline:hover:not(:disabled) { @apply bg-horta-danger text-white; }
-  .text-button { @apply mb-4 border-0 bg-transparent px-0 py-3 text-horta-forest; }
-  .text-button:hover:not(:disabled) { @apply bg-transparent underline; }
-  .muted, .hint { @apply text-horta-muted; }
-  .hint { @apply text-xs leading-relaxed; }
-  .eyebrow { @apply text-[0.65rem] font-bold tracking-widest text-horta-muted uppercase; }
-  .app-header { @apply mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-5 py-5 sm:flex-row sm:items-center sm:gap-8 sm:px-12; }
-  .brand { @apply flex items-center gap-3 text-lg font-bold tracking-tight no-underline; }
-  .brand svg { @apply size-10 fill-[#d5e6bc] stroke-horta-forest; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
-  .brand small { @apply mt-1 block text-[0.65rem] font-normal tracking-widest; }
-  .garden-select { @apply w-full flex-row items-center justify-between gap-3 text-horta-muted sm:w-auto; }
-  .garden-select select { @apply w-[calc(100%_-_4rem)] bg-transparent sm:w-64; }
-  .demo-strip { @apply flex flex-wrap items-center gap-2 border-y border-[#d7e0cb] bg-[#e9eedf] px-5 py-3 text-xs text-[#486143] sm:justify-center; }
-  .demo-dot { @apply size-1.5 rounded-full bg-[#748d38]; }
-  .demo-strip > span:last-child { @apply basis-full pl-3 text-[#586650] sm:basis-auto sm:pl-0; }
-  main { @apply mx-auto min-h-[70vh] max-w-7xl px-4 py-7 sm:px-12 sm:py-10; }
-  .page-heading { @apply mb-7 flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-center; }
-  .page-heading .eyebrow { @apply mb-4 block; }
-  .page-heading p { @apply mb-0 text-horta-muted; }
-  .page-heading button { @apply w-full whitespace-nowrap sm:w-auto; }
-  .panel { @apply mb-5 rounded-xl border border-horta-line bg-white p-5 shadow-xs sm:p-6; }
-  .count { @apply pt-2 text-xs whitespace-nowrap text-horta-muted; }
-  .filters { @apply mb-6 grid grid-cols-2 items-end gap-4 p-5 lg:grid-cols-[1fr_1fr_1.4fr_1fr_auto]; }
-  .filters label:nth-of-type(3), .filters label:nth-of-type(4), .filters button { @apply col-span-full sm:col-span-1; }
-  .filters button { @apply sm:col-span-full lg:col-span-1; }
-  .badge { @apply inline-block rounded-full bg-horta-soft px-3 py-1.5 text-[0.7rem] leading-tight font-semibold text-[#436037]; }
-  .badge.invalid { @apply bg-[#f7e9e6] text-[#91463e]; }
-  .consumption-value { @apply my-4 text-5xl leading-tight font-semibold tracking-tight text-horta-forest; }
-  .consumption-value > span { @apply ml-2 text-lg font-normal tracking-normal text-horta-muted; }
-  .sector-list { @apply mt-5 border-t border-horta-line; }
-  .sector-row { @apply flex items-center justify-between gap-4 border-b border-horta-line py-4 text-xs; }
-  .sector-row small { @apply mt-1 block; }
-  .sector-row > strong { @apply whitespace-nowrap; }
-  .record { @apply flex items-start justify-between gap-4 border-b border-horta-line py-4 text-sm sm:items-center; }
-  .record:first-child { @apply pt-1; }
-  .record p { @apply mt-1 mb-2 text-xs text-horta-muted; }
-  .record-end { @apply flex flex-col items-end gap-3 text-right; }
-  .record-end button { @apply px-3 py-2 text-xs; }
-  .pagination { @apply mt-5 flex items-center justify-between gap-2 text-xs text-horta-muted; }
-  .pagination button { @apply min-h-10 px-2.5 py-2 text-xs; }
-  .empty { @apply px-4 py-9 text-center text-horta-muted; }
-  .empty > span { @apply block text-3xl text-[#8b9e81]; }
-  .empty h3 { @apply text-[#425847]; }
-  .field-error { @apply text-xs font-medium text-horta-danger; }
-  .form-panel { @apply mx-auto max-w-4xl; }
-  .form-panel h2 { @apply text-2xl; }
-  .form-panel .hint { @apply mt-3; }
-  .bed-picker { @apply my-6 rounded-lg border border-horta-line p-4; }
-  .bed-picker legend { @apply px-2 text-sm font-semibold; }
-  .bed-options { @apply grid grid-cols-1 gap-3 sm:grid-cols-2; }
-  .check-card { @apply flex cursor-pointer flex-row items-center gap-3 rounded-md border border-horta-line p-3 font-normal; }
-  .check-card input { @apply size-4.5 min-h-4.5 w-4.5 shrink-0 accent-horta-forest; }
-  .check-card span { @apply flex flex-col text-xs text-horta-muted; }
-  .check-card strong { @apply text-sm text-horta-forest; }
-  .feedback { @apply mb-4 rounded-lg border border-[#e7d49e] bg-[#fff4da] p-4 text-sm wrap-anywhere; }
-  .feedback p:last-child { @apply mb-0; }
-  .feedback button { @apply mt-3; }
-  .feedback.error { @apply border-[#e7c2ba] bg-[#fff2ef] text-[#84372c]; }
-  .feedback.success { @apply border-[#cddfc4] bg-[#eef5e6] text-[#3c5b35]; }
-  .feedback code { @apply block text-xs wrap-anywhere; }
-  .notice { @apply border-l-3 border-[#a8bd8c] bg-[#f4f7ee] px-3 py-2 text-xs text-[#4e6742]; }
-  .detail-heading { @apply my-4 flex items-start justify-between; }
-  .detail-heading h3 { @apply mt-0 mb-3 text-2xl; }
-  .facts { @apply m-0 text-sm; }
-  .facts > div { @apply mb-4 min-w-0; }
-  .facts dt { @apply mb-1 text-xs text-horta-muted; }
-  .facts dd { @apply m-0 leading-relaxed whitespace-pre-wrap wrap-anywhere; }
-  .detail-facts { @apply mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3; }
-  .timeline { @apply my-4 list-none p-0; }
-  .timeline > li { @apply relative ml-1 border-l border-horta-line py-5 pl-6; }
-  .timeline > li::before { @apply absolute top-6 -left-1 size-2 rounded-full bg-[#6d9254] ring-4 ring-white; content: ''; }
-  .timeline p { @apply my-3 text-sm; }
-  .history-head { @apply flex flex-col justify-between gap-2 text-sm sm:flex-row; }
-  .history-head > span { @apply text-xs text-horta-muted; }
-  .timeline details section { @apply mt-3 rounded-md bg-[#f5f7f2] p-4; }
-  .timeline details h3 { @apply mt-0 mb-4; }
-  .invalidation { @apply mt-6 border-t border-horta-line pt-2; }
 }
 
+/* Panorâmica: identidade da cena preservada. */
 @layer components {
-  .ui-icon { @apply size-5 shrink-0; }
-  .skip-link { @apply sr-only; }
-  .skip-link:focus { @apply not-sr-only fixed top-4 left-4 z-50 rounded-lg bg-white p-3; }
-  .masthead { @apply relative flex min-h-22 items-center justify-center border-b border-horta-line px-5 py-4; }
-  .environment-label { @apply absolute right-8 hidden items-center gap-2 text-xs text-horta-muted lg:flex; }
-  .workspace-layout { @apply grid min-h-dvh lg:grid-cols-[232px_minmax(0,1fr)]; }
-  .workspace-sidebar { @apply sticky top-0 hidden h-screen overflow-y-auto flex-col border-r border-horta-line bg-[#f9faf6] px-4 py-7 lg:flex; }
-  .sidebar-context { @apply mb-7 flex flex-col gap-2 px-3; }
-  .sidebar-context strong { @apply text-sm font-semibold; }
-  .nav-group { @apply mb-6; }
-  .nav-group-title { @apply mb-2 px-3 text-[10px] font-semibold tracking-widest text-horta-muted uppercase; }
-  .nav-link { @apply my-1 flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-horta-muted no-underline transition-colors hover:bg-horta-soft; }
-  .nav-link span { @apply flex-1; }
-  .nav-link[aria-current=page] { @apply bg-horta-forest font-semibold text-white; }
-  .nav-chevron { @apply size-3 opacity-40; }
-  .sidebar-note { @apply mt-auto flex items-start gap-2 border-t border-horta-line px-2 pt-5 text-[11px] text-horta-muted; }
-  .sidebar-note .demo-dot { @apply mt-1 shrink-0; }
-  .sidebar-note p { @apply mt-1 mb-0 text-[11px]; }
-  .workspace-content { @apply flex min-w-0 flex-col; }
-  .workspace-toolbar { @apply flex flex-col justify-between gap-4 border-b border-horta-line bg-white/50 px-5 py-4 sm:flex-row sm:items-center xl:px-9; }
-  .breadcrumb { @apply flex items-center gap-2 text-xs text-horta-muted; }
-  .breadcrumb strong { @apply font-medium text-horta-ink; }
-  .breadcrumb .ui-icon { @apply size-3; }
-  .garden-select { @apply w-full flex-row items-center gap-3 text-xs sm:w-auto; }
-  .garden-select select { @apply min-h-10 flex-1 bg-white py-2 sm:w-56; }
-  .section-navigation { @apply flex gap-1 overflow-x-auto border-b border-horta-line bg-white px-4 pt-2 xl:px-8; }
-  .section-navigation a { @apply shrink-0 border-b-2 border-transparent px-3 py-3 text-xs font-medium whitespace-nowrap text-horta-muted no-underline hover:bg-horta-canvas; }
-  .section-navigation a[aria-current=page] { @apply border-horta-forest font-semibold text-horta-forest; }
-  .workspace-content main { @apply mx-auto w-full max-w-none flex-1 px-5 py-7 xl:px-9 xl:py-8; }
-  .workspace-footer { @apply w-full max-w-none shrink-0 px-5 xl:px-9; }
-  .mobile-menu-button { @apply absolute left-3 min-h-10 border-0 bg-transparent p-2 lg:hidden; }
-  .navigation-dialog { @apply fixed inset-0 m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-sm overflow-y-auto rounded-2xl border border-horta-line bg-horta-canvas p-5 shadow-xl; }
-  .navigation-dialog::backdrop { background: rgb(24 47 35 / 45%); backdrop-filter: blur(3px); }
-  .navigation-dialog .primary-navigation { @apply mt-6; }
-  .page-heading { @apply mb-6 gap-4; }
-  .page-heading .eyebrow { @apply mb-2; }
-  .page-heading h1 { @apply mb-2; }
-  .page-heading p { @apply max-w-2xl text-sm; }
-  .page-heading button { @apply flex items-center justify-center gap-2; }
-  .panel { @apply rounded-xl border-horta-line shadow-none; }
-  .filter-panel { @apply mb-6 bg-[#fafbf8] p-4; }
-  .filter-panel button { @apply min-h-11; }
-  .results-heading { @apply mb-2 flex items-center justify-between gap-4 border-b border-horta-line pb-4; }
-  .results-heading h2 { @apply m-0 text-base; }
-  .record-results > li { @apply flex flex-wrap items-center justify-between gap-2 border-b border-horta-line px-2 py-5 text-sm; }
-  .record-results > li:hover { @apply bg-horta-canvas; }
-  .record-results > li > a { @apply min-w-0 flex-1 font-semibold underline-offset-4; }
-  .record-results > li > span { @apply rounded-full bg-horta-canvas px-3 py-1 text-xs text-horta-muted; }
-  .empty .ui-icon { @apply mx-auto size-9 text-horta-muted; }
-  .editor-panel { @apply mx-auto max-w-5xl p-5 sm:p-8; }
-  .editor-panel > .eyebrow { @apply mb-2 block; }
-  .editor-panel > p { @apply mb-7 border-b border-horta-line pb-5; }
-  .editor-panel label { @apply gap-1.5 text-[13px]; }
-  .hint:empty, .field-error:empty { @apply hidden; }
-  .editor-panel fieldset fieldset { @apply mt-2 rounded-lg border border-horta-line bg-[#fafbf8] p-5; }
-  .editor-panel legend { @apply px-2 text-sm font-semibold text-horta-forest; }
-  .editor-actions { @apply sticky bottom-0 -mx-5 mt-8 flex flex-wrap justify-end gap-3 border-t border-horta-line bg-white/95 px-5 py-4 backdrop-blur-sm sm:-mx-8 sm:px-8; }
-  .editor-actions button { @apply flex-1 sm:flex-none; }
-  .indicator-summary .facts { @apply mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3; }
-  .indicator-summary .facts > div { @apply mb-0 rounded-lg border border-horta-line bg-[#f8faf5] p-4; }
-  .indicator-summary .facts dt { @apply mb-2 text-xs; }
-  .indicator-summary .facts dd { @apply text-lg font-semibold text-horta-forest; }
-  .indicator-summary > p { @apply mt-4 text-xs text-horta-muted; }
-  .indicator-definition { @apply border-b border-horta-line pb-3; }
-  .origin-results > li { @apply border-b border-horta-line py-4 text-sm; }
-}
-
-@layer components { .form-section-title { @apply col-span-full mt-3 mb-1 border-b border-horta-line pb-3 text-sm; } }
-
-@layer components {
-  .feedback.success { @apply flex flex-wrap items-center justify-between gap-2 py-3; }
-  .feedback.success .text-button { @apply m-0 min-h-8 px-2 py-1; }
-  .indicator-summary > div:first-child { @apply items-start; }
-  .record-description { @apply order-3 basis-full text-xs font-normal text-horta-muted; }
-  .editor-panel input[type=checkbox] { @apply accent-horta-forest; }
-}
-
-@layer components {
-  .action-link { @apply inline-flex min-h-11 items-center justify-center rounded-md border border-horta-forest bg-horta-forest px-4 py-2 text-sm font-semibold text-white no-underline hover:bg-horta-forest-hover; }
-  .next-step { @apply my-6 flex flex-wrap items-center gap-4 rounded-lg border border-horta-line bg-horta-soft/40 p-5; }
-  .next-step h3, .next-step p { @apply m-0 basis-full; }
-  .next-step > a:not(.action-link) { @apply text-sm font-semibold underline underline-offset-4; }
-  .setup-steps { @apply grid list-none gap-5 p-0; }
-  .setup-steps > li { @apply flex gap-4 rounded-xl border border-horta-line bg-white p-5 sm:p-6; }
-  .setup-steps h2 { @apply mt-0 mb-2 text-lg; }
-  .step-number { @apply flex size-9 shrink-0 items-center justify-center rounded-full bg-horta-soft font-semibold text-horta-forest; }
-  .setup-steps li > div { @apply min-w-0 flex-1; }
-  .setup-steps a { @apply mr-5 mb-2 inline-flex text-sm font-semibold underline-offset-4; }
-  .setup-beds { @apply mt-4 divide-y divide-horta-line; }
-  .setup-beds li { @apply flex flex-wrap items-center justify-between gap-2 py-3 text-sm; }
-  .setup-beds span { @apply text-xs text-horta-muted; }
-  .bed-setup { @apply mt-6 border-t border-horta-line pt-3; }
-  .setup-form { @apply rounded-xl border border-horta-line bg-horta-canvas/50 p-5; }
-  .setup-form h3 { @apply mt-0; }
-  .workflow-guide { @apply mb-6 rounded-lg border border-horta-line bg-white/60 px-4 py-3; }
-  .workflow-guide summary { @apply font-semibold; }
-  .workflow-guide p { @apply mt-2 text-xs text-horta-muted; }
-  .workflow-guide nav { @apply flex flex-wrap gap-2; }
-  .workflow-guide a { @apply rounded-md border border-horta-line bg-white px-3 py-2 text-xs no-underline; }
-  .workflow-guide a[aria-current=step] { @apply border-horta-forest bg-horta-soft font-semibold; }
-  .dashboard-group { @apply my-8; }
-  .dashboard-group > h2 { @apply border-b border-horta-line pb-3; }
-  .dashboard-grid { @apply grid gap-5 xl:grid-cols-2; }
-  .dashboard-card { @apply flex min-w-0 flex-col rounded-xl border border-horta-line bg-white p-5 sm:p-6; }
-  .dashboard-card h3 { @apply m-0 text-base; }
-  .dashboard-card > .hint { @apply mt-2 text-xs; }
-  .dashboard-value { @apply my-4 text-3xl leading-tight font-semibold text-horta-forest; }
-  .dashboard-detail { @apply mt-auto inline-block border-t border-horta-line pt-4 text-sm font-semibold underline-offset-4; }
-  .dashboard-bars { @apply my-4 space-y-3; }
-  .dashboard-bars li { @apply grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-xs; }
-  .dashboard-bars meter { @apply col-span-full h-3 w-full; }
-  .dashboard-bars meter::-webkit-meter-bar { background: #edf1e8; border: 0; }
-  .dashboard-bars meter::-webkit-meter-optimum-value { background: #48765a; }
-  .garden-overview { @apply overflow-hidden bg-[#f8faf5] p-4 sm:p-6; }
-  .garden-overview-heading { @apply mb-5 flex flex-wrap items-start justify-between gap-4; }
-  .garden-overview-heading h2 { @apply mt-1 mb-1 text-xl text-horta-forest; }
+  .garden-overview { @apply min-w-0; }
+  .garden-overview-heading { @apply mb-3 flex flex-wrap items-start justify-between gap-3; }
+  .garden-overview-heading h2 { @apply mb-0.5; }
   .garden-overview-heading p { @apply m-0 max-w-2xl text-sm text-horta-muted; }
-  .garden-scene { @apply relative h-80 w-full min-w-0 overflow-hidden rounded-xl border border-[#b7ceb2] bg-[#244936] shadow-inner sm:aspect-video sm:h-auto; min-height: 300px; touch-action: none; }
+  .garden-scene { @apply relative h-80 w-full min-w-0 overflow-hidden rounded-md border border-[#b7ceb2] bg-[#244936] shadow-inner sm:aspect-video sm:h-auto; min-height: 300px; touch-action: none; }
   .garden-scene > svg { @apply block size-full; touch-action: none; user-select: none; cursor: grab; }
   .garden-scene > svg[data-dragging="true"], .garden-scene > svg[data-dragging="true"] .garden-scene-object { cursor: grabbing; }
   .garden-scene svg image { image-rendering: pixelated; }
@@ -287,7 +519,7 @@
   .garden-scene-facts dd { @apply mt-1 text-xs font-semibold; }
   .garden-scene-hint { @apply absolute right-3 bottom-16 left-3 rounded-lg bg-[#173d2e]/75 px-3 py-2 text-[11px] font-medium text-[#edf4dc] shadow-lg backdrop-blur-sm sm:top-3 sm:right-auto sm:bottom-auto; }
   .garden-scene-caption { @apply absolute right-3 bottom-3 left-3 flex flex-wrap justify-between gap-2 rounded-md bg-[#173d2e]/75 px-3 py-2 text-[11px] font-medium text-[#edf4dc] backdrop-blur-sm; }
-  .garden-overview-note { @apply mt-3 text-xs text-horta-muted; }
+  .garden-overview-note { @apply mt-1 mb-0 text-[13px]; }
 }
 
 @keyframes garden-scene-life {
@@ -312,44 +544,11 @@
   .garden-scene-focus { animation: none; }
 }
 
-@layer components {
-  .organization-shell .editor-panel { @apply max-w-2xl; }
-  .organization-shell .editor-panel fieldset fieldset { @apply m-0 border-0 bg-transparent p-0; }
-  .organization-shell .editor-panel > .eyebrow { @apply hidden; }
-  .organization-shell .editor-panel h1 { @apply text-2xl; }
-  .organization-shell .editor-panel label { @apply text-sm; }
-  .organization-trail { @apply mb-8 text-sm text-horta-muted; }
-  .organization-trail ol { @apply flex flex-wrap items-center gap-x-2 gap-y-2; }
-  .organization-trail li { @apply flex min-w-0 items-center gap-2; }
-  .organization-trail a { @apply rounded py-1 underline-offset-4 hover:underline; }
-  .organization-trail [aria-current=page] { @apply font-medium text-horta-ink; }
-  .organization-trail .ui-icon { @apply size-3 shrink-0 text-horta-muted; }
-  .organization-heading { @apply mb-8 items-start; }
-  .organization-heading h1 { @apply break-words text-3xl sm:text-4xl; }
-  .organization-heading > div { @apply min-w-0; }
-  .organization-heading > .action-link { @apply shrink-0; }
-  .organization-path { @apply mb-8 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-horta-line bg-white/50 px-5 py-4 text-sm text-horta-muted; }
-  .organization-collection { @apply overflow-hidden rounded-xl border border-horta-line bg-white; }
-  .organization-rows { @apply divide-y divide-horta-line; }
-  .organization-rows > li { @apply flex flex-col justify-between gap-4 px-5 py-6 sm:flex-row sm:items-center sm:px-6; }
-  .organization-rows h3 { @apply m-0 text-lg font-semibold break-words; }
-  .organization-rows h3 a { @apply underline-offset-4 hover:underline; }
-  .organization-rows p { @apply mt-2 mb-0 max-w-2xl break-words text-horta-muted; }
-  .organization-row-action { @apply inline-flex min-h-11 shrink-0 items-center justify-center gap-3 self-start rounded-md border border-horta-line px-4 py-2 text-sm font-semibold hover:bg-horta-soft sm:self-center; }
-  .organization-secondary-links { @apply mt-6 flex flex-wrap gap-x-6 gap-y-3; }
-  .organization-secondary-links a { @apply inline-flex min-h-11 items-center text-sm underline underline-offset-4; }
-  .organization-disclosure { @apply my-6 rounded-lg border border-horta-line bg-white px-5 py-3 text-sm; }
-  .organization-disclosure > summary { @apply min-h-11 py-3 font-semibold; }
-  .organization-disclosure[open] > summary { @apply mb-4 border-b border-horta-line; }
-  .organization-shell .detail-facts { @apply my-6 grid gap-5 sm:grid-cols-2; }
-  .organization-shell .detail-facts > div { @apply rounded-lg bg-horta-canvas/60 p-4; }
-  .organization-shell .detail-facts dt { @apply mb-2 text-xs text-horta-muted; }
-  .organization-shell .detail-facts dd { @apply text-base font-medium; }
-}
-
+/* Editor interativo: controles e canvas. */
 @layer components {
   .interactive-garden { @apply min-w-0; }
-  .interactive-demo-notice { @apply mb-5 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-[#d7e0cb] bg-[#e9eedf] px-4 py-3 text-xs text-[#486143]; }
+  .interactive-status-bar { @apply mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-y border-horta-line bg-[#fafbf8] px-3 py-2 lg:sticky lg:top-0 lg:z-20; }
+  .interactive-demo-notice { @apply flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[#486143]; }
   .interactive-demo-notice strong { @apply font-semibold text-horta-forest; }
   .interactive-demo-notice span:last-child { @apply font-semibold text-[#7b551d]; }
   .interactive-toolbar { @apply flex flex-wrap items-center justify-between gap-4 bg-white p-4; }
@@ -361,10 +560,13 @@
   .interactive-check { @apply flex min-h-10 flex-row items-center gap-2 px-2 text-xs font-normal; }
   .interactive-check input { @apply size-4 min-h-4 w-4 accent-horta-forest; }
   .interactive-editor { @apply grid min-w-0 gap-5 ; }
-  .interactive-canvas-panel, .interactive-side { @apply min-w-0 p-4 sm:p-5; }
+  .interactive-canvas-panel { @apply min-w-0; }
+  .interactive-side { @apply min-w-0 p-4 sm:p-5; }
   .interactive-panel-heading { @apply mb-4 flex flex-wrap items-start justify-between gap-3; }
   .interactive-panel-heading h2 { @apply mt-1 mb-0 text-lg; }
-  .interactive-canvas { @apply h-[78dvh] min-h-[560px] sm:min-h-[680px] touch-none overflow-hidden rounded-lg border border-horta-line bg-[#f8faf5]; cursor: crosshair; }
+  .interactive-canvas { @apply h-[60dvh] min-h-[420px] lg:h-[calc(100dvh-300px)] lg:min-h-[520px] touch-none overflow-hidden border-x border-horta-line bg-[#f8faf5]; cursor: crosshair; }
+  .interactive-canvas.tool-select { cursor: default; }
+  .interactive-canvas.tool-pan { cursor: grab; }
   .interactive-canvas.panning { cursor: grab; }
   .interactive-canvas.panning:active { cursor: grabbing; }
   .interactive-canvas svg { @apply block h-full w-full select-none; }
@@ -412,7 +614,7 @@
   .interactive-mandala-preview span { @apply text-xs text-horta-muted; }
   .interactive-mandala-actions { @apply mt-6 flex flex-wrap justify-end gap-2 border-t border-horta-line pt-4; }
   .interactive-rotation-hint { @apply mb-4 rounded-md border border-[#d5e1d1] bg-[#eef4ea] px-3 py-2 text-xs text-[#486143]; }
-  .interactive-scale { @apply mt-3 flex items-center gap-2 text-[11px] text-horta-muted; }
+  .interactive-scale { @apply flex shrink-0 items-center gap-2 text-[11px] text-horta-muted; }
   .interactive-scale-line { @apply block h-0 border-t-2 border-horta-forest; }
   .interactive-elements { @apply m-0 list-none divide-y divide-horta-line border-y border-horta-line p-0; }
   .interactive-element { @apply flex min-h-14 w-full flex-row items-center gap-3 rounded-none border-0 bg-transparent px-2 py-3 text-left text-horta-ink; }
@@ -438,54 +640,108 @@
   .interactive-facts dd { @apply mt-1 text-xs font-semibold text-horta-forest; }
   .interactive-help { @apply mt-5 text-xs text-horta-muted; }
   .interactive-remove { @apply mt-5 w-full; }
+
+  /* Editor do mapa: cabeçalho, barra do mapa e painel de construção */
+  .interactive-header { @apply mb-3 flex flex-wrap items-start justify-between gap-x-6 gap-y-3; }
+  .interactive-save-status { @apply inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-medium; }
+  .interactive-save-status::before { content: ""; @apply size-2 rounded-full bg-current; }
+  .interactive-save-status.ok { @apply border-[#cfe0bf] bg-[#f1f7ea] text-horta-forest; }
+  .interactive-save-status.warning { @apply border-[#e8d3a6] bg-[#fdf6e7] text-[#7b551d]; }
+  .interactive-save-status.pending, .interactive-save-status.muted { @apply border-horta-line bg-white text-horta-muted; }
+  .interactive-help-popover { @apply relative; }
+  .interactive-help-popover summary { @apply cursor-pointer text-horta-forest underline underline-offset-2; }
+  .interactive-help-popover > div { @apply absolute left-0 top-6 z-30 w-[min(360px,calc(100vw-32px))] rounded-lg border border-horta-line bg-white p-3 text-xs leading-relaxed text-horta-ink shadow-lg; }
+  .interactive-help-popover > div p { @apply m-0 mb-2 last:mb-0; }
+  .interactive-canvas-toolbar { @apply flex flex-wrap items-center gap-2 border border-horta-line bg-white px-2 py-1.5; }
+  .interactive-toolbar-group { @apply flex items-center gap-0.5 border-r border-horta-line pr-2 last:border-r-0 last:pr-0; }
+  .interactive-icon-button { @apply inline-flex size-9 min-h-9 shrink-0 items-center justify-center rounded-md border-0 bg-transparent p-0 text-horta-ink shadow-none hover:!bg-[#eef3ea] disabled:opacity-35; }
+  .interactive-icon-button svg { @apply size-4; }
+  .interactive-icon-button.active { @apply !bg-horta-forest text-white hover:!bg-horta-forest; }
+  .interactive-icon-button.danger { @apply text-[#8d3430] hover:!bg-[#fbecea]; }
+  .interactive-zoom-value { @apply min-h-9 min-w-14 rounded-md border-0 bg-transparent px-1 text-xs font-semibold tabular-nums text-horta-ink shadow-none hover:!bg-[#eef3ea]; }
+  .interactive-canvas-footer { @apply flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border border-horta-line bg-white px-3 py-1.5 text-[11px] text-horta-muted; }
+  .interactive-canvas-notices { @apply pointer-events-none absolute inset-x-0 top-3 z-10 flex flex-col items-center gap-2 px-3; }
+  .interactive-canvas-notice { @apply pointer-events-auto m-0 flex max-w-xl items-center gap-2 rounded-lg border border-[#e8d3a6] bg-[#fffaf0]/95 py-1 pr-1 pl-3 text-xs text-[#5e4419] shadow-md; }
+  .interactive-canvas-notice.error { @apply border-[#e7b3a8] bg-[#fdf1ee]/95 py-2 pr-3 text-[#8d3430]; }
+  .interactive-tool-tile { @apply flex min-h-12 w-full items-center gap-2.5 rounded-md border border-horta-line bg-white px-2.5 py-1.5 text-left font-normal text-horta-ink shadow-none hover:!border-horta-forest hover:!bg-[#f4f8ef] disabled:hover:!border-horta-line disabled:hover:!bg-white; }
+  .interactive-tool-tile strong { @apply block truncate text-[13px] font-semibold; }
+  .interactive-tool-tile small { @apply block truncate text-[11px] text-horta-muted; }
+  .interactive-tool-tile-icon { @apply flex size-7 shrink-0 items-center justify-center rounded-md bg-[#eef3ea] text-horta-forest; }
+  .interactive-tool-tile-icon svg { @apply size-4; }
+  .interactive-tool-tile.active { @apply !border-horta-forest !bg-[#e6efdc] ring-1 ring-horta-forest; }
+  .interactive-tool-tile.active .interactive-tool-tile-icon { @apply bg-horta-forest text-white; }
 }
 
+/* Panorâmica como viewport de jogo: cena em área inteira, HUD sobreposto e painel de detalhes escuro. */
 @layer components {
-  .integrated-brand { @apply gap-2 text-sm; }
-  .integrated-brand svg { @apply size-8 shrink-0; }
-  .integrated-brand small { @apply text-[9px]; }
-  .workspace-sidebar > .integrated-brand { @apply mb-8 px-2; }
-  .workspace-sidebar .sidebar-context { @apply mb-6 border-b border-horta-line pb-5; }
-  .organization-shell .workspace-content main { @apply max-w-none; }
+  .garden-overview { @apply mb-5 min-w-0; }
+  .garden-scene-wrapper { @apply relative min-w-0; }
+  .garden-scene { @apply relative h-[clamp(340px,58dvh,520px)] w-full overflow-hidden rounded-xl border border-[#0b1712] bg-[#13221b] shadow-[0_14px_34px_-18px_rgb(8_22_15/0.7)] sm:aspect-auto sm:h-[clamp(460px,70dvh,820px)]; min-height: 0; }
+  .garden-scene > svg:focus-visible { outline: 2px solid #e2c27a; outline-offset: -4px; }
+  .garden-scene-wrapper[data-fullscreen=true] { @apply bg-[#0f1c16]; }
+  .garden-scene-wrapper[data-fullscreen=true] .garden-scene { @apply h-dvh rounded-none border-0; }
+
+  .scene-hud-top { @apply pointer-events-none absolute inset-x-3 top-3 z-10 flex items-start justify-between gap-3; }
+  .scene-hud-top > * { @apply pointer-events-auto; }
+  .scene-hud-title, .scene-hud-button, .scene-dock, .scene-legend, .garden-scene-inspector { @apply bg-[#0f1e17]/80 text-[#e9f1df] ring-1 ring-white/10 backdrop-blur-md; }
+  .scene-hud-title { @apply pointer-events-none min-w-0 max-w-[min(26rem,62%)] rounded-lg px-3 py-2; }
+  .scene-hud-title h2 { @apply m-0 text-sm leading-5 font-semibold text-white; }
+  .scene-hud-title p { @apply m-0 text-[11px] leading-4 text-[#b5c8ad]; }
+  .scene-hud-stats { @apply m-0 mt-1.5 flex list-none flex-wrap gap-x-3 gap-y-0.5 p-0 text-[11px] text-[#b5c8ad]; }
+  .scene-hud-stats strong { @apply font-semibold text-white tabular-nums; }
+  .scene-hud-actions { @apply flex shrink-0 items-center gap-2; }
+  .scene-hud-button { @apply inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-lg border-0 px-3 py-1.5 text-xs font-semibold text-[#e9f1df] no-underline shadow-none transition-colors hover:!bg-[#1d3529]/90 [&_svg]:size-4; }
+
+  .garden-scene .scene-dock { @apply top-auto right-auto bottom-3 left-1/2 z-10 max-w-[calc(100%-24px)] -translate-x-1/2 flex-nowrap gap-0.5 rounded-xl border-0 p-1 text-xs shadow-[0_8px_24px_-10px_rgb(0_0_0/0.6)]; }
+  .garden-scene .scene-dock button, .garden-scene .scene-dock .scene-dock-toggle { @apply flex h-9 min-h-9 w-auto min-w-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border-0 bg-transparent px-2 text-xs font-semibold text-[#e9f1df] shadow-none transition-colors hover:!bg-white/10 [&_svg]:size-4; }
+  .garden-scene .scene-dock .garden-scene-fit { @apply px-2.5 text-xs sm:ml-0; }
+  .garden-scene .scene-dock [aria-pressed=true], .garden-scene .scene-dock [aria-expanded=true], .garden-scene .scene-dock .scene-dock-toggle[data-checked=true] { @apply bg-[#b8d98c]/20 text-[#d8efbd]; }
+  .garden-scene .scene-dock .scene-dock-toggle:has(input:focus-visible) { @apply outline-2 outline-[#e2c27a]; }
+  .garden-scene .scene-dock .scene-dock-zoom { @apply min-w-12 text-center text-xs font-semibold tabular-nums; }
+  .garden-scene .scene-dock .scene-switch { @apply relative m-0 h-4 min-h-4 w-7 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-white/20 p-0 transition-colors checked:bg-[#b8d98c] before:absolute before:top-0.5 before:left-0.5 before:size-3 before:rounded-full before:bg-white before:transition-transform before:content-[""] checked:before:translate-x-3; }
+  .scene-dock-divider { @apply mx-1 h-5 w-px shrink-0 bg-white/15; }
+
+  .scene-legend { @apply absolute bottom-16 left-1/2 z-20 max-h-[calc(100%-96px)] w-[min(24rem,calc(100%-24px))] -translate-x-1/2 overflow-y-auto rounded-xl p-3.5 text-xs leading-relaxed shadow-[0_12px_30px_-12px_rgb(0_0_0/0.6)]; }
+  .scene-legend h3 { @apply mt-2.5 mb-1 text-[11px] font-semibold tracking-wide text-[#b8d98c] uppercase first:mt-0; }
+  .scene-legend ul { @apply m-0 grid list-none grid-cols-2 gap-x-3 gap-y-0.5 p-0; }
+  .scene-legend p { @apply my-1 text-xs text-[#d4e0cb]; }
+
+  .garden-scene-inspector { @apply mt-3 rounded-xl border-0 p-3.5 shadow-[0_12px_30px_-12px_rgb(0_0_0/0.6)] sm:top-3 sm:left-3 sm:z-20 sm:mt-0 sm:max-h-[calc(100%-84px)]; }
+  .garden-scene-inspector-header { @apply border-white/10; }
+  .garden-scene-inspector-header .eyebrow { @apply text-[#b8d98c]; }
+  .garden-scene-inspector-header strong { @apply text-base text-white; }
+  .garden-scene-inspector-header button { @apply size-8 min-h-8 border-white/15 text-[#e9f1df] hover:!bg-white/10; }
+  .garden-scene-facts > div { @apply bg-white/5; }
+  .garden-scene-facts dt { @apply text-[#a9bea0]; }
+  .garden-scene-facts dd { @apply text-[#f1f6ea]; }
+  .garden-scene-inspector .border-horta-line { @apply border-white/10; }
+  .garden-scene-inspector p { @apply text-[#d4e0cb]; }
+  .garden-scene-inspector .action-link { @apply border-[#b8d98c] bg-[#b8d98c] text-[#13261c] hover:bg-[#cbe6a6]; }
+}
+@layer components {
+  .garden-scene .scene-dock .scene-dock-divider { @apply min-w-0 w-px; }
+  .garden-scene .scene-dock .scene-dock-toggle { @apply flex-row; }
+  .garden-scene-inspector { @apply max-sm:bg-[#14251c]; }
 }
 
-/* Apresentação exclusiva das telas tradicionais, sem atingir editor/panorâmica. */
+/* Placas de identificação da panorâmica */
 @layer components {
-  .organization-workspace { @apply min-w-0 pb-4; }
-  .organization-workspace .organization-trail { @apply mb-5 text-sm; }
-  .organization-workspace .organization-heading { @apply mb-8 gap-4 border-b border-horta-line pb-7; }
-  .organization-workspace .organization-heading .eyebrow { @apply mb-2 text-xs tracking-wide; }
-  .organization-workspace .organization-heading h1 { @apply mb-3 text-3xl font-semibold sm:text-4xl; }
-  .organization-workspace .organization-heading p { @apply max-w-2xl text-base; }
-  .organization-workspace .organization-collection { @apply overflow-visible rounded-none border-x-0 border-t-0 bg-transparent shadow-none; }
-  .organization-workspace .organization-collection > div:first-child { @apply gap-3 bg-transparent px-0 py-4; }
-  .organization-workspace .organization-rows > li { @apply gap-4 px-0 py-5 sm:gap-8; }
-  .organization-workspace .organization-rows h3 { @apply text-base font-semibold sm:text-lg; }
-  .organization-workspace .organization-rows p { @apply mt-1 text-sm; }
-  .organization-workspace .organization-row-action { @apply rounded-md border-0 bg-transparent px-0 text-sm hover:bg-transparent hover:underline; }
-  .organization-workspace .organization-secondary-links { @apply mt-8 gap-x-6 border-t border-horta-line pt-4; }
-  .organization-workspace .panel { @apply rounded-none border-0 bg-transparent px-0 shadow-none; }
-  .organization-workspace .detail-facts { @apply my-6 grid gap-x-10 gap-y-0 border-t border-horta-line sm:grid-cols-2; }
-  .organization-workspace .detail-facts > div { @apply min-w-0 rounded-none border-b border-horta-line bg-transparent px-0 py-4; }
-  .organization-workspace .detail-facts dt { @apply mb-1 text-sm; }
-  .organization-workspace .detail-facts dd { @apply m-0 text-base break-words; }
-  .organization-workspace .organization-disclosure { @apply my-6 rounded-none border-x-0 border-t-0 bg-transparent px-0; }
-  .organization-workspace .organization-disclosure > summary { @apply text-sm; }
-  .organization-workspace .editor-panel { @apply mx-0 w-full max-w-[720px] pt-0 sm:px-0; }
-  .organization-workspace .editor-panel h1 { @apply text-3xl; }
-  .organization-workspace .editor-panel > p { @apply mb-7 text-base; }
-  .organization-workspace .editor-panel label { @apply gap-2 text-sm font-medium; }
-  .organization-workspace .editor-panel input,
-  .organization-workspace .editor-panel select,
-  .organization-workspace .editor-panel textarea { @apply min-h-12 rounded-md bg-white text-base; }
-  .organization-workspace .editor-panel fieldset fieldset { @apply rounded-none border-0 bg-transparent p-0; }
-  .organization-workspace .editor-panel legend { @apply mb-3 px-0 text-base; }
-  .organization-workspace .editor-actions { @apply static mx-0 mt-8 flex flex-wrap justify-between gap-3 border-t border-horta-line bg-transparent px-0 py-5 shadow-none; }
-  .organization-workspace .editor-actions button { @apply min-h-11 flex-1 sm:flex-none; }
-  .organization-workspace .organization-path { @apply rounded-none border-x-0 border-t-0 bg-transparent px-0 text-sm; }
-  .organization-workspace .next-step { @apply rounded-none border-x-0 border-y border-horta-line bg-horta-soft/40 px-4 py-5 shadow-none; }
-  .organization-workspace .badge { @apply rounded-md px-2 py-1 text-xs; }
-  .organization-workspace .empty { @apply py-14; }
-  .organization-workspace .empty > .ui-icon { @apply mx-auto mb-4 size-8; }
-  .organization-workspace .empty p { @apply text-base; }
+  .garden-scene .garden-scene-label { filter: drop-shadow(0 2px 3px rgb(0 0 0 / .45)); }
+  .garden-scene .garden-scene-label rect { fill: #0f1e17; fill-opacity: .9; stroke: rgb(255 255 255 / .16); stroke-width: 1; }
+  .garden-scene .garden-scene-label[data-role=sector] { filter: none; }
+  .garden-scene .garden-scene-label[data-role=sector] rect { fill-opacity: .55; stroke: rgb(228 237 197 / .45); stroke-dasharray: 3 2; }
+  .garden-scene .garden-scene-label .garden-scene-label-marker { fill: #b8d98c; }
+  .garden-scene .garden-scene-label[data-role=sector] .garden-scene-label-marker { fill: none; stroke: #e4edc5; stroke-width: 1.2; }
+  .garden-scene .garden-scene-label .garden-scene-label-kind { fill: #9fbe8a; font-size: 8.5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; }
+  .garden-scene .garden-scene-label .garden-scene-label-name { fill: #f4f8ee; font-size: 11.5px; font-weight: 600; }
+  .garden-scene .garden-scene-label .garden-scene-label-leader { stroke: rgb(244 248 238 / .7); stroke-width: 1; }
+  .garden-scene .garden-scene-label .garden-scene-label-anchor { fill: #f4f8ee; stroke: #0f1e17; stroke-width: 1; }
+  .garden-scene .garden-scene-label.selected rect { stroke: #e2c27a; stroke-width: 1.5; fill-opacity: .97; }
+  .garden-scene .garden-scene-label.selected .garden-scene-label-marker { fill: #e2c27a; }
+  .garden-scene .garden-scene-label.selected .garden-scene-label-leader { stroke: #e2c27a; }
+}
+@layer components {
+  .scene-hud-title { @apply max-sm:max-w-[58%] max-sm:px-2.5 max-sm:py-1.5; }
+  .scene-hud-title h2 { @apply max-sm:text-[13px] max-sm:leading-4; }
+  .scene-hud-stats { @apply max-sm:hidden; }
 }

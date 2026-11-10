@@ -6,6 +6,8 @@ Antes de planejar, implementar ou revisar o frontend, leia integralmente e siga 
 
 Consulte os requisitos e a modelagem preliminar referenciados nas regras. A criação das regras não autoriza iniciar a implementação da aplicação nem transforma decisões funcionais pendentes em requisitos aprovados.
 
+O Claude Code usa a configuração em [.claude/CLAUDE.md](.claude/CLAUDE.md). As regras completas em `.claude/rules/` são espelhos gerados das duas fontes acima. Ao alterar uma regra de arquitetura em `.codex`, execute `pwsh -File .claude/scripts/sync-architecture.ps1` e confira com `-Check`. Não editar os espelhos diretamente nem manter decisões diferentes entre os agentes.
+
 ## Organização da documentação
 
 - `documentos/`: requisitos em Markdown, PDF e DOCX e documentos gerais recebidos do projeto.

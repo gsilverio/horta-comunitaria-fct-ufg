@@ -1,3 +1,4 @@
+import { RecordTabs } from '../../../components/RecordTabs'
 import { useGardenState } from "../../../hooks/useGardenState"
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Failure } from '../../../components/Feedback'
@@ -40,9 +41,10 @@ export function IrrigationDetailPage({ garden, id, back, changed, sectors, parti
   return <>
     <button className="text-button" onClick={back} disabled={busy}>← Voltar aos registros</button>
     {success && <p className="feedback success" role="status">{success}</p>}
-    <section className="panel" aria-labelledby="detail-title"><span className="eyebrow">Registro de campo</span><h2 id="detail-title" ref={title} tabIndex={-1}>Detalhe da irrigação</h2>
+    <h1 className="mb-3" id="detail-title" ref={title} tabIndex={-1}>Detalhe da irrigação</h1>
+    <RecordTabs label="Seções da irrigação" tabs={[{ id: 'dados', label: 'Dados', content: <section className="panel" aria-labelledby="detail-title">
       {record.loading && <p role="status">Carregando registro…</p>}{record.error && <Failure error={record.error} retry={refresh} />}
-      {detail && <><div className="detail-heading"><div><h3>{detail.sectorName}</h3><p>{formatInstant(detail.startedAt)} · São Paulo</p></div><span className={`badge ${detail.validity === 'Invalid' ? 'invalid' : ''}`}>{detail.validity === 'Invalid' ? 'Invalidado' : statusLabel(detail.status)}</span></div>
+      {detail && <><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="mb-0.5">{detail.sectorName}</h2><p>{formatInstant(detail.startedAt)} · São Paulo</p></div><span className={`badge ${detail.validity === 'Invalid' ? 'invalid' : ''}`}>{detail.validity === 'Invalid' ? 'Invalidado' : statusLabel(detail.status)}</span></div>
         <dl className="facts detail-facts"><div><dt>Volume</dt><dd>{formatVolume(detail.volumeLiters)}</dd></div><div><dt>Origem / método</dt><dd>{detail.volumeSource === 'Estimated' ? 'Estimado' : detail.volumeSource === 'Measured' ? 'Medido' : 'Não informada'} · {detail.volumeMethod ?? 'Não informado'}</dd></div>
           <div><dt>Fim</dt><dd>{detail.endedAt ? formatInstant(detail.endedAt) : 'Não informado'}</dd></div><div><dt>Duração ativa</dt><dd>{detail.activeDurationMinutes === null ? 'Não informada' : `${formatNumber(detail.activeDurationMinutes)} min`}</dd></div><div><dt>Vazão informativa</dt><dd>{detail.flowRateLitersPerMinute === null ? 'Não informada' : `${formatNumber(detail.flowRateLitersPerMinute)} L/min`}</dd></div>
           <div><dt>Canteiros atendidos</dt><dd>{detail.beds.length ? detail.beds.map(bed => bed.name).join(', ') : 'Não informados'}</dd></div><div><dt>Responsável pelo trabalho</dt><dd>{participants.find(person => person.id === detail.responsibleParticipantId)?.displayName ?? (detail.responsibleParticipantId ? 'Referência histórica indisponível no catálogo ativo' : 'Não informado')}</dd></div><div><dt>Observações</dt><dd>{detail.notes ?? 'Não informadas'}</dd></div>
@@ -54,8 +56,7 @@ export function IrrigationDetailPage({ garden, id, back, changed, sectors, parti
         {error?.status === 409 && <button className="secondary" type="button" onClick={refresh}>Recarregar registro para revisão</button>}
         <label htmlFor="invalidation-reason">Motivo da invalidação *<textarea id="invalidation-reason" required maxLength={500} rows={3} value={reason} disabled={busy} aria-invalid={!!error?.fields.reason} onChange={event => setReason(event.target.value)} /></label>
         <div className="mt-6 mb-4 flex flex-wrap justify-end gap-3 max-sm:[&>button]:flex-1"><button className="secondary" type="button" disabled={busy} onClick={() => setInvalidating(false)}>Cancelar invalidação</button><button className="danger" disabled={busy || !detail || detail.validity === 'Invalid' || error?.status === 409}>{busy ? 'Invalidando…' : 'Confirmar invalidação'}</button></div></form>}
-    </section>
-    {history.loading ? <p role="status">Carregando histórico…</p> : history.error ? <Failure error={history.error} retry={refresh} /> : history.data && <HistoryPanel data={history.data} changePage={setHistoryPage} sectors={sectors} participants={participants} />}
+    </section> }, { id: 'historico', label: 'Histórico', content: history.loading ? <p role="status">Carregando histórico…</p> : history.error ? <Failure error={history.error} retry={refresh} /> : history.data && <HistoryPanel data={history.data} changePage={setHistoryPage} sectors={sectors} participants={participants} /> }]} />
   </>
 }
 

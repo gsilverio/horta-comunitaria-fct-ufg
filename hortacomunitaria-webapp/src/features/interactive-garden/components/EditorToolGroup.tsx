@@ -1,12 +1,17 @@
 import type { ReactNode } from 'react'
 
-export function EditorToolGroup({ number, title, description, active, locked, children }: { number: string; title: string; description: string; active: boolean; locked: boolean; children: ReactNode }) {
-  return <section className={`min-w-0 border-b border-[#d5ddce] ${active ? 'bg-[#edf3e6]' : 'bg-transparent'}`} aria-label={`Ferramentas de ${title.toLowerCase()}`}>
-    <header className="flex items-start gap-2 px-3 pt-4 pb-2">
-      <span className={`flex size-6 shrink-0 items-center justify-center font-mono text-xs font-bold ${active ? 'bg-horta-forest text-white' : 'bg-[#e6ecd9] text-horta-forest'}`}>{number}</span>
-      <div className="min-w-0"><h3 className="m-0 text-sm font-bold text-horta-forest">{title}</h3><p className="mt-1 mb-0 text-[11px] leading-relaxed text-horta-muted">{description}</p></div>
-      <span className="ml-auto shrink-0 pt-1 font-mono text-[9px] uppercase tracking-wide text-horta-muted">{locked ? 'Bloqueado' : active ? 'Em uso' : 'Disponível'}</span>
-    </header>
-    <div className="flex flex-col items-stretch gap-1 px-3 pb-4 [&>button]:w-full [&>button]:rounded-none [&>button]:!border-0 [&>button]:!shadow-none [&>button]:text-left [&>button]:text-xs">{children}</div>
+/** Bloco do painel lateral com título curto. */
+export function PanelSection({ title, children, tone = 'default' }: { title: string; children: ReactNode; tone?: 'default' | 'danger' }) {
+  return <section className="border-b border-horta-line px-4 py-3 last:border-b-0" aria-label={title}>
+    <h3 className={`mt-0 mb-2 text-[11px] font-semibold uppercase tracking-wide ${tone === 'danger' ? 'text-[#8d3430]' : 'text-horta-muted'}`}>{title}</h3>
+    {children}
   </section>
+}
+
+/** Botão de ferramenta com ícone e legenda; `pressed` indica a ferramenta ativa no mapa. */
+export function ToolTile({ label, ariaLabel, hint, icon, pressed, disabled, shortcut, onClick }: { label: string; /** Nome acessível estável quando difere da legenda visível. */ ariaLabel?: string; hint?: string; icon: ReactNode; pressed?: boolean; disabled?: boolean; shortcut?: string; onClick: () => void }) {
+  return <button type="button" className={`interactive-tool-tile${pressed ? ' active' : ''}`} aria-label={ariaLabel} aria-pressed={pressed} disabled={disabled} onClick={onClick} title={shortcut ? `${ariaLabel ?? label} (${shortcut})` : ariaLabel ?? label} aria-keyshortcuts={shortcut}>
+    <span aria-hidden="true" className="interactive-tool-tile-icon">{icon}</span>
+    <span className="min-w-0"><strong>{label}</strong>{hint && <small>{hint}</small>}</span>
+  </button>
 }
