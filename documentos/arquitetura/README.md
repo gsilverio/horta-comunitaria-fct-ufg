@@ -16,6 +16,7 @@ Esta pasta reúne a modelagem de dados, seus diagramas e as explicações das de
 Os modelos são preliminares e se baseiam nos requisitos 0.0.1 e no anexo da professora. O primeiro fluxo de irrigação possui consultas dos cadastros de contexto, registro/consumo, correção/histórico e interface React/Tailwind; o restante do modelo continua preliminar. Os diagramas ficam nesta pasta; o documento de requisitos e suas versões PDF/DOCX são preservados.
 
 - [Execução local](Execucao_Local.md): projetos, versões, configuração, migrations e evidências.
+- [Deploy com Docker](Deploy_Docker.md): stack `horta-comunitaria-fct-ufg`, rede `shared-tunnel`, migrations, primeiro Adm e cenário demonstrativo `--seed-demo`.
 - [Observabilidade](Observabilidade.md): contrato dos eventos implementados e diagnóstico com Serilog.
 - [Catálogo Embrapa](Catalogo_Embrapa.md): 113 cultivares, imagens licenciadas e importação explícita offline.
 - [Cultivos no panorama](Cultivos_no_Panorama.md): pixel art, fases configuráveis e densidade ilustrativa.

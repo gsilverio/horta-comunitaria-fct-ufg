@@ -43,6 +43,17 @@ try
         Environment.ExitCode = await bootstrapScope.ServiceProvider.GetRequiredService<AdministratorBootstrap>().RunAsync(CancellationToken.None);
         return;
     }
+    if (args.Contains("--seed-demo", StringComparer.Ordinal))
+    {
+        // Comando administrativo explícito: cenário fictício da reunião de validação, sem servidor nem migrations.
+        using var demoScope = app.Services.CreateScope();
+        using var cancellation = new CancellationTokenSource();
+        Console.CancelKeyPress += (_, e) => { e.Cancel = true; cancellation.Cancel(); };
+        Environment.ExitCode = await demoScope.ServiceProvider
+            .GetRequiredService<HortaComunitaria.Api.Features.Demonstration.SeedValidationScenario.SeedValidationScenarioCommandHandler>()
+            .RunAsync(cancellation.Token);
+        return;
+    }
     app.UseObservability();
     app.UseMiddleware<ErrorHandlingMiddleware>();
     app.UseAppIdentity();

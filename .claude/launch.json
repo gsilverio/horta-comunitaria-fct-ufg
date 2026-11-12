@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "HortaComunitaria.Api/HortaComunitaria.Api.csproj", "--launch-profile", "http"],
+      "port": 5163
+    },
+    {
+      "name": "webapp",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "hortacomunitaria-webapp", "run", "dev"],
+      "port": 5173
+    }
+  ]
+}

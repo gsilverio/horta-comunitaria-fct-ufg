@@ -36,6 +36,7 @@ O backend utiliza .NET 10, EF Core/Npgsql e logs estruturados com console legív
 - [Get Started](documentos/Get_Started.md): iniciar a aplicação, preparar um ambiente sem seed e testar as features disponíveis; lacunas em relação aos requisitos ficam explícitas.
 - [Planejamento completo do frontend](documentos/planejamento/frontend/README.md): telas, criação/gestão, dependências, etapas e aceite de todos os requisitos atuais e nove indicadores.
 - [Execução local da aplicação](documentos/arquitetura/Execucao_Local.md): configuração demonstrativa, migrations, API, frontend e testes.
+- [Deploy com Docker](documentos/arquitetura/Deploy_Docker.md): containers, rede compartilhada do túnel, migrations e seeds explícitos.
 - [Validação com a PO](documentos/planejamento/Validacao_PO_MVP_Irrigacao.md): roteiro de demonstração e decisões pendentes do primeiro fluxo.
 - [Observabilidade](documentos/arquitetura/Observabilidade.md): estrutura dos eventos Serilog e correlação dos processos.
 - [Documento técnico de requisitos](documentos/Documento_Tecnico_Requisitos_Horta.md): versão 0.0.1, com escopo e requisitos iniciais para validação com a PO.

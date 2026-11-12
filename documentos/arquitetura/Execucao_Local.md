@@ -4,6 +4,9 @@ Estado atual: backend dos fluxos 02–09 implementado, com interfaces pendentes,
 
 O backend implementa as etapas [1 — contexto](../planejamento/mvp-irrigacao/Etapa_01_Contexto.md), [2 — registro e consumo](../planejamento/mvp-irrigacao/Etapa_02_Registro_Consumo.md) e [3 — correção e histórico](../planejamento/mvp-irrigacao/Etapa_03_Correcao_Historico.md): catálogos demonstrativos, registro manual, listagem, detalhe, correção, invalidação, histórico e consumo de água. A [etapa 4](../planejamento/mvp-irrigacao/Etapa_04_Interface_PO.md) conecta esse percurso à interface React/Tailwind. As hipóteses funcionais continuam sujeitas à PO.
 
+
+Deploy em containers (PostgreSQL, API e frontend com nginx), migrations por bundle e seeds explícitos: ver [Deploy com Docker](Deploy_Docker.md).
+
 ## Projetos e versões
 
 O projeto existente `HortaComunitaria.Api/HortaComunitaria.Api.csproj` é o executável do backend; `tests/HortaComunitaria.Api.IntegrationTests` contém a integração. A solução existente fica em `HortaComunitaria.Api/HortaComunitaria.Api.slnx`. O template de Controllers/WeatherForecast foi substituído por Minimal APIs. `hortacomunitaria-webapp` contém o frontend e seus testes Playwright.

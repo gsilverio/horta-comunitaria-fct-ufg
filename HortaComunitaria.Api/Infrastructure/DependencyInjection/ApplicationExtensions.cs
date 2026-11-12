@@ -179,6 +179,7 @@ internal static class ApplicationExtensions
         services.AddScoped<ListIrrigationSectorHistoryQueryHandler>();
         services.AddScoped<CreateBedCommandHandler>();
         services.AddScoped<HortaComunitaria.Api.Features.Gardens.SaveLayout.SaveLayoutCommandHandler>();
+        services.AddScoped<HortaComunitaria.Api.Features.Demonstration.SeedValidationScenario.SeedValidationScenarioCommandHandler>();
         services.AddScoped<HortaComunitaria.Api.Features.Gardens.GetLayout.GetLayoutQueryHandler>();
         services.AddScoped<UpdateBedCommandHandler>();
         services.AddScoped<GetBedQueryHandler>();

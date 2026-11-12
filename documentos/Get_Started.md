@@ -68,7 +68,7 @@ dotnet run --project HortaComunitaria.Api --no-launch-profile -- --bootstrap-adm
 Remove-Item Env:Bootstrap__Password
 ```
 
-O comando não inicia o servidor nem aplica migrations, recusa-se se já houver administrador ativo e marca a senha como inicial: no primeiro acesso a interface exige a troca. Os demais usuários são criados pelo Adm em **Usuários** (menu da conta). Não há redefinição de senha nesta etapa. O antigo autor técnico `demo:operator`, se existir, é convertido pela migration `AddIdentityAuthentication` em registro de demonstração inativo, sem credenciais, apenas para o histórico.
+O comando não inicia o servidor nem aplica migrations, recusa-se se já houver administrador ativo e marca a senha como inicial: no primeiro acesso a interface exige a troca. Para a reunião de validação existe um cenário fictício opcional: com o Adm criado, execute `--seed-embrapa` e depois `--seed-demo` (mesma forma de chamada). O cenário cria a horta `DEMO-VALIDACAO` com ciclos, replantios, manejo, colheitas sucessivas e irrigações manuais; ver [Deploy com Docker](arquitetura/Deploy_Docker.md#cenário-demonstrativo---seed-demo). Os demais usuários são criados pelo Adm em **Usuários** (menu da conta). Não há redefinição de senha nesta etapa. O antigo autor técnico `demo:operator`, se existir, é convertido pela migration `AddIdentityAuthentication` em registro de demonstração inativo, sem credenciais, apenas para o histórico.
 
 Todos os cadastros de negócio são criados pela interface ou por HTTP autenticado, com histórico. Para seguir somente pela interface, entre como Adm, vá à seção 4 e use o roteiro da seção 5; os exemplos HTTP abaixo são uma alternativa. Crie uma horta separada para cada roteiro independente; não execute como carga automática da aplicação.
 
