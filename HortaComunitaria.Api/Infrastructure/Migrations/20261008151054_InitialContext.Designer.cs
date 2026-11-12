@@ -167,7 +167,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                     b.ToTable("irrigation_sectors", (string)null);
                 });
 
-            modelBuilder.Entity("HortaComunitaria.Api.Domain.Identity.User", b =>
+            modelBuilder.Entity("HortaComunitaria.Api.Identity.AppUser", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");

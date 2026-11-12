@@ -90,7 +90,7 @@ public sealed class CatalogWriteTests(PostgresFixture postgres) : IClassFixture<
         await factory.WithDbAsync(async db =>
         {
             Assert.Equal(4, await db.AuditEntries.CountAsync());
-            Assert.All(await db.AuditEntries.ToListAsync(), x => Assert.Equal(DemoIds.Operator, x.UserId));
+            Assert.All(await db.AuditEntries.ToListAsync(), x => Assert.Equal(DemoIds.Administrator, x.UserId));
         });
         Assert.Equal(HttpStatusCode.Conflict, (await client.PostAsJsonAsync(path + "/beds", new { code = "B", name = "Outro" })).StatusCode);
     }

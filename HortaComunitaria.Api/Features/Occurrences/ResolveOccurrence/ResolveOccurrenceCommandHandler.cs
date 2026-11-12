@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Occurrences.Shared;
 namespace HortaComunitaria.Api.Features.Occurrences.ResolveOccurrence;
 
 internal sealed record ResolveOccurrenceRequest([property: JsonRequired] DateTimeOffset ResolvedAt, [property: JsonRequired] string Resolution, [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class ResolveOccurrenceCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<ResolveOccurrenceCommandHandler> logger)
+internal sealed class ResolveOccurrenceCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<ResolveOccurrenceCommandHandler> logger)
 {
     public async Task<Result<OccurrenceResponse>> HandleAsync(Guid gardenId, Guid id, ResolveOccurrenceRequest request, CancellationToken cancellationToken)
     {

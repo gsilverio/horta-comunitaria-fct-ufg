@@ -11,7 +11,7 @@ using HortaComunitaria.Api.Features.Environment.Shared;
 namespace HortaComunitaria.Api.Features.Environment.RegisterEnvironmentalMeasurement;
 
 internal sealed record RegisterEnvironmentalMeasurementRequest([property: JsonRequired] Guid OperationId, [property: JsonRequired] Guid SamplingPointId, [property: JsonRequired] Guid VariableId, [property: JsonRequired] DateTimeOffset CollectedAt, [property: JsonRequired] decimal Value, [property: JsonRequired] string Unit, [property: JsonRequired] string Method, [property: JsonRequired] MeasurementQuality Quality, Guid? ResponsibleParticipantId, string? Notes);
-internal sealed class RegisterEnvironmentalMeasurementCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<RegisterEnvironmentalMeasurementCommandHandler> logger)
+internal sealed class RegisterEnvironmentalMeasurementCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<RegisterEnvironmentalMeasurementCommandHandler> logger)
 {
     public async Task<Result<CreatedEnvironmentalMeasurementResponse>> HandleAsync(Guid gardenId, RegisterEnvironmentalMeasurementRequest request, CancellationToken cancellationToken)
     {

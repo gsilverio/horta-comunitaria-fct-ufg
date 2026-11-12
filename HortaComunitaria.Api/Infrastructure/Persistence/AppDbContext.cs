@@ -4,7 +4,8 @@ using HortaComunitaria.Api.Domain.Environment;
 using HortaComunitaria.Api.Domain.Cultivation;
 using HortaComunitaria.Api.Domain.Activities;
 using HortaComunitaria.Api.Domain.Gardens;
-using HortaComunitaria.Api.Domain.Identity;
+using HortaComunitaria.Api.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using HortaComunitaria.Api.Domain.History;
 using HortaComunitaria.Api.Domain.Irrigation;
 using IrrigationRecord = HortaComunitaria.Api.Domain.Irrigation.Irrigation;
@@ -12,8 +13,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HortaComunitaria.Api.Infrastructure.Persistence;
 
-/// <summary>Unidade de persistência dos slices; não adiciona camada de repositories.</summary>
-public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+/// <summary>Unidade de persistência dos slices e do Identity (<c>Users</c>); não adiciona camada de repositories.</summary>
+public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityUserContext<AppUser, Guid>(options)
 {
     /// <summary>Hortas cadastradas.</summary>
     public DbSet<Garden> Gardens => Set<Garden>();
@@ -27,8 +28,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<BedConfiguration> BedConfigurations => Set<BedConfiguration>();
     /// <summary>Responsáveis pelo trabalho.</summary>
     public DbSet<Participant> Participants => Set<Participant>();
-    /// <summary>Autoria técnica; não constitui um sistema de autenticação.</summary>
-    public DbSet<User> Users => Set<User>();
     /// <summary>Fatos manuais de irrigação.</summary>
     public DbSet<IrrigationRecord> Irrigations => Set<IrrigationRecord>();
     /// <summary>Canteiros atendidos com contexto histórico.</summary>
@@ -82,6 +81,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     /// <summary>Aplica mapeamentos separados do domínio.</summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         modelBuilder.HasPostgresExtension("btree_gist");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }

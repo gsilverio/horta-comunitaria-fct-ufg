@@ -7,6 +7,9 @@ using HortaComunitaria.Api.Features.Activities;
 using HortaComunitaria.Api.Features.Irrigation;
 using HortaComunitaria.Api.Features.Indicators;
 using HortaComunitaria.Api.Features.Evidence;
+using HortaComunitaria.Api.Features.Auth;
+using HortaComunitaria.Api.Features.Users;
+using HortaComunitaria.Api.Infrastructure.Identity;
 
 namespace HortaComunitaria.Api.Infrastructure.Endpoints;
 
@@ -14,16 +17,20 @@ internal static class EndpointRouteBuilderExtensions
 {
     internal static IEndpointRouteBuilder MapAllEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/v1/gardens");
+        // Toda rota exige autenticação (fallback policy); a senha inicial pendente bloqueia o restante da API.
+        var v1 = app.MapGroup("/api/v1").AddEndpointFilter<PasswordChangeRequiredFilter>();
+        v1.MapAuthEndpoints();
+        v1.MapUsersEndpoints();
+        var group = v1.MapGroup("/gardens");
         group.MapGardensEndpoints();
         group.MapActivitiesEndpoints();
         group.MapIrrigationEndpoints();
         group.MapIndicatorsEndpoints();
-        app.MapGroup("/api/v1").MapCultivationGlobalEndpoints();
+        v1.MapCultivationGlobalEndpoints();
         group.MapCultivationEndpoints();
-        app.MapGroup("/api/v1").MapEnvironmentGlobalEndpoints();
+        v1.MapEnvironmentGlobalEndpoints();
         group.MapEnvironmentEndpoints();
-        app.MapGroup("/api/v1").MapActivitiesGlobalEndpoints();
+        v1.MapActivitiesGlobalEndpoints();
         group.MapCostsEndpoints();
         group.MapOccurrencesEndpoints();
         group.MapEvidenceEndpoints();

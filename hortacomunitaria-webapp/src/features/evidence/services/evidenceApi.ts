@@ -23,6 +23,7 @@ export const evidenceApi = {
     (await http.put<Evidence>(`${path(garden)}/${encodeURIComponent(id)}`, { ...values, expectedVersion, reason })).data,
   invalidate: async (garden: string, id: string, expectedVersion: number, reason: string) =>
     (await http.post<Evidence>(`${path(garden)}/${encodeURIComponent(id)}/invalidation`, { expectedVersion, reason })).data,
-  /** URL da imagem para <img>; usa a mesma base do cliente HTTP (proxy do Vite em desenvolvimento). */
-  contentUrl: (garden: string, id: string) => `${http.defaults.baseURL ?? ''}${path(garden)}/${encodeURIComponent(id)}/content`,
+  /** Caminho do arquivo na API; o conteúdo exige o token da sessão e é obtido por `content`. */
+  contentUrl: (garden: string, id: string) => `${path(garden)}/${encodeURIComponent(id)}/content`,
+  content: async (contentPath: string, signal: AbortSignal) => (await http.get<Blob>(contentPath, { responseType: 'blob', signal })).data,
 }

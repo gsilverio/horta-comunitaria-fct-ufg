@@ -36,11 +36,11 @@ export function InteractivePlantingForm({ garden, bed, species, saved, cancel, r
     {options.loading && <p role="status">Carregando variedades e origens…</p>}
     {options.error && <Failure error={options.error} retry={options.retry} />}
     <details className="!m-0 border-t border-[#c8d3b6] pt-2"><summary>Variedade e informações complementares</summary><div className="mt-3 grid gap-4">
-      <SelectField name="cultivarId" label="Variedade (opcional)" value={draft.cultivar} change={value => change('cultivar', value)} options={options.data?.cultivar?.filter(item => item.speciesId === species.id) ?? []} error={command.error} />
-      <SelectField name="propagationLotId" label="Lote de origem (opcional)" value={draft.origin} change={value => change('origin', value)} options={options.data?.propagationLot?.filter(item => item.speciesId === species.id) ?? []} error={command.error} />
+      <SelectField name="cultivarId" label="Variedade" value={draft.cultivar} change={value => change('cultivar', value)} options={options.data?.cultivar?.filter(item => item.speciesId === species.id) ?? []} error={command.error} />
+      <SelectField name="propagationLotId" label="Lote de origem" value={draft.origin} change={value => change('origin', value)} options={options.data?.propagationLot?.filter(item => item.speciesId === species.id) ?? []} error={command.error} />
       <Field name="plantSpacingCm" label="Entre plantas (cm)" type="decimal" value={draft.plantSpacing} change={value => change('plantSpacing', value)} error={command.error} />
       <Field name="rowSpacingCm" label="Entre linhas (cm)" type="decimal" value={draft.rowSpacing} change={value => change('rowSpacing', value)} error={command.error} />
-      <SelectField name="responsibleParticipantId" label="Responsável (opcional)" value={draft.participant} change={value => change('participant', value)} options={options.data?.participant ?? []} error={command.error} />
+      <SelectField name="responsibleParticipantId" label="Responsável" value={draft.participant} change={value => change('participant', value)} options={options.data?.participant ?? []} error={command.error} />
     </div></details>
     {command.progress && <p role="status" className="notice !m-0">{command.progress}</p>}
     {command.partialCycle && <button type="button" className="secondary" onClick={() => { releaseNavigationGuard(); resume(command.partialCycle ?? '') }}>Revisar plantio do cultivo salvo</button>}

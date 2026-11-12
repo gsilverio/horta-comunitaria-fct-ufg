@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.CreateSpecies;
 
 internal sealed record CreateSpeciesRequest([property: JsonRequired] string CommonName, string? ScientificName, string? Description);
-internal sealed class CreateSpeciesCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CreateSpeciesCommandHandler> logger)
+internal sealed class CreateSpeciesCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CreateSpeciesCommandHandler> logger)
 {
     public async Task<Result<SpeciesResponse>> HandleAsync(CreateSpeciesRequest request, CancellationToken cancellationToken)
     {

@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Environment.Shared;
 namespace HortaComunitaria.Api.Features.Environment.CreateEnvironmentalVariable;
 
 internal sealed record CreateEnvironmentalVariableRequest(string? Code, [property: JsonRequired] string Name, [property: JsonRequired] string Quantity, [property: JsonRequired] string ReferenceUnit, string? Description, bool? IsSoilMoisture);
-internal sealed class CreateEnvironmentalVariableCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CreateEnvironmentalVariableCommandHandler> logger)
+internal sealed class CreateEnvironmentalVariableCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CreateEnvironmentalVariableCommandHandler> logger)
 {
     public async Task<Result<EnvironmentalVariableResponse>> HandleAsync(CreateEnvironmentalVariableRequest request, CancellationToken cancellationToken)
     {

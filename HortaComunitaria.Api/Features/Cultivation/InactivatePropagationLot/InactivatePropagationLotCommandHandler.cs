@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.InactivatePropagationLot;
 
 internal sealed record InactivatePropagationLotRequest([property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class InactivatePropagationLotCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<InactivatePropagationLotCommandHandler> logger)
+internal sealed class InactivatePropagationLotCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<InactivatePropagationLotCommandHandler> logger)
 {
     public async Task<Result<PropagationLotResponse>> HandleAsync(Guid gardenId, Guid id, InactivatePropagationLotRequest request, CancellationToken cancellationToken)
     {

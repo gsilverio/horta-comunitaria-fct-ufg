@@ -28,7 +28,7 @@ O seed não roda no startup, em migration ou hosted service; não consulta inter
 
 1. Configurar conexão conforme [Execução local](Execucao_Local.md).
 2. Aplicar migrations explicitamente. `AddEmbrapaCatalogImages` altera só o esquema.
-3. Preparar `demo:operator` conforme [Get Started](../Get_Started.md); o comando não cria usuários/credenciais.
+3. Criar o primeiro administrador conforme [Get Started](../Get_Started.md); a importação é atribuída ao Adm ativo mais antigo e não cria usuários/credenciais.
 4. Executar:
 
 ```powershell

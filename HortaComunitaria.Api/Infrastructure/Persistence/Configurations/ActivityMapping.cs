@@ -33,7 +33,7 @@ internal sealed class ActivityMapping : IEntityTypeConfiguration<Activity>
         builder.HasIndex(x => new { x.GardenId, x.OperationId }).IsUnique().HasDatabaseName("ux_activities_garden_operation");
         builder.HasIndex(x => new { x.GardenId, x.PerformedOn, x.Id }).IsDescending(false, true, true);
         builder.HasOne<Garden>().WithMany().HasForeignKey(x => x.GardenId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<Domain.Identity.User>().WithMany().HasForeignKey(x => x.RecordedByUserId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Identity.AppUser>().WithMany().HasForeignKey(x => x.RecordedByUserId).OnDelete(DeleteBehavior.Restrict);
         builder.Property(x => x.Title).HasMaxLength(120).IsRequired(); builder.Property(x => x.Category).HasMaxLength(120).IsRequired(); builder.Property(x => x.Description).HasMaxLength(1000); builder.Property(x => x.Objective).HasMaxLength(1000); builder.Property(x => x.Modality).HasMaxLength(120); builder.HasOne<Bed>().WithMany().HasForeignKey(x => new { x.GardenId, x.BedId }).HasPrincipalKey(x => new { x.GardenId, x.Id }).OnDelete(DeleteBehavior.Restrict); builder.HasOne<IrrigationSector>().WithMany().HasForeignKey(x => new { x.GardenId, x.SectorId }).HasPrincipalKey(x => new { x.GardenId, x.Id }).OnDelete(DeleteBehavior.Restrict); builder.HasOne<CultivationCycle>().WithMany().HasForeignKey(x => new { x.GardenId, x.CycleId }).HasPrincipalKey(x => new { x.GardenId, x.Id }).OnDelete(DeleteBehavior.Restrict); builder.HasOne<Occurrence>().WithMany().HasForeignKey(x => new { x.GardenId, x.OccurrenceId }).HasPrincipalKey(x => new { x.GardenId, x.Id }).OnDelete(DeleteBehavior.Restrict);
     }
 }

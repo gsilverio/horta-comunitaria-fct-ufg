@@ -5,9 +5,11 @@ export type CropStage = 'AwaitingPlanting' | 'Planted' | 'Seedling' | 'Growing' 
 export interface GardenCrop {
   cycleId: string
   bedId: string
+  speciesId: string
   speciesName: string
   speciesCatalogKey: string | null
   scientificName: string | null
+  speciesImageUrl: string | null
   cultivarName: string | null
   cultivarCatalogKey: string | null
   occupiedAreaM2: number
@@ -78,3 +80,33 @@ export function bedCropSymbols(crops: readonly GardenCrop[]) {
   }
   return symbols
 }
+
+/** Nome curto da fase, para rótulos e etiquetas. */
+export const phaseNames: Record<CropStage, string> = {
+  AwaitingPlanting: 'Aguardando plantio',
+  Planted: 'Plantado',
+  Seedling: 'Início do plantio',
+  Growing: 'Crescimento',
+  HarvestExpected: 'Colheita prevista',
+  HarvestRecorded: 'Colheita registrada',
+  Mixed: 'Plantios em datas distintas',
+}
+
+const DAY_MS = 86_400_000
+const dayNumber = (date: string) => { const [year, month, day] = date.split('-').map(Number); return Date.UTC(year, month - 1, day) / DAY_MS }
+const addDays = (date: string, days: number) => new Date((dayNumber(date) + days) * DAY_MS).toISOString().slice(0, 10)
+
+/**
+ * Linha do tempo ilustrativa do cultivo na data `on`: dias desde o primeiro plantio inicial e prazo de colheita
+ * configurado (espécie ou cultivar). É previsão, não maturidade confirmada.
+ */
+export function cropTimeline(crop: GardenCrop, on: string) {
+  const elapsed = crop.firstPlantedOn ? dayNumber(on) - dayNumber(crop.firstPlantedOn) : undefined
+  const harvestDays = crop.visualHarvestDays !== null && crop.visualHarvestDays > 0 ? crop.visualHarvestDays : undefined
+  const harvestOn = crop.firstPlantedOn && harvestDays !== undefined ? addDays(crop.firstPlantedOn, harvestDays) : undefined
+  const harvestIn = elapsed !== undefined && harvestDays !== undefined ? harvestDays - elapsed : undefined
+  const progress = elapsed !== undefined && harvestDays !== undefined && crop.stage !== 'Mixed' ? Math.min(Math.max(elapsed, 0), harvestDays) : undefined
+  return { elapsed, harvestDays, harvestOn, harvestIn, progress }
+}
+
+export const pluralDays = (value: number) => `${value.toLocaleString('pt-BR')} ${value === 1 ? 'dia' : 'dias'}`

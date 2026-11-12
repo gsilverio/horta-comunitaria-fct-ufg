@@ -13,7 +13,7 @@ using Npgsql;
 namespace HortaComunitaria.Api.Features.Activities.UpdateParticipant;
 
 internal sealed record UpdateParticipantRequest([property: JsonRequired] string DisplayName, [property: JsonRequired] string? Category, [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class UpdateParticipantCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<UpdateParticipantCommandHandler> logger)
+internal sealed class UpdateParticipantCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<UpdateParticipantCommandHandler> logger)
 {
     public async Task<Result<ParticipantResponse>> HandleAsync(Guid gardenId, Guid id, UpdateParticipantRequest request, CancellationToken cancellationToken)
     {

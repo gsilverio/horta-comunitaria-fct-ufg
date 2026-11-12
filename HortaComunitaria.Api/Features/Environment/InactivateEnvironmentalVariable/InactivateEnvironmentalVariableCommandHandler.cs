@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Environment.Shared;
 namespace HortaComunitaria.Api.Features.Environment.InactivateEnvironmentalVariable;
 
 internal sealed record InactivateEnvironmentalVariableRequest([property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class InactivateEnvironmentalVariableCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<InactivateEnvironmentalVariableCommandHandler> logger)
+internal sealed class InactivateEnvironmentalVariableCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<InactivateEnvironmentalVariableCommandHandler> logger)
 {
     public async Task<Result<EnvironmentalVariableResponse>> HandleAsync(Guid id, InactivateEnvironmentalVariableRequest request, CancellationToken cancellationToken)
     {

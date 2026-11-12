@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.RegisterPropagationLot;
 
 internal sealed record RegisterPropagationLotRequest(string? Code, [property: JsonRequired] Guid SpeciesId, Guid? CultivarId, [property: JsonRequired] MaterialType MaterialType, string? Origin, DateOnly? ReceivedOn, string? Notes);
-internal sealed class RegisterPropagationLotCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<RegisterPropagationLotCommandHandler> logger)
+internal sealed class RegisterPropagationLotCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<RegisterPropagationLotCommandHandler> logger)
 {
     public async Task<Result<PropagationLotResponse>> HandleAsync(Guid gardenId, RegisterPropagationLotRequest request, CancellationToken cancellationToken)
     {

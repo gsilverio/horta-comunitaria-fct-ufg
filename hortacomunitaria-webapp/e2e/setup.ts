@@ -1,8 +1,11 @@
 import { spawn, execFileSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
-import { mkdirSync, createWriteStream } from 'node:fs'
-import { resolve } from 'node:path'
+import { mkdirSync, createWriteStream, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, join, resolve } from 'node:path'
+import { chromium } from '@playwright/test'
 import pg from 'pg'
+import { administratorStorageState, e2eAdministrator } from './fixtures'
 
 /** Contexto de teste exclusivamente no banco descartável, sem dados inseridos pela aplicação. */
 export const secondGarden = '01a11c0e-0d50-77e9-83f0-25404edc4cc5'
@@ -33,6 +36,12 @@ export default async function setup() {
   const log = createWriteStream(resolve(import.meta.dirname, '../test-results/backend.log'))
   const quote = (value: string) => `'${value.replaceAll("'", "''")}'`
   const npgsql = `Host=${quote(url.hostname)};Port=${url.port || '5432'};Database=${database};Username=${quote(decodeURIComponent(url.username))};Password=${quote(decodeURIComponent(url.password))}`
+  // Chaves do Data Protection descartáveis desta execução, fora do repositório.
+  const keysPath = join(tmpdir(), 'horta-e2e-keys', database)
+  const apiEnv = { ...process.env, DOTNET_ENVIRONMENT: 'Development', Persistence__ConnectionString: npgsql,
+    Authentication__KeysPath: keysPath,
+    // Cada teste obtém um token pelo login; o limite padrão (10/min por IP) é para uso real.
+    Authentication__RateLimitPerMinute: '1000' }
   let api: ReturnType<typeof spawn> | undefined
   let frontend: ReturnType<typeof spawn> | undefined
   async function stop(child: ReturnType<typeof spawn> | undefined) {
@@ -48,12 +57,56 @@ export default async function setup() {
     await admin.query('SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()', [database])
     if (!/^horta_e2e_[0-9a-f]{32}$/.test(database)) throw new Error('Nome de banco de teste inválido')
     await admin.query(`DROP DATABASE "${database}"`); await admin.end()
+    rmSync(dirname(administratorStorageState), { recursive: true, force: true })
+    rmSync(keysPath, { recursive: true, force: true })
   }
+  const apiDll = resolve(repo, 'HortaComunitaria.Api/bin/Release/net10.0/HortaComunitaria.Api.dll')
+
+  /**
+   * Primeiro Adm pelo comando administrativo explícito, como em produção, e troca da senha inicial pela API.
+   * As senhas são aleatórias por execução e só existem no banco descartável.
+   */
+  async function createAdministrator() {
+    const initial = `Inicial-${randomBytes(12).toString('hex')}`
+    const password = `Sessao-${randomBytes(12).toString('hex')}`
+    try {
+      execFileSync('dotnet', [apiDll, '--bootstrap-admin'], { cwd: resolve(repo, 'HortaComunitaria.Api'), stdio: 'pipe', windowsHide: true,
+        env: { ...apiEnv, Bootstrap__Email: e2eAdministrator.email, Bootstrap__DisplayName: e2eAdministrator.displayName, Bootstrap__Password: initial } })
+    } catch { throw new Error('O comando --bootstrap-admin recusou a criação do Adm do E2E.') }
+    const auth = `${process.env.HORTA_E2E_API_URL}/api/v1/auth`
+    const login = await fetch(`${auth}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: e2eAdministrator.email, password: initial }) })
+    if (!login.ok) throw new Error(`Login inicial do Adm do E2E recusado (${login.status}).`)
+    const { accessToken } = await login.json() as { accessToken: string }
+    const changed = await fetch(`${auth}/change-password`, { method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` }, body: JSON.stringify({ currentPassword: initial, newPassword: password }) })
+    if (!changed.ok) throw new Error(`Troca da senha inicial do Adm do E2E recusada (${changed.status}).`)
+    process.env.HORTA_E2E_ADMIN_PASSWORD = password
+  }
+
+  /** Entra pela tela real e guarda o cookie de renovação; cada teste abre a aplicação com a sessão restaurada. */
+  async function saveAdministratorSession() {
+    const browser = await chromium.launch()
+    try {
+      const context = await browser.newContext({ baseURL: 'http://127.0.0.1:5183' })
+      const page = await context.newPage()
+      await page.goto('/')
+      await page.getByLabel('E-mail').fill(e2eAdministrator.email)
+      await page.getByLabel('Senha').fill(process.env.HORTA_E2E_ADMIN_PASSWORD ?? '')
+      await Promise.all([
+        page.waitForResponse(response => new URL(response.url()).pathname === '/api/v1/auth/me' && response.ok()),
+        page.getByRole('button', { name: 'Entrar', exact: true }).click(),
+      ])
+      mkdirSync(dirname(administratorStorageState), { recursive: true })
+      const state = await context.storageState({ path: administratorStorageState })
+      if (!state.cookies.some(cookie => cookie.name === '__Secure-horta.refresh'))
+        throw new Error('O navegador não guardou o cookie de renovação; a sessão não seria restaurada entre os testes.')
+    } finally { await browser.close() }
+  }
+
   try {
     execFileSync('dotnet', ['build', 'HortaComunitaria.Api/HortaComunitaria.Api.csproj', '-c', 'Release', '--no-restore', '-m:1'], { cwd: repo, stdio: 'pipe', windowsHide: true })
     api = spawn('dotnet', ['run', '--project', 'HortaComunitaria.Api', '-c', 'Release', '--no-build', '--no-restore', '--no-launch-profile'], {
-      cwd: repo, windowsHide: true, env: { ...process.env, DOTNET_ENVIRONMENT: 'Development', ASPNETCORE_URLS: process.env.HORTA_E2E_API_URL,
-        Persistence__ConnectionString: npgsql, Persistence__ApplyMigrationsOnStartup: 'true', DemoMode__Enabled: 'true' },
+      cwd: repo, windowsHide: true, env: { ...apiEnv, ASPNETCORE_URLS: process.env.HORTA_E2E_API_URL, Persistence__ApplyMigrationsOnStartup: 'true' },
     })
     api.stdout?.pipe(log, { end: false }); api.stderr?.pipe(log, { end: false })
     let ready = false
@@ -78,7 +131,6 @@ export default async function setup() {
         await db.query('INSERT INTO bed_sector_assignments ("Id", "GardenId", "BedId", "IrrigationSectorId", "ValidFrom", "ValidUntil") VALUES ($1,$2,$3,$4,$5,NULL)', [uuidV7(), garden, bed, sector, '2026-10-01'])
       }
       await db.query('INSERT INTO participants ("Id", "GardenId", "DisplayName", "IsActive") VALUES ($1,$2,$3,true)', ['01a11c0e-0d4c-7c58-884b-78bf1729acbf', garden, 'Participante fictício'])
-      await db.query('INSERT INTO users ("Id", "AuthenticationIdentifier", "DisplayName", "IsActive") VALUES ($1,$2,$3,true)', ['01a11c0e-0d4c-7928-ab6b-fd88c78ae086', 'demo:operator', 'Operador de demonstração'])
       await db.query('INSERT INTO gardens ("Id", "Code", "Name", "IsActive") VALUES ($1, $2, $3, true)', [secondGarden, 'ZZ_DEMO', 'Outra horta demonstrativa'])
       await db.query('INSERT INTO irrigation_sectors ("Id", "GardenId", "Code", "Name", "IsActive") VALUES ($1, $2, $3, $4, true)', [secondSector, secondGarden, 'R1', 'Setor da outra horta'])
       for (let index = 1; index <= 101; index++) {
@@ -88,7 +140,8 @@ export default async function setup() {
       }
       for (let index = 3; index <= 6; index++) await db.query('INSERT INTO irrigation_sectors ("Id", "GardenId", "Code", "Name", "IsActive") VALUES ($1,$2,$3,$4,true)', [uuidV7(), '01a11c0e-0d43-77e9-83f0-25404edc4cc5', `S${index}`, `Setor demonstrativo ${index}`])
     } finally { await db.end() }
-    if (process.env.HORTA_E2E_EMBRAPA === 'true') execFileSync('dotnet', [resolve(repo, 'HortaComunitaria.Api/bin/Release/net10.0/HortaComunitaria.Api.dll'), '--seed-embrapa'], { cwd: resolve(repo, 'HortaComunitaria.Api'), stdio: 'pipe', windowsHide: true, env: { ...process.env, DOTNET_ENVIRONMENT: 'Development', Persistence__ConnectionString: npgsql, DemoMode__Enabled: 'true' } })
+    await createAdministrator()
+    if (process.env.HORTA_E2E_EMBRAPA === 'true') execFileSync('dotnet', [apiDll, '--seed-embrapa'], { cwd: resolve(repo, 'HortaComunitaria.Api'), stdio: 'pipe', windowsHide: true, env: apiEnv })
     const response = await fetch(`${process.env.HORTA_E2E_API_URL}/openapi/v1.json`)
     if (!response.ok) throw new Error('OpenAPI não disponível')
     const document = await response.json() as { paths: Record<string, Record<string, unknown>> }
@@ -107,6 +160,7 @@ export default async function setup() {
       if (!frontReady) await new Promise(done => setTimeout(done, 100))
     }
     if (!frontReady) throw new Error('Preview não respondeu no prazo.')
+    await saveAdministratorSession()
     return cleanup
   } catch (error) { await cleanup(); throw error }
 }

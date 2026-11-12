@@ -63,7 +63,7 @@ public sealed class IrrigationChangesTests(PostgresFixture postgres) : IClassFix
         Assert.Equal(RecordValidity.Invalid, history.Items[0].After.Validity);
         Assert.Null(history.Items[2].Before);
         Assert.Null(history.Items[2].Reason);
-        Assert.All(history.Items, x => { Assert.True(x.Actor.IsDemonstration); Assert.Equal(DemoIds.Operator, x.Actor.Id); });
+        Assert.All(history.Items, x => { Assert.False(x.Actor.IsDemonstration); Assert.Equal(DemoIds.Administrator, x.Actor.Id); });
         var invalidReplay = await DetailAsync(await PostAsync(client, original));
         Assert.Equal(3, invalidReplay.Version);
         await factory.WithDbAsync(async db =>

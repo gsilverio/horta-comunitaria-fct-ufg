@@ -1,11 +1,11 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 
 test('canteiro no editor conclui mapa, área, espécie, cultivo e plantio sem sair do modo interativo', async ({ page, request }) => {
   const api = `${process.env.HORTA_E2E_API_URL}/api/v1`
   const created = await request.post(`${api}/gardens`, { data: { name: 'Horta estação de cultivo' } })
   expect(created.status()).toBe(201)
   const garden = await created.json() as { id: string }
-  const path = `/#/hortas/${garden.id}/horta`
+  const path = `/hortas/${garden.id}/horta/mapa`
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto(path)
   await page.getByRole('button', { name: 'Retangular', exact: true }).click()
@@ -97,7 +97,7 @@ test('canteiro no editor conclui mapa, área, espécie, cultivo e plantio sem sa
   await expect(page.getByText('Código do canteiro', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Alface', exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: /^20 plantas/ })).toBeVisible()
-  await page.getByRole('link', { name: 'Voltar à panorâmica', exact: true }).click()
+  await page.getByRole('link', { name: '← Voltar: Panorâmica', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Visão panorâmica da horta' })).toBeVisible()
 })
 
@@ -107,7 +107,7 @@ test('ficha de plantio retoma cultivo salvo após rejeição do plantio sem dupl
   const layout = await request.put(`${api}/gardens/${garden.id}/layout`, { data: { operationId: crypto.randomUUID(), expectedVersion: 0, layout: { width: 20, height: 20, boundary: [{ x: 0, y: 0 }, { x: 20, y: 0 }, { x: 20, y: 20 }, { x: 0, y: 20 }], elements: [{ id: 's', name: 'Setor', role: 'sector', shape: 'rectangle', x: 0, y: 0, width: 20, height: 20, rotationDeg: 0 }, { id: 'b', name: 'Canteiro de revisão', role: 'bed', shape: 'rectangle', x: 5, y: 5, width: 2, height: 1, rotationDeg: 0, sectorId: 's' }] } } })
   expect(layout.ok()).toBe(true)
   await page.setViewportSize({ width: 1440, height: 1000 })
-  await page.goto(`/#/hortas/${garden.id}/horta`)
+  await page.goto(`/hortas/${garden.id}/horta/mapa`)
   await page.getByRole('application').getByRole('button', { name: /^Canteiro de revisão,/ }).click()
   const menu = page.getByRole('complementary', { name: 'Canteiro de revisão', exact: true })
   await menu.getByRole('button', { name: 'Selecionar Alface', exact: true }).click()

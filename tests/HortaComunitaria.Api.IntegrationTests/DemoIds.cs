@@ -7,7 +7,10 @@ internal static class DemoIds
     internal static readonly Guid SectorOne = Guid.Parse("01a11c0e-0d4a-71e0-9b3e-6ff7bb54245b");
     internal static readonly Guid SectorTwo = Guid.Parse("01a11c0e-0d4a-7872-adc6-357d4ab33105");
     internal static readonly Guid Participant = Guid.Parse("01a11c0e-0d4c-7c58-884b-78bf1729acbf");
+    /// <summary>Conta de teste com perfil Operador.</summary>
     internal static readonly Guid Operator = Guid.Parse("01a11c0e-0d4c-7928-ab6b-fd88c78ae086");
+    /// <summary>Conta de teste com perfil Adm; autora padrão das gravações dos testes.</summary>
+    internal static readonly Guid Administrator = Guid.Parse("01a11c0e-0d4c-7f31-a2d4-3c5e8b9a6f10");
     internal static readonly Guid[] Beds =
     [
         Guid.Parse("01a11c0e-0d4b-7411-b9f3-f5a646477e57"),

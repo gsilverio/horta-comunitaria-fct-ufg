@@ -12,7 +12,7 @@ using Npgsql;
 namespace HortaComunitaria.Api.Features.Gardens.CreateGarden;
 
 internal sealed record CreateGardenRequest(string? Code, [property: JsonRequired] string Name, string? Location, decimal? InstitutionalAreaM2, decimal? OperationalAreaM2, decimal? ExperimentalAreaM2);
-internal sealed class CreateGardenCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CreateGardenCommandHandler> logger)
+internal sealed class CreateGardenCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CreateGardenCommandHandler> logger)
 {
     public async Task<Result<GardenResponse>> HandleAsync(CreateGardenRequest request, CancellationToken cancellationToken)
     {

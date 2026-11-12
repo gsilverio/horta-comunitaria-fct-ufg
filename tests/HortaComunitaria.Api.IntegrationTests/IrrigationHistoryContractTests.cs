@@ -33,7 +33,7 @@ public sealed class IrrigationHistoryContractTests(PostgresFixture postgres) : I
             Request(30m) with { SectorId = otherSector.Id, BedIds = [], ResponsibleParticipantId = null }, Json)).StatusCode);
         await DetailAsync(await PutAsync(client, created.Id, Correction(original)));
         await DetailAsync(await InvalidateAsync(client, created.Id, 2));
-        await factory.WithDbAsync(db => db.Database.ExecuteSqlAsync($"UPDATE users SET \"IsActive\" = false WHERE \"Id\" = {DemoIds.Operator}"));
+        await factory.WithDbAsync(db => db.Database.ExecuteSqlAsync($"UPDATE users SET \"IsActive\" = false WHERE \"Id\" = {DemoIds.Administrator}"));
         var items = new List<IrrigationHistoryResponse>();
         for (var number = 1; number <= 3; number++)
         {
@@ -46,7 +46,7 @@ public sealed class IrrigationHistoryContractTests(PostgresFixture postgres) : I
         }
         Assert.Equal(new[] { AuditOperation.Invalidated, AuditOperation.Corrected, AuditOperation.Created }, items.Select(x => x.Operation));
         Assert.Equal(items.Select(x => x.Id).OrderDescending(), items.Select(x => x.Id));
-        Assert.All(items, x => { Assert.Equal(created.Id, x.After.Id); Assert.True(x.Actor.IsDemonstration); });
+        Assert.All(items, x => { Assert.Equal(created.Id, x.After.Id); Assert.Equal(DemoIds.Administrator, x.Actor.Id); Assert.False(x.Actor.IsDemonstration); });
         var raw = await client.GetStringAsync(Path(created.Id) + "/history");
         Assert.DoesNotContain("creationPayload", raw);
         Assert.DoesNotContain("operationId", raw);

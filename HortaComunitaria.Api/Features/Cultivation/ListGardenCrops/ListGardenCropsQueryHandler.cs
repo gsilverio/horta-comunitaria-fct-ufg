@@ -9,8 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HortaComunitaria.Api.Features.Cultivation.ListGardenCrops;
 
-internal sealed record GardenCropResponse(Guid CycleId, Guid BedId, string SpeciesName, string? SpeciesCatalogKey,
-    string? ScientificName, string? CultivarName, string? CultivarCatalogKey, decimal OccupiedAreaM2,
+/// <summary>Cultivo vigente na data da cena. <c>SpeciesImageUrl</c> aponta para a imagem ilustrativa da espécie, quando cadastrada.</summary>
+internal sealed record GardenCropResponse(Guid CycleId, Guid BedId, Guid SpeciesId, string SpeciesName, string? SpeciesCatalogKey,
+    string? ScientificName, string? SpeciesImageUrl, string? CultivarName, string? CultivarCatalogKey, decimal OccupiedAreaM2,
     long? InitialQuantity, bool HasReplacements, bool HasMixedPlantingDates, DateOnly? FirstPlantedOn,
     DateOnly? LastHarvestedOn, int? VisualGrowthDays, int? VisualHarvestDays, CropVisualStage Stage);
 
@@ -33,7 +34,8 @@ internal sealed class ListGardenCropsQueryHandler(AppDbContext db, ILogger<ListG
                     from cultivar in cultivars.DefaultIfEmpty()
                     where cycle.GardenId == gardenId && cycle.Validity == RecordValidity.Valid && cycle.StartedOn <= date &&
                         (cycle.EndedOn == null || cycle.EndedOn > date)
-                    select new { cycle.Id, cycle.BedId, cycle.OccupiedAreaM2, species.CommonName, species.ScientificName,
+                    select new { cycle.Id, cycle.BedId, cycle.OccupiedAreaM2, SpeciesId = species.Id, species.CommonName, species.ScientificName,
+                        SpeciesHasImage = species.ImageBase64 != null,
                         SpeciesCatalogKey = species.CatalogKey, CultivarName = cultivar == null ? null : cultivar.Name,
                         CultivarCatalogKey = cultivar == null ? null : cultivar.CatalogKey,
                         GrowthDays = cultivar != null && cultivar.VisualGrowthDays != null ? cultivar.VisualGrowthDays : species.VisualGrowthDays,
@@ -55,8 +57,8 @@ internal sealed class ListGardenCropsQueryHandler(AppDbContext db, ILogger<ListG
             harvests.TryGetValue(cycle.Id, out var harvest);
             var stage = CropVisualAppearance.Resolve(date, planting?.First, harvest is not null, planting?.Mixed ?? false,
                 planting?.Replacements ?? false, cycle.GrowthDays, cycle.HarvestDays);
-            return new GardenCropResponse(cycle.Id, cycle.BedId, cycle.CommonName, cycle.SpeciesCatalogKey, cycle.ScientificName,
-                cycle.CultivarName, cycle.CultivarCatalogKey, cycle.OccupiedAreaM2,
+            return new GardenCropResponse(cycle.Id, cycle.BedId, cycle.SpeciesId, cycle.CommonName, cycle.SpeciesCatalogKey, cycle.ScientificName,
+                cycle.SpeciesHasImage ? $"/api/v1/species/{cycle.SpeciesId}/image" : null, cycle.CultivarName, cycle.CultivarCatalogKey, cycle.OccupiedAreaM2,
                 planting?.First is null ? null : planting.InitialQuantity, planting?.Replacements ?? false, planting?.Mixed ?? false,
                 planting?.First, harvest?.Last, cycle.GrowthDays, cycle.HarvestDays, stage);
         }).ToArray();

@@ -32,7 +32,7 @@ internal sealed record RegisterIrrigationRequest(
 
 internal sealed record RegisterIrrigationResponse(bool Created, IrrigationDetailResponse Detail);
 
-internal sealed class RegisterIrrigationCommandHandler(AppDbContext db, DemoAuthorContext author,
+internal sealed class RegisterIrrigationCommandHandler(AppDbContext db, CurrentAuthor author,
     TimeProvider timeProvider, ILogger<RegisterIrrigationCommandHandler> logger)
 {
     private static readonly JsonSerializerOptions PayloadOptions = new(JsonSerializerDefaults.Web)

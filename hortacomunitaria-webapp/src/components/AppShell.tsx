@@ -1,16 +1,17 @@
 import { useRef } from "react";
 import type { ReactNode } from "react";
 import { Navigation } from "./Navigation";
-import { currentLocation } from "./navigationItems";
+import { LocationTrail } from "./PageTrail";
 import { Icon } from "./Icon";
-import { routeHref } from "../hooks/useRoute";
-import type { RecordRoute } from "../types/records";
+import { AccountMenu } from "../features/auth/components/AccountMenu";
+import { areaOf, linkTo } from "../routes/routes";
+import type { AppRoute } from "../routes/routes";
 
 function Brand() {
   return (
     <a
       className="brand"
-      href={routeHref("", "horta", "hortas")}
+      href={linkTo("", "hortas")}
       aria-label="Horta Comunitária, todas as hortas"
     >
       <svg viewBox="0 0 32 32" aria-hidden="true">
@@ -28,15 +29,15 @@ export function AppShell({
   gardenName,
   children,
 }: {
-  route: RecordRoute;
+  route: AppRoute;
   gardenSelect?: ReactNode;
   gardenName?: string;
   children: ReactNode;
 }) {
   const menu = useRef<HTMLDialogElement>(null);
-  const organization = route.module === "horta";
-  const wide = organization && route.resource === "interativa";
-  const { area, page } = currentLocation(route);
+  // Cadastros da horta (e a lista de hortas) têm caminho próprio; o mapa usa a largura inteira.
+  const organization = route.scope === "gardens" || areaOf(route.page)?.id === "horta";
+  const wide = route.page === "horta/mapa";
   return (
     <div
       className={`app-shell ${organization ? "organization-shell" : ""} ${wide ? "workspace-wide" : ""}`}
@@ -91,26 +92,13 @@ export function AppShell({
             >
               <Icon name="menu" />
             </button>
-            <p className="workspace-location">
-              {gardenName && !gardenSelect && <span>{gardenName}</span>}
-              {gardenName && !gardenSelect && area && <Icon name="chevron" />}
-              {area && (page ? <span>{area}</span> : <strong>{area}</strong>)}
-              {page && <Icon name="chevron" />}
-              {page && <strong>{page}</strong>}
-            </p>
             <div className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-3 sm:gap-5">
               {gardenSelect && <div className="min-w-0 flex-1 sm:max-w-72">{gardenSelect}</div>}
-              <div className="flex shrink-0 items-center justify-end gap-2.5" role="group" aria-label="Identificação do operador demonstrativo">
-                <div className="hidden min-w-0 text-right sm:block">
-                  <p className="m-0 truncate text-[13px] leading-4 font-semibold text-horta-ink">Operador de demonstração</p>
-                  <p className="m-0 text-xs leading-4 text-horta-muted">Modo demonstrativo</p>
-                </div>
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-horta-line bg-horta-soft text-xs font-semibold text-horta-forest" aria-hidden="true">OD</span>
-              </div>
+              <AccountMenu />
             </div>
           </header>
           <main id="main-content" tabIndex={-1}>
-            <div className="main-inner">{children}</div>
+            <div className="main-inner">{(!organization || wide) && <LocationTrail route={route} gardenName={gardenName} />}{children}</div>
           </main>
           <footer className="workspace-footer">
             <span>Horta Comunitária FCT/UFG</span>

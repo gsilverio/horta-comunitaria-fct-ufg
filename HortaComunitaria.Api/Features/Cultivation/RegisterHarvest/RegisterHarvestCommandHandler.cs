@@ -11,7 +11,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.RegisterHarvest;
 
 internal sealed record RegisterHarvestRequest([property: JsonRequired] Guid OperationId, [property: JsonRequired] Guid CycleId, [property: JsonRequired] DateOnly HarvestedOn, [property: JsonRequired] decimal FreshMassKg, decimal? UsableMassKg, string? LossReason, Guid? ResponsibleParticipantId);
-internal sealed class RegisterHarvestCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<RegisterHarvestCommandHandler> logger)
+internal sealed class RegisterHarvestCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<RegisterHarvestCommandHandler> logger)
 {
     public async Task<Result<CreatedHarvestResponse>> HandleAsync(Guid gardenId, RegisterHarvestRequest request, CancellationToken cancellationToken)
     {

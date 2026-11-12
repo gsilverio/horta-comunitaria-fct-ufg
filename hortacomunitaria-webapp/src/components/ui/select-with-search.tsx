@@ -1,4 +1,5 @@
-import { Check, ChevronsUpDown, Loader2, Search } from "lucide-react";
+import { Check, ChevronsUpDown, Search } from "lucide-react";
+import { PlantLoader } from "../PlantLoader";
 
 import { cn } from "../libs/utils";
 import { Input } from "./input";
@@ -254,7 +255,7 @@ export function SelectWithSearch<TData = unknown>({
           >
             {loading && (
               <div className="flex items-center justify-center py-5 text-sm text-slate-500">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <PlantLoader className="mr-2 size-4" />
                 Carregando...
               </div>
             )}

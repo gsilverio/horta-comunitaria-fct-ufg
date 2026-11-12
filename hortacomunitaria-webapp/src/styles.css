@@ -35,6 +35,46 @@
   input:hover:not(:disabled), select:hover:not(:disabled), textarea:hover:not(:disabled) { @apply border-[#9fb0a5]; }
   input:disabled, select:disabled, textarea:disabled { @apply bg-horta-canvas text-horta-muted; }
   [aria-invalid=true] { @apply border-horta-danger; }
+
+  /* Barras de rolagem finas nas cores da horta; trilho transparente para não pesar nas áreas internas. */
+  * { scrollbar-width: thin; scrollbar-color: #c6d2c8 transparent; }
+  *:hover { scrollbar-color: #9fb0a5 transparent; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 9999px; background-color: #c6d2c8; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background-color: #9fb0a5; }
+  ::-webkit-scrollbar-corner { background: transparent; }
+
+  /*
+   * Padrão de select da aplicação: controle nativo (teclado, leitores de tela e celular continuam do navegador).
+   * Base: seta própria e estados consistentes. Onde houver select personalizável (appearance: base-select),
+   * a lista de opções ganha painel, destaque e marca de seleção da horta; nos demais navegadores as opções seguem nativas.
+   */
+  select {
+    @apply cursor-pointer appearance-none pr-9 transition-colors;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235a6962' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right .75rem center;
+    background-size: 1rem;
+  }
+  select:disabled { @apply cursor-default; }
+  option { @apply text-horta-ink; }
+  option:disabled { @apply text-horta-muted; }
+
+  @supports (appearance: base-select) {
+    select, ::picker(select) { appearance: base-select; }
+    select { @apply flex items-center gap-2 bg-none pr-3; }
+    select::picker-icon { @apply ml-auto text-horta-muted transition-transform duration-150; content: ''; width: 1rem; height: 1rem; background: currentColor; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat; }
+    select:open::picker-icon { rotate: 180deg; }
+    select:open { @apply border-horta-forest; }
+    ::picker(select) { @apply mt-1 max-h-80 overflow-y-auto rounded-lg border border-horta-line bg-white p-1 text-sm shadow-[0_12px_32px_-12px_rgb(28_73_57/0.35)]; }
+    option { @apply flex min-h-10 cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 transition-colors; }
+    option:hover:not(:disabled), option:focus-visible { @apply bg-horta-canvas outline-none; }
+    option:checked { @apply bg-horta-soft font-semibold text-horta-forest; }
+    option::checkmark { @apply order-1 ml-auto text-horta-forest; content: '✓'; }
+    option:disabled { @apply cursor-default opacity-60; }
+    selectedcontent { @apply truncate; }
+  }
   fieldset { @apply m-0 min-w-0 border-0 p-0; }
   details { @apply my-2 text-sm break-words; }
   summary { @apply min-h-11 cursor-pointer py-3 font-medium text-horta-forest; }
@@ -52,12 +92,13 @@
   .workspace-sidebar .primary-navigation { @apply px-2 py-3; }
   .workspace-content { @apply flex min-w-0 flex-col bg-white; }
   .workspace-header { @apply flex min-h-14 min-w-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-horta-line bg-[#f9faf6] px-3 py-1.5 sm:flex-nowrap sm:px-5; }
-  .workspace-location { @apply order-last m-0 flex w-full min-w-0 items-center gap-1.5 text-[13px] sm:order-none sm:w-auto; }
-  .workspace-location strong { @apply truncate font-semibold text-horta-ink; }
-  .workspace-location span { @apply truncate text-horta-muted; }
-  .workspace-location .ui-icon { @apply size-3 text-horta-muted; }
-  .garden-picker { @apply min-w-0 flex-row items-center gap-2 text-xs font-medium text-horta-muted; }
-  .garden-picker select { @apply bg-white; }
+  /* Select com rótulo interno: a borda fica no conjunto e o rótulo continua associado ao controle. */
+  .select-inline { @apply relative flex min-h-11 w-full min-w-0 flex-row items-center gap-0 rounded-md border border-[#c9d4cc] bg-white text-sm transition-colors hover:border-[#9fb0a5]; }
+  .select-inline:focus-within { @apply border-horta-forest outline-2 outline-offset-0 outline-horta-focus/70; }
+  .select-inline:has(select:disabled) { @apply bg-horta-canvas hover:border-[#c9d4cc]; }
+  .select-inline-label { @apply shrink-0 border-r border-horta-line py-1 pr-2.5 pl-3 text-[11px] leading-4 font-semibold tracking-wide text-horta-muted uppercase; }
+  .select-inline select { @apply min-h-[42px] flex-1 border-0 bg-transparent font-medium shadow-none hover:border-0 focus-visible:outline-none; }
+  .garden-picker { @apply min-w-0; }
   .workspace-content main { @apply w-full flex-1 px-4 py-5 sm:px-5 xl:px-6; min-height: 70vh; }
   .workspace-content main > * { @apply max-w-[1400px]; }
   .workspace-wide .workspace-content main > * { @apply max-w-none; }
@@ -75,6 +116,8 @@
   .nav-link[aria-current=page] .ui-icon, .nav-link[data-open=true] .ui-icon { @apply text-horta-forest; }
   .nav-link[data-open=true] { @apply font-semibold text-horta-forest; }
   .nav-pages { @apply m-0 mb-1 ml-5 list-none border-l border-horta-line p-0 pl-2; }
+  /* Páginas da área aberta: a altura máxima vem do espaço livre do menu (Navigation.tsx); acima disso, rolam internamente. */
+  .primary-navigation .nav-pages { @apply overflow-y-auto overscroll-contain pr-1; scrollbar-gutter: stable; }
   .nav-page { @apply flex min-h-10 items-center rounded-md px-2.5 py-1.5 text-[13px] text-horta-muted no-underline transition-colors hover:bg-horta-canvas hover:text-horta-forest max-lg:min-h-11; }
   .nav-page[aria-current=page] { @apply bg-horta-soft font-semibold text-horta-forest; }
   .navigation-dialog { @apply fixed inset-y-0 left-0 m-0 h-dvh max-h-none w-[min(20rem,calc(100%-3rem))] max-w-none overflow-y-auto border-0 border-r border-horta-line bg-[#f9faf6] p-0 shadow-xl; }
@@ -157,8 +200,15 @@
   .feedback ul { @apply my-1 list-none p-0; }
   .feedback .feedback-field { @apply m-0 min-h-8 border-0 bg-transparent p-0 text-left text-sm font-normal text-inherit underline underline-offset-2 hover:!bg-transparent; }
   .notice { @apply mb-3 border-l-3 border-[#a8bd8c] bg-[#f4f7ee] px-3 py-2 text-sm text-[#44603a]; }
-  main p[role=status]:not([class]) { @apply flex items-center gap-2 py-2 text-horta-muted; }
-  main p[role=status]:not([class])::before { @apply size-3.5 shrink-0 animate-spin rounded-full border-2 border-horta-line border-t-horta-forest; content: ''; }
+  /*
+   * Carregamento padrão: <p role="status"> sem classe dentro de <main> ganha a muda que cresce (src/assets/plant-loader.svg).
+   * Fora desse padrão, acrescentar a classe .plant-status ao parágrafo ou usar o componente PlantLoader.
+   * O ícone surge após um breve atraso para não piscar em respostas rápidas; o texto aparece de imediato.
+   */
+  main p[role=status]:not([class]) { @apply py-2; }
+  main p[role=status]:not([class]), .plant-status { @apply flex items-center gap-2 text-horta-muted; }
+  main p[role=status]:not([class])::before, .plant-status::before { @apply size-5 shrink-0 bg-contain bg-center bg-no-repeat; content: ''; background-image: url('./assets/plant-loader.svg'); animation: plant-loader-reveal .2s ease-out .3s both; }
+  .plant-loader { animation: plant-loader-reveal .2s ease-out .3s both; }
 
   .facts { @apply m-0 text-sm; }
   .facts > div { @apply min-w-0; }
@@ -201,7 +251,7 @@
   .form-repeat { @apply border-t border-horta-line pt-4; }
   .form-repeat > h3 { @apply mt-0 text-horta-forest; }
   .field-label { @apply font-medium text-horta-ink; }
-  .field-optional { @apply font-normal text-horta-muted; }
+  .required-mark { @apply ml-0.5 font-semibold text-[#c0392b]; }
   .form-actions-status { @apply mr-auto flex min-h-11 w-full items-center text-[13px] text-horta-muted sm:w-auto; }
   .form-actions-status[data-dirty=true] { @apply font-medium text-[#7a5316]; }
   .editor-panel input[type=checkbox] { @apply accent-horta-forest; }
@@ -212,12 +262,21 @@
   .form-panel { @apply max-w-4xl; }
   .form-panel .hint { @apply mt-2; }
 
-  .organization-trail { @apply mb-2 text-xs text-horta-muted; }
-  .organization-trail ol { @apply m-0 flex list-none flex-wrap items-center gap-x-1.5 gap-y-1 p-0; }
-  .organization-trail li { @apply flex min-w-0 items-center gap-1.5; }
-  .organization-trail a { @apply inline-flex min-h-6 items-center text-horta-muted underline-offset-4 hover:text-horta-forest hover:underline; }
-  .organization-trail [aria-current=page] { @apply font-medium text-horta-ink; }
-  .organization-trail .ui-icon { @apply size-3 shrink-0; }
+  /* Barra de contexto: retorno + caminho numa única linha, sem cartão; divisória a separa do conteúdo. */
+  .page-context { @apply mb-3 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-horta-line pb-2; }
+  .page-context-divider { @apply hidden h-5 w-px shrink-0 bg-horta-line sm:block; }
+  .page-back { @apply -ml-2 inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-md px-2 text-[13px] font-semibold text-horta-forest no-underline transition-colors hover:bg-horta-soft; }
+  .page-back-standalone { @apply mb-3; }
+  /* O retorno avulso só aparece quando a página não exibe a barra de contexto. */
+  .main-inner:has(.page-context .page-back) .page-back-standalone { @apply hidden; }
+  .page-trail { @apply min-w-0; }
+  .page-trail ol { @apply m-0 flex min-w-0 list-none flex-wrap items-center gap-x-0.5 p-0 text-[13px]; }
+  .page-trail li { @apply flex min-w-0 items-center gap-0.5; }
+  .page-trail a, .page-trail span { @apply inline-block max-w-56 truncate; }
+  .page-trail a { @apply rounded px-1.5 py-1 leading-6 text-horta-muted no-underline transition-colors hover:bg-horta-soft hover:text-horta-forest; }
+  .page-trail [aria-current=page] { @apply px-1.5 font-semibold text-horta-ink; }
+  .page-trail-home { @apply mr-0.5 size-4 shrink-0 text-horta-forest; }
+  .page-trail-separator { @apply size-3.5 shrink-0 text-[#a9b6ad]; }
   .organization-path { @apply mb-4 flex list-none flex-wrap items-center gap-x-4 gap-y-1 border-b border-horta-line p-0 pb-3 text-sm text-horta-muted; }
   .organization-collection { @apply min-w-0; }
   .organization-collection-heading { @apply flex flex-wrap items-center justify-between gap-3 border-b border-horta-line pb-2; }
@@ -301,8 +360,10 @@
   .dashboard-bars meter::-webkit-meter-optimum-value { background: #48765a; }
 }
 
+@keyframes plant-loader-reveal { from { opacity: 0; } to { opacity: 1; } }
+
 @media (prefers-reduced-motion: reduce) {
-  main p[role=status]:not([class])::before { animation: none; }
+  main p[role=status]:not([class])::before, .plant-status::before { background-image: url('./assets/plant-loader-still.svg'); }
 }
 
 /* Superfícies: fundo da horta, painéis brancos com cabeçalho, resumo numérico e tabelas de dados. */
@@ -533,6 +594,16 @@
   68% { transform: rotate(-4deg) translateX(-1px); }
 }
 
+@keyframes garden-ready-pulse {
+  0%, 100% { opacity: .55; }
+  50% { opacity: 1; }
+}
+
+@keyframes garden-ready-twinkle {
+  0%, 100% { opacity: 0; transform: scale(.4) rotate(0deg); }
+  45% { opacity: 1; transform: scale(1) rotate(20deg); }
+}
+
 @keyframes garden-scene-focus {
   0%, 100% { opacity: .18; }
   50% { opacity: .36; }
@@ -717,6 +788,16 @@
   .garden-scene-inspector .border-horta-line { @apply border-white/10; }
   .garden-scene-inspector p { @apply text-[#d4e0cb]; }
   .garden-scene-inspector .action-link { @apply border-[#b8d98c] bg-[#b8d98c] text-[#13261c] hover:bg-[#cbe6a6]; }
+  .garden-scene-ready-glow { animation: garden-ready-pulse 2.4s ease-in-out infinite; }
+  .garden-scene-ready-sprite { filter: drop-shadow(0 0 2px #fff3a6) drop-shadow(0 0 5px #ffd84a); }
+  .garden-scene-ready-sparkles path { transform-box: fill-box; transform-origin: center; animation: garden-ready-twinkle 1.8s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .garden-scene-ready-glow, .garden-scene-ready-sparkles path { animation: none; } }
+  .garden-scene-sector-tag { @apply rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-[#b8d98c]; }
+  .garden-scene-crop { @apply border-b border-white/10 py-3 last:border-b-0; }
+  .garden-scene-phase { @apply mt-3 mb-1 flex flex-wrap items-baseline justify-between gap-x-2 text-xs; }
+  .garden-scene-phase span { @apply font-semibold text-[#b8d98c] uppercase tracking-wide; }
+  .garden-scene-phase strong { @apply text-sm text-white; }
+  .garden-scene-progress { @apply block h-1.5 w-full; }
 }
 @layer components {
   .garden-scene .scene-dock .scene-dock-divider { @apply min-w-0 w-px; }
@@ -744,4 +825,63 @@
   .scene-hud-title { @apply max-sm:max-w-[58%] max-sm:px-2.5 max-sm:py-1.5; }
   .scene-hud-title h2 { @apply max-sm:text-[13px] max-sm:leading-4; }
   .scene-hud-stats { @apply max-sm:hidden; }
+}
+
+/*
+ * Superfície única (11/11/2026): o conteúdo de cada página fica numa folha branca elevada sobre o fundo da horta.
+ * Dentro dela, o que antes eram cards soltos vira seção separada por linha, sem cartões dentro de cartões.
+ * O mapa interativo (página larga) continua sem folha, ocupando a área inteira.
+ */
+@layer components {
+  .workspace-content main > .main-inner { @apply rounded-2xl border border-horta-line bg-white p-4 shadow-[0_1px_2px_rgb(28_73_57/0.06),0_14px_36px_-20px_rgb(28_73_57/0.3)] sm:p-6 lg:px-8 lg:py-7; }
+  .workspace-wide .workspace-content main > .main-inner { @apply rounded-none border-0 bg-transparent p-0 shadow-none; }
+  @media (width < 40rem) { .workspace-content main > .main-inner { @apply -mx-4 rounded-none border-x-0; } }
+
+  .main-inner .page-context { @apply mb-5; }
+  .main-inner .page-heading { @apply mb-5; }
+
+  /* Cards internos → seções. */
+  .main-inner .panel { @apply mb-0 rounded-none border-0 border-t border-horta-line bg-transparent p-0 py-6 shadow-none; }
+  .main-inner .panel:first-child, .main-inner .record-tab-panel > .panel:first-child, .main-inner .page-heading + .panel { @apply border-t-0 pt-1; }
+  .main-inner .panel.flush { @apply overflow-visible p-0 py-0; }
+  .main-inner .panel-header { @apply bg-transparent px-0 pt-0; }
+  .main-inner .panel-body { @apply px-0; }
+  .main-inner .panel.flush .pagination { @apply px-0; }
+  .main-inner .panel > .empty { @apply rounded-lg bg-horta-canvas/60; }
+  .main-inner .results-heading, .main-inner .organization-collection-heading { @apply px-0; }
+  .main-inner .organization-rows > li { @apply -mx-2 rounded-md px-2 sm:-mx-3 sm:px-3; }
+  .main-inner .filter-panel { @apply rounded-lg border-0 bg-horta-canvas/70 shadow-none; }
+  .main-inner .journey, .main-inner .dashboard-card { @apply shadow-none; }
+  .main-inner .editor-panel { @apply max-w-5xl p-0; }
+  .main-inner .editor-actions { @apply mx-0 rounded-none bg-white/95 px-0; }
+  .main-inner .editor-actions:last-child { @apply mb-0; }
+  .main-inner .record-tabs-list { @apply mb-5; }
+
+  /* Seção com título e ação à direita. */
+  .section-heading { @apply mb-4 flex flex-wrap items-start justify-between gap-x-6 gap-y-3; }
+  .section-heading h2 { @apply mb-0.5 text-base; }
+  .section-heading p { @apply m-0 text-[13px] text-horta-muted; }
+  .section-heading .action-link { @apply gap-1.5; }
+
+  /* Cultivos do canteiro. */
+  .bed-crop-list { @apply m-0 list-none divide-y divide-horta-line border-y border-horta-line p-0; }
+  .bed-crop { @apply flex gap-4 py-5; }
+  .bed-crop > span:first-child { @apply !size-16 rounded-lg; }
+  .bed-crop h3 { @apply m-0 text-[15px] font-semibold text-horta-ink; }
+  .bed-crop[data-ready] > span:first-child { @apply ring-2 ring-[#e6c64f] ring-offset-2; }
+  .badge.ready { @apply bg-[#fff4cc] text-[#6f5410] ring-[#ecd27a]; }
+  .bed-crop-meta { @apply mt-1 mb-2 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-horta-muted; }
+  .bed-crop-meta strong { @apply font-semibold text-horta-forest; }
+  .bed-crop-meta > * + *::before { @apply mr-3 text-horta-line; content: '·'; }
+  .bed-crop-progress { @apply mb-2 flex max-w-xl flex-col gap-1 text-xs text-horta-muted; }
+  .bed-crop-progress meter { @apply h-2 w-full; }
+  .bed-crop-progress meter::-webkit-meter-bar { background: #edf1e8; border: 0; border-radius: 9999px; }
+  .bed-crop-progress meter::-webkit-meter-optimum-value { background: #48765a; border-radius: 9999px; }
+  .bed-crop[data-ready] .bed-crop-progress meter::-webkit-meter-optimum-value { background: #c9a227; }
+  .bed-crop-plantings { @apply mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]; }
+  .bed-crop-plantings > span { @apply text-horta-muted; }
+  .bed-crop-plantings a { @apply underline underline-offset-4; }
+  .bed-crop-actions { @apply mt-2 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium; }
+  .bed-crop-actions > a:not(.action-link) { @apply inline-flex min-h-11 items-center underline underline-offset-4; }
+  @media (width < 40rem) { .bed-crop > span:first-child { @apply !size-12; } }
 }

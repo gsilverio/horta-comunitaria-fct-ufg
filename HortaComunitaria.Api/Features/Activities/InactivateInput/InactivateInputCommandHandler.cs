@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Activities.Shared;
 namespace HortaComunitaria.Api.Features.Activities.InactivateInput;
 
 internal sealed record InactivateInputRequest([property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class InactivateInputCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<InactivateInputCommandHandler> logger)
+internal sealed class InactivateInputCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<InactivateInputCommandHandler> logger)
 {
     public async Task<Result<AgriculturalInputResponse>> HandleAsync(Guid id, InactivateInputRequest request, CancellationToken cancellationToken)
     {

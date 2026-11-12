@@ -11,7 +11,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.OpenCultivationCycle;
 
 internal sealed record OpenCultivationCycleRequest([property: JsonRequired] Guid OperationId, [property: JsonRequired] Guid BedId, [property: JsonRequired] Guid SpeciesId, Guid? CultivarId, [property: JsonRequired] DateOnly StartedOn, [property: JsonRequired] decimal OccupiedAreaM2, Guid? ResponsibleParticipantId);
-internal sealed class OpenCultivationCycleCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<OpenCultivationCycleCommandHandler> logger)
+internal sealed class OpenCultivationCycleCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<OpenCultivationCycleCommandHandler> logger)
 {
     public async Task<Result<CreatedCultivationCycleResponse>> HandleAsync(Guid gardenId, OpenCultivationCycleRequest request, CancellationToken cancellationToken)
     {

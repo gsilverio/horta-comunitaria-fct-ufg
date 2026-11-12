@@ -13,7 +13,7 @@ namespace HortaComunitaria.Api.Features.Gardens.AssignBedToSector;
 
 internal sealed record AssignBedToSectorRequest([property: JsonRequired] Guid SectorId, [property: JsonRequired] DateOnly ValidFrom, [property: JsonRequired] int ExpectedBedVersion, string? Reason);
 internal sealed record AssignBedToSectorResponse(BedSectorAssignmentResponse Context, int BedVersion);
-internal sealed class AssignBedToSectorCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<AssignBedToSectorCommandHandler> logger)
+internal sealed class AssignBedToSectorCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<AssignBedToSectorCommandHandler> logger)
 {
     public async Task<Result<AssignBedToSectorResponse>> HandleAsync(Guid gardenId, Guid bedId, AssignBedToSectorRequest request, CancellationToken cancellationToken)
     {

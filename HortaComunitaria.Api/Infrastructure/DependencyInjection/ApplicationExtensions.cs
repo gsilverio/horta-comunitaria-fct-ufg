@@ -321,7 +321,15 @@ internal static class ApplicationExtensions
         services.AddScoped<HortaComunitaria.Api.Features.Evidence.GetEvidenceContent.GetEvidenceContentQueryHandler>();
         services.AddScoped<HortaComunitaria.Api.Features.Evidence.CorrectEvidence.CorrectEvidenceCommandHandler>();
         services.AddScoped<HortaComunitaria.Api.Features.Evidence.InvalidateEvidence.InvalidateEvidenceCommandHandler>();
+        services.AddScoped<HortaComunitaria.Api.Features.Auth.Login.LoginCommandHandler>();
+        services.AddScoped<HortaComunitaria.Api.Features.Auth.RefreshSession.RefreshSessionCommandHandler>();
+        services.AddScoped<HortaComunitaria.Api.Features.Auth.Logout.LogoutCommandHandler>();
+        services.AddScoped<HortaComunitaria.Api.Features.Auth.GetCurrentUser.GetCurrentUserQueryHandler>();
+        services.AddScoped<HortaComunitaria.Api.Features.Auth.ChangePassword.ChangePasswordCommandHandler>();
+        services.AddScoped<HortaComunitaria.Api.Features.Users.ListUsers.ListUsersQueryHandler>();
+        services.AddScoped<HortaComunitaria.Api.Features.Users.GetUser.GetUserQueryHandler>();
+        services.AddScoped<HortaComunitaria.Api.Features.Users.CreateUser.CreateUserCommandHandler>();
+        services.AddScoped<HortaComunitaria.Api.Features.Users.UpdateUser.UpdateUserCommandHandler>();
         return services;
     }
 }
-

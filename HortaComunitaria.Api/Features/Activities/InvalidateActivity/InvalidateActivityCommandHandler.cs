@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Activities.Shared;
 namespace HortaComunitaria.Api.Features.Activities.InvalidateActivity;
 
 internal sealed record InvalidateActivityRequest([property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class InvalidateActivityCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<InvalidateActivityCommandHandler> logger)
+internal sealed class InvalidateActivityCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<InvalidateActivityCommandHandler> logger)
 {
     public async Task<Result<ActivityResponse>> HandleAsync(Guid gardenId, Guid id, InvalidateActivityRequest request, CancellationToken cancellationToken)
     {

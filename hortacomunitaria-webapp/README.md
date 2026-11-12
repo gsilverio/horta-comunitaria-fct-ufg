@@ -29,11 +29,43 @@ A área Horta usa o caminho hierárquico, sem abas concorrentes. O menu lateral 
 
 **Todos os canteiros e cadastros pendentes** permite retomar cadastros incompletos e consultar inativos. Em falha parcial, a conclusão consulta o estado persistido antes de retomar. Em conflito, o rascunho é preservado e a versão atual precisa ser revisada explicitamente.
 
+## Autenticação e perfis — 12/11/2026
+
+- Sem sessão, a aplicação mostra **Entrar** sem trocar o endereço; após o login, a página pedida é aberta. Com senha inicial, a troca é obrigatória antes de continuar.
+- O access token fica só em memória (`src/services/session.ts`); ao recarregar, a sessão é recuperada pelo cookie HttpOnly de renovação (`POST /api/v1/auth/refresh`). Em 401, o cliente renova uma única vez e repete a requisição; se falhar, volta à tela de entrada.
+- Perfis: **Adm** mantém estrutura, catálogos e usuários (`/usuarios`); **Operador** registra, corrige e invalida fatos de campo. Para o Operador, ações de estrutura/catálogo e salvar o mapa ficam ocultas; o servidor também recusa (403).
+- Fotografias são carregadas pelo cliente autenticado e exibidas por URL local (blob).
+- Troca da própria senha em `/conta/senha`. Não há recuperação/redefinição de senha nesta etapa.
+
 ## Organização técnica
 
-Seguir as [regras do frontend](../.codex/arquitetura-frontend.mdc). A composição atual usa `features/organization/pages/OrganizationPage.tsx`; páginas, componentes, hooks e serviços HTTP permanecem separados. O cliente Axios comum normaliza erros. A navegação hash mantém contexto e paginação na URL, sem rascunhos.
+Seguir as [regras do frontend](../.codex/arquitetura-frontend.mdc). Páginas, componentes, hooks e serviços HTTP permanecem separados por feature. O cliente Axios comum normaliza erros. A navegação usa caminhos (History API) e mantém contexto, filtros e paginação na URL, sem rascunhos.
 
-Rotas principais: `#/hortas/_/horta/hortas`, `#/hortas/{gardenId}/horta/setores`, `#/hortas/{gardenId}/horta/setores/{sectorId}` e `#/hortas/{gardenId}/horta/canteiros/{bedId}`. Formulários usam `novo`, edição usa `edit=1` e conclusão do canteiro usa `setup=1`. Rotas antigas de preparação abrem os setores. Os demais módulos mantêm suas rotas. Dentro do canteiro, `cultivate=1` abre a definição do cultivo e `plantingCycle={id}` abre o plantio, verificando que o cultivo pertence àquele canteiro.
+### Rotas
+
+As rotas ficam em `src/routes/`, sem biblioteca de roteamento:
+
+- `routes.ts`: tabela única de páginas (rótulo, área, se tem registros), grupos do menu, leitura do endereço (`parseLocation`) e montagem de endereços (`linkTo`, `samePage`, `withReturn`, `backTarget`).
+- `navigation.ts`: rota atual (`useRoute`, `readRoute`), navegação com proteção de rascunho (`go`, `goTo`, `goToSame`), inclusive no voltar/avançar do navegador, troca sem histórico (`replaceRoute`, `replaceQuery`), interceptação dos links internos (`useNavigationGuard`) e foco no título após navegar (`useRouteFocus`).
+- `pages.tsx`: componente de cada página. `App.tsx` só escolhe entre lista de hortas, catálogo, página da horta e página não encontrada.
+
+| Endereço | Conteúdo |
+| --- | --- |
+| `/hortas`, `/hortas/nova` | Lista e cadastro de hortas |
+| `/hortas/{horta}` | Visão geral (panorâmica) |
+| `/hortas/{horta}/{página}[/{id}][/{ação}]` | Páginas da horta, por exemplo `horta/canteiros/{id}/configurar` ou `cultivo/ciclos/{id}/editar` |
+| `/hortas/{horta}/{área}` | Página inicial da área, por exemplo `cultivo` abre `cultivo/ciclos` |
+| `/catalogo/especies`, `/catalogo/cultivares?speciesId=…` | Catálogos globais, sem horta no endereço |
+
+Páginas: `visao-geral` e `visao-geral/{agua, umidade, pegamento, produtividade, perdas, secagem, horas, ocorrencias, participacao, custos}`; `horta/{mapa, setores, canteiros, dados}`; `irrigacao`; `ambiente/{variaveis, pontos, medicoes}`; `cultivo/{origens, ciclos, plantios, avaliacoes, observacoes}`; `producao/{colheitas, secagens}`; `fotos`; `atividades/{registros, participantes, insumos, instituicoes}`; `ocorrencias`; `custos`.
+
+Ações: `novo` ocupa o lugar do id; `editar`, `configurar` e `cultivar` (canteiro), `plantar?cycleId=…` (canteiro), `inativar` (`horta/dados/inativar`) e `fases` (espécie/cultivar). Em páginas sem registros, a ação vem logo após o nome da página, como em `horta/dados/editar`.
+
+A query guarda filtros (`from`, `to`, `page`, `status`…), contexto de preenchimento (`bedId`, `cycleId`, `speciesId`…), a aba aberta (`tab`) e `voltar`, o único parâmetro de retorno. Ele guarda o endereço de origem, e o App mostra "← Voltar: {destino}". Endereços fora desse formato abrem "Página não encontrada"; os formatos antigos (`#/…`, `/hortas/_/…`, `?edit=1`, `returnTo`, `nextModule`) não são aceitos.
+
+Como os endereços não usam `#`, o servidor precisa devolver o `index.html` para qualquer caminho que não seja arquivo estático nem `/api`. O Vite já faz isso em `npm run dev` e `npm run preview`; na publicação, configure o mesmo fallback (por exemplo, `try_files $uri /index.html` no Nginx). Os recursos usam caminhos absolutos (`/assets/...`) e carregam em qualquer profundidade de rota.
+
+Em catálogos e na lista de hortas, o menu continua na última horta aberta (ou na primeira disponível). O endereço vazio abre a visão geral da primeira horta ou, sem hortas, a lista.
 
 Os contratos administrativos e de vigência permanecem os existentes, sem migration. A lista de canteiros do setor consulta `GET /gardens/{gardenId}/beds?sectorId=...&on=...` com paginação e carrega os detalhes dos itens daquela página. Área e setor são os vigentes em `America/Sao_Paulo`.
 
@@ -59,7 +91,7 @@ O seletor de horta fica no header, ao lado da identificação do operador, e apa
 
 ## Experimento do modo interativo
 
-A configuração padrão da horta abre diretamente o editor em `#/hortas/{gardenId}/horta/interativa`. Medidas reais são opcionais; o grid usa unidades de desenho (u), sem equivalência com metros. A primeira etapa obrigatória é **Delimitar terreno**: a tela abre sem terreno cadastrado e sem quadrado padrão. Marque os vértices de um contorno irregular e clique no primeiro ponto para fechar o terreno diretamente no grid; o botão Concluir terreno continua disponível. **Editar terreno** permite arrastar vértices ou redesenhar o contorno diretamente no grid; ampliar e reduzir não ficam limitados ao enquadramento inicial da tela. Cancelar preserva o terreno anterior. Contornos cruzados ou que excluem objetos existentes são rejeitados. Os objetos permanecem dentro do terreno desenhado.
+A configuração padrão da horta abre diretamente o editor em `/hortas/{gardenId}/horta/mapa`. Medidas reais são opcionais; o grid usa unidades de desenho (u), sem equivalência com metros. A primeira etapa obrigatória é **Delimitar terreno**: a tela abre sem terreno cadastrado e sem quadrado padrão. Marque os vértices de um contorno irregular e clique no primeiro ponto para fechar o terreno diretamente no grid; o botão Concluir terreno continua disponível. **Editar terreno** permite arrastar vértices ou redesenhar o contorno diretamente no grid; ampliar e reduzir não ficam limitados ao enquadramento inicial da tela. Cancelar preserva o terreno anterior. Contornos cruzados ou que excluem objetos existentes são rejeitados. Os objetos permanecem dentro do terreno desenhado.
 
 Após concluir o terreno, delimite pelo menos um setor antes de inserir canteiros ou mandalas. Canteiros parcialmente sobrepostos também são associados automaticamente ao setor. Quando houver mais de um setor sobreposto, o vínculo atual prevalece enquanto houver interseção; caso contrário, usa-se o primeiro setor desenhado que intersecta o canteiro. Mover objetos e editar limites atualiza essa associação no rascunho.
 
@@ -119,7 +151,7 @@ A entrada e as telas tradicionais de hortas, setores e canteiros usam listas con
 
 ## Header e identificação — 06/11/2026
 
-O header acompanha o menu lateral com a mesma superfície, altura e divisória. A identificação Operador de demonstração fica no extremo direito, com avatar de iniciais e indicação de modo demonstrativo. No celular, o botão do header abre o menu lateral em diálogo. Não há conta autenticada, perfil ou ação de sair nesta etapa.
+O header acompanha o menu lateral com a mesma superfície, altura e divisória. O menu da conta fica no extremo direito, com avatar de iniciais, nome e perfil; oferece Usuários (somente Adm), Trocar senha e Sair. No celular, o botão do header abre o menu lateral em diálogo. Não há conta autenticada, perfil ou ação de sair nesta etapa.
 
 ### Gestão pelo menu Horta — 06/11/2026
 
@@ -151,7 +183,7 @@ A horta local recebeu oito novos canteiros, totalizando 14 canteiros/espécies, 
 
 ## Padrões de interface — 06/11/2026
 
-- A hierarquia é módulo → página → registro. Módulos e páginas ficam no menu lateral; o item Horta lista as hortas e mantém a horta atual no contexto. O header mostra a localização, a seleção de horta e a identificação demonstrativa. A raiz abre a Visão geral da primeira horta.
+- A hierarquia é módulo → página → registro. Módulos e páginas ficam no menu lateral; o item Horta lista as hortas e mantém a horta atual no contexto. O header mostra a localização, a seleção de horta e o menu da conta. A raiz abre a Visão geral da primeira horta.
 - Abas (`RecordTabs`) só alternam conteúdos de um mesmo registro: seções próprias, Dados, Histórico e Manutenção. A aba fica em `?tab=` e os painéis permanecem montados para preservar rascunhos.
 - `PageHeader`, `FilterBar`, `RecordRow`, `RecordDetail`, `EditorFrame` e `Group` são os padrões de cabeçalho, filtros, linha, detalhe, formulário e seção. Filtros ficam recolhidos no celular. Listagens traduzem ids com os lookups já paginados por completo; busca e ordenação continuam na API.
 - O modo interativo e a panorâmica mantêm motor, geometria e persistência; mudam apenas status, etapas e instruções ao redor do canvas. Com `playwright.editor.config.ts`, a verificação do editor roda sem API nem banco.

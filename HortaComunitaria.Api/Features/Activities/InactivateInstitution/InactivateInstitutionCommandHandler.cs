@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Activities.Shared;
 namespace HortaComunitaria.Api.Features.Activities.InactivateInstitution;
 
 internal sealed record InactivateInstitutionRequest([property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class InactivateInstitutionCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<InactivateInstitutionCommandHandler> logger)
+internal sealed class InactivateInstitutionCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<InactivateInstitutionCommandHandler> logger)
 {
     public async Task<Result<InstitutionResponse>> HandleAsync(Guid id, InactivateInstitutionRequest request, CancellationToken cancellationToken)
     {

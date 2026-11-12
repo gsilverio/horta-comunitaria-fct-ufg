@@ -12,7 +12,7 @@ using Npgsql;
 namespace HortaComunitaria.Api.Features.Activities.CreateParticipant;
 
 internal sealed record CreateParticipantRequest([property: JsonRequired] string DisplayName, string? Category);
-internal sealed class CreateParticipantCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CreateParticipantCommandHandler> logger)
+internal sealed class CreateParticipantCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CreateParticipantCommandHandler> logger)
 {
     public async Task<Result<ParticipantResponse>> HandleAsync(Guid gardenId, CreateParticipantRequest request, CancellationToken cancellationToken)
     {

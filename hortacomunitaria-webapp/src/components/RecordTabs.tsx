@@ -1,7 +1,7 @@
+import { readRoute, replaceQuery } from '../routes/navigation'
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
-import { readRoute } from '../hooks/useRoute'
 
 export interface RecordTab { id: string; label: string; content: ReactNode }
 
@@ -13,10 +13,7 @@ export function RecordTabs({ tabs, label, initial }: { tabs: RecordTab[]; label:
   })
   function select(id: string) {
     setActive(id)
-    const [path, query = ''] = location.hash.slice(1).split('?')
-    const search = new URLSearchParams(query)
-    search.set('tab', id)
-    history.replaceState(null, '', `${location.pathname}${location.search}#${path}?${search}`)
+    replaceQuery(query => query.set('tab', id))
   }
   return <Tabs value={tabs.some(tab => tab.id === active) ? active : tabs[0].id} onValueChange={select}>
     <TabsList variant="line" aria-label={label} className="record-tabs-list">

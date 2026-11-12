@@ -27,7 +27,12 @@ public sealed class PostgresFixture : IAsyncLifetime
         Assert.InRange(version, 170000, 179999);
     }
 
-    public async Task<ApiFactory> CreateFactoryAsync(bool withContext = true, Action<Microsoft.Extensions.DependencyInjection.IServiceCollection>? customize = null)
+    /// <summary>
+    /// Cria um banco descartável com as migrations da aplicação. <paramref name="withContext"/> insere a horta fictícia;
+    /// <paramref name="withUsers"/> cria Adm e Operador de teste e autentica <c>CreateClient()</c> como Adm.
+    /// </summary>
+    public async Task<ApiFactory> CreateFactoryAsync(bool withContext = true, Action<Microsoft.Extensions.DependencyInjection.IServiceCollection>? customize = null,
+        bool withUsers = true, IReadOnlyDictionary<string, string?>? settings = null)
     {
         var database = "horta_test_" + Guid.CreateVersion7().ToString("N");
         await using var connection = new NpgsqlConnection(adminConnection);
@@ -41,7 +46,9 @@ public sealed class PostgresFixture : IAsyncLifetime
         await using var db = new AppDbContext(options);
         await db.Database.MigrateAsync();
         if (withContext) await TestContext.InsertAsync(db);
-        return new ApiFactory(builder.ConnectionString) { CustomizeServices = customize };
+        var factory = new ApiFactory(builder.ConnectionString, settings: settings) { CustomizeServices = customize };
+        if (withUsers) await factory.InitializeUsersAsync();
+        return factory;
     }
 
     public async Task DisposeAsync()

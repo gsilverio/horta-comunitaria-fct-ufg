@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.InactivateCultivar;
 
 internal sealed record InactivateCultivarRequest([property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class InactivateCultivarCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<InactivateCultivarCommandHandler> logger)
+internal sealed class InactivateCultivarCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<InactivateCultivarCommandHandler> logger)
 {
     public async Task<Result<CultivarResponse>> HandleAsync(Guid speciesId, Guid id, InactivateCultivarRequest request, CancellationToken cancellationToken)
     {

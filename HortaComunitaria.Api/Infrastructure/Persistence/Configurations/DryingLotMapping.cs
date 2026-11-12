@@ -29,7 +29,7 @@ internal sealed class DryingLotMapping : IEntityTypeConfiguration<DryingLot>
         builder.HasIndex(x => new { x.GardenId, x.OperationId }).IsUnique().HasDatabaseName("ux_drying_lots_garden_operation");
         builder.HasIndex(x => new { x.GardenId, x.StartedOn, x.Id }).IsDescending(false, true, true);
         builder.HasOne<Garden>().WithMany().HasForeignKey(x => x.GardenId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<Domain.Identity.User>().WithMany().HasForeignKey(x => x.RecordedByUserId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Identity.AppUser>().WithMany().HasForeignKey(x => x.RecordedByUserId).OnDelete(DeleteBehavior.Restrict);
         builder.Property(x => x.Code).HasMaxLength(40).IsRequired(); builder.Property(x => x.Method).HasMaxLength(200); builder.Property(x => x.TotalDryMassKg).HasPrecision(14, 3); builder.HasOne<Participant>().WithMany().HasForeignKey(x => new { x.GardenId, x.ResponsibleParticipantId }).HasPrincipalKey(x => new { x.GardenId, x.Id }).OnDelete(DeleteBehavior.Restrict);
     }
 }

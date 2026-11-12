@@ -26,6 +26,8 @@ public sealed class EmbrapaCatalogTests(PostgresFixture postgres) : IClassFixtur
             Assert.Equal(23, await db.Species.CountAsync(x => x.CatalogKey != null));
             Assert.Equal(113, await db.Cultivars.CountAsync(x => x.CatalogKey != null));
             Assert.Equal(136, await db.AuditEntries.CountAsync(x => x.Reason == "Importação explícita do catálogo Embrapa 2023."));
+            // Sem HTTP, a importação é atribuída ao primeiro Adm ativo.
+            Assert.All(await db.AuditEntries.ToListAsync(), x => Assert.Equal(DemoIds.Administrator, x.UserId));
             var species = await db.Species.SingleAsync(x => x.CatalogKey == "embrapa-2023:alface");
             id = species.Id;
             var reason = ChangeReason.Create("Revisão local do cadastro").Value;
@@ -70,5 +72,16 @@ public sealed class EmbrapaCatalogTests(PostgresFixture postgres) : IClassFixtur
             Assert.Equal(0, await db.Cultivars.CountAsync(x => x.CatalogKey != null));
             Assert.Equal(0, await db.AuditEntries.CountAsync(x => x.Reason == "Importação explícita do catálogo Embrapa 2023."));
         });
+    }
+
+    [Fact]
+    public async Task Import_refuses_without_an_active_administrator()
+    {
+        await using var factory = await postgres.CreateFactoryAsync(withUsers: false);
+        using var scope = factory.Services.CreateScope();
+        var seed = ActivatorUtilities.CreateInstance<EmbrapaCatalogSeed>(scope.ServiceProvider);
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => seed.RunAsync(default));
+        Assert.Contains("--bootstrap-admin", exception.Message);
+        await factory.WithDbAsync(async db => Assert.Equal(0, await db.Species.CountAsync()));
     }
 }

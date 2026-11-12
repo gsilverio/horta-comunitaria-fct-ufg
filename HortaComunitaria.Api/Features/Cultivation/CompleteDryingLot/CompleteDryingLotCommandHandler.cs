@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.CompleteDryingLot;
 
 internal sealed record CompleteDryingLotRequest([property: JsonRequired] DateOnly EndedOn, [property: JsonRequired] decimal TotalDryMassKg, [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class CompleteDryingLotCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CompleteDryingLotCommandHandler> logger)
+internal sealed class CompleteDryingLotCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CompleteDryingLotCommandHandler> logger)
 {
     public async Task<Result<DryingLotResponse>> HandleAsync(Guid gardenId, Guid id, CompleteDryingLotRequest request, CancellationToken cancellationToken)
     {

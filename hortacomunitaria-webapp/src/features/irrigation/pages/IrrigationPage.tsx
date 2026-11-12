@@ -1,3 +1,5 @@
+import { goTo } from '../../../routes/navigation'
+import type { AppRoute } from '../../../routes/routes'
 import { useGardenState } from "../../../hooks/useGardenState"
 import { useCallback, useState } from 'react'
 import { Failure } from '../../../components/Feedback'
@@ -9,10 +11,8 @@ import { IrrigationList } from '../components/IrrigationList'
 import { ConsumptionPanel } from '../components/ConsumptionPanel'
 import { IrrigationDetailPage } from './IrrigationDetailPage'
 import type { CatalogItem, Filters, IrrigationDetail, Validity } from '../types/irrigation'
-import { navigate } from '../../../hooks/useRoute'
-import type { RecordRoute } from '../../../types/records'
 
-export function GardenFlow({ garden, modeChanged, route, onSaved }: { garden: CatalogItem; modeChanged: (busy: boolean) => void; route?: RecordRoute; onSaved?: (message: string) => void }) {
+export function GardenFlow({ garden, modeChanged, route, onSaved }: { garden: CatalogItem; modeChanged: (busy: boolean) => void; route?: AppRoute; onSaved?: (message: string) => void }) {
   const workspace = useGardenState()
   const [revision, setRevision] = useState(0)
   const [creating, setCreating] = useState(route?.id === 'novo'), [selected, setSelected] = useState(route?.id && route.id !== 'novo' ? route.id : ''), [notice, setNotice] = useState('')
@@ -25,15 +25,15 @@ export function GardenFlow({ garden, modeChanged, route, onSaved }: { garden: Ca
   const list = useRemote(`${JSON.stringify(filters)}/${page}/${revision}`, listLoad)
   const consumptionLoad = useCallback((signal: AbortSignal) => irrigationApi.consumption(garden.id, filters, sectorPage, signal), [garden.id, filters, sectorPage])
   const consumption = useRemote(`${JSON.stringify(filters)}/${sectorPage}/${revision}`, consumptionLoad)
-  function open(id: string) { setSelected(id); modeChanged(true); if (route) navigate(garden.id, 'irrigacao', 'registros', id, route.search) }
+  function open(id: string) { setSelected(id); modeChanged(true); if (route) goTo(garden.id, 'irrigacao', id, route.search) }
   function saved(detail: IrrigationDetail) { setCreating(false); setRevision(value => value + 1); setNotice('Irrigação salva. Os dados abaixo são confirmados pela API.'); onSaved?.('Irrigação salva. Os dados abaixo são confirmados pela API.'); open(detail.id) }
-  function back() { setSelected(''); setCreating(false); setRevision(value => value + 1); modeChanged(false); if (route) navigate(garden.id, 'irrigacao', 'registros', '', route.search) }
+  function back() { setSelected(''); setCreating(false); setRevision(value => value + 1); modeChanged(false); if (route) goTo(garden.id, 'irrigacao', '', route.search) }
   const refresh = () => setRevision(value => value + 1)
-  function filterRoute(values: Filters, listPage = page, consumptionPage = sectorPage) { if (route) navigate(garden.id, 'irrigacao', 'registros', '', new URLSearchParams({ ...values, page: String(listPage), sectorPage: String(consumptionPage) })) }
+  function filterRoute(values: Filters, listPage = page, consumptionPage = sectorPage) { if (route) goTo(garden.id, 'irrigacao', '', new URLSearchParams({ ...values, page: String(listPage), sectorPage: String(consumptionPage) })) }
   if (creating) return <IrrigationForm garden={garden.id} saved={saved} cancel={back} />
   if (selected) return <>{notice && <p className="feedback success" role="status">{notice}</p>}<IrrigationDetailPage key={selected} garden={garden.id} id={selected} back={back} changed={refresh} sectors={context.data?.sectors ?? []} participants={context.data?.participants ?? []} /></>
   return <>
-    <div className="page-heading"><div><h1 tabIndex={-1}>Irrigação</h1><p>Registros de campo e consumo conhecido, no mesmo lugar.</p></div><button disabled={!workspace.isActive} onClick={() => { setCreating(true); modeChanged(true); if (route) navigate(garden.id, 'irrigacao', 'registros', 'novo', route.search) }}>+ Nova irrigação</button></div>
+    <div className="page-heading"><div><h1 tabIndex={-1}>Irrigação</h1><p>Registros de campo e consumo conhecido, no mesmo lugar.</p></div><button disabled={!workspace.isActive} onClick={() => { setCreating(true); modeChanged(true); if (route) goTo(garden.id, 'irrigacao', 'novo', route.search) }}>+ Nova irrigação</button></div>
     {notice && <p className="feedback success" role="status">{notice}</p>}
     <form className="filter-panel" aria-label="Filtros do período" onSubmit={event => { event.preventDefault(); if (!draftFilters.from || !draftFilters.to || draftFilters.from > draftFilters.to) { setFilterError('Informe um período válido, com início até o fim.'); return } setFilterError(''); setFilters({ ...draftFilters }); setPage(1); setSectorPage(1); filterRoute(draftFilters, 1, 1) }}>
       <label htmlFor="filter-from">De<input id="filter-from" type="date" required value={draftFilters.from} onChange={event => setDraftFilters(current => ({ ...current, from: event.target.value }))} /></label>
@@ -48,16 +48,3 @@ export function GardenFlow({ garden, modeChanged, route, onSaved }: { garden: Ca
     <p className="hint">O consumo considera apenas registros válidos. O filtro de invalidados altera a lista, sem incluir esses fatos no indicador.</p>
   </>
 }
-export function IrrigationPage() {
-  const [gardenId, setGardenId] = useState(''), [revision, setRevision] = useState(0), [inFlow, setInFlow] = useState(false)
-  const load = useCallback((signal: AbortSignal) => irrigationApi.gardens(signal), [])
-  const gardens = useRemote(`gardens/${revision}`, load)
-  const garden = gardens.data?.find(item => item.id === gardenId) ?? (gardenId ? undefined : gardens.data?.[0])
-  return <><header className="app-header"><a className="brand" href="/" aria-label="Horta Comunitária, início"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 27V15M16 19C6 21 3 13 5 6c8 0 12 5 11 13ZM16 15C15 7 21 3 28 4c0 7-4 12-12 11Z" /></svg><span>Horta Comunitária<small>FCT / UFG · APOEMA</small></span></a>
-    <label className="garden-select" htmlFor="garden-selection">Horta<select id="garden-selection" disabled={gardens.loading || inFlow} value={garden?.id ?? ''} onChange={event => setGardenId(event.target.value)}>{gardens.data?.map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label></header>
-    <div className="demo-strip"><span className="demo-dot" aria-hidden="true" /><strong>Ambiente de demonstração</strong><span>Dados fictícios · autoria: Operador de demonstração</span></div>
-    <main id="main-content">{gardens.loading && <p role="status">Buscando hortas…</p>}{gardens.error && <Failure error={gardens.error} retry={() => setRevision(value => value + 1)} />}{gardens.data?.length === 0 && <section className="panel empty"><h1>Nenhuma horta disponível</h1><p>Ainda não há hortas cadastradas para selecionar.</p></section>}{garden && <GardenFlow key={garden.id} garden={garden} modeChanged={setInFlow} />}</main>
-    <footer>Horta Comunitária FCT/UFG <span>Coleta manual · cuidado compartilhado</span></footer></>
-}
-
-

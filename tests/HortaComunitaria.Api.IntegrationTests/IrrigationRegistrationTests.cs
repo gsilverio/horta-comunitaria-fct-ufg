@@ -36,8 +36,9 @@ public sealed class IrrigationRegistrationTests(PostgresFixture postgres) : ICla
         Assert.Equal(TimeSpan.Zero, detail.StartedAt.Offset);
         Assert.Equal(1, detail.Version);
         Assert.Equal(RecordValidity.Valid, detail.Validity);
-        Assert.Equal(DemoIds.Operator, detail.RecordedBy.Id);
-        Assert.True(detail.RecordedBy.IsDemonstration);
+        Assert.Equal(DemoIds.Administrator, detail.RecordedBy.Id);
+        Assert.Equal(TestAccounts.Administrator.DisplayName, detail.RecordedBy.DisplayName);
+        Assert.False(detail.RecordedBy.IsDemonstration);
         Assert.Equal(DemoIds.Participant, detail.ResponsibleParticipantId);
         var raw = await response.Content.ReadAsStringAsync();
         Assert.DoesNotContain("creationPayload", raw);

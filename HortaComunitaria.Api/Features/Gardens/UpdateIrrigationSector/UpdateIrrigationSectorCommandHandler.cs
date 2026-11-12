@@ -13,7 +13,7 @@ using Npgsql;
 namespace HortaComunitaria.Api.Features.Gardens.UpdateIrrigationSector;
 
 internal sealed record UpdateIrrigationSectorRequest(string? Code, [property: JsonRequired] string Name, [property: JsonRequired] string? Description, [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class UpdateIrrigationSectorCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<UpdateIrrigationSectorCommandHandler> logger)
+internal sealed class UpdateIrrigationSectorCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<UpdateIrrigationSectorCommandHandler> logger)
 {
     public async Task<Result<IrrigationSectorResponse>> HandleAsync(Guid gardenId, Guid id, UpdateIrrigationSectorRequest request, CancellationToken cancellationToken)
     {

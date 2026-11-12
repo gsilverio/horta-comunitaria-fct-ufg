@@ -1505,7 +1505,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                     b.ToTable("audit_entries", (string)null);
                 });
 
-            modelBuilder.Entity("HortaComunitaria.Api.Domain.Identity.User", b =>
+            modelBuilder.Entity("HortaComunitaria.Api.Identity.AppUser", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
@@ -1760,7 +1760,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1857,7 +1857,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1884,7 +1884,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1921,7 +1921,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1985,7 +1985,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2006,7 +2006,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2034,7 +2034,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2062,7 +2062,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2123,7 +2123,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2240,7 +2240,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .HasForeignKey("GardenId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2261,7 +2261,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2313,7 +2313,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)

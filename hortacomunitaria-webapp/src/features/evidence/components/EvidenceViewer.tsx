@@ -7,6 +7,7 @@ import { formatDate } from '../../../services/dates'
 import { formatInstant } from '../../irrigation/formValues'
 import type { ApiFailure } from '../../../types/api'
 import type { Evidence } from '../types/Evidence'
+import { useEvidenceImage } from '../hooks/useEvidenceImage'
 import { evidenceTargets } from '../types/Evidence'
 
 type Mode = 'view' | 'edit' | 'invalidate'
@@ -21,6 +22,7 @@ export function EvidenceViewer({ item, imageUrl, targetHref, canChange, busy, er
   invalidate: (reason: string) => Promise<boolean>; close: () => void
 }) {
   const [mode, setMode] = useState<Mode>('view')
+  const image = useEvidenceImage(imageUrl)
   const [draft, setDraft] = useState({ title: item.title, description: item.description ?? '', capturedOn: item.capturedOn ?? '' })
   const [reason, setReason] = useState('')
   const valid = item.validity === 'Valid'
@@ -31,7 +33,7 @@ export function EvidenceViewer({ item, imageUrl, targetHref, canChange, busy, er
   }
   return <Dialog open onOpenChange={open => { if (!open && !busy) close() }}>
     <DialogContent className="w-[calc(100%-2rem)] max-w-4xl gap-0 overflow-y-auto p-0">
-      <div className="bg-[#1f2a22]"><img src={imageUrl} alt={item.description ?? item.title} className="mx-auto max-h-[60vh] w-auto max-w-full object-contain" /></div>
+      <div className="bg-[#1f2a22]">{image.url ? <img src={image.url} alt={item.description ?? item.title} className="mx-auto max-h-[60vh] w-auto max-w-full object-contain" /> : <p className="m-0 p-6 text-center text-sm text-white" role="status">{image.failed ? 'Imagem indisponível.' : 'Carregando imagem…'}</p>}</div>
       <div className="grid gap-4 p-4 sm:p-5">
         <div className="pr-10">
           <DialogTitle className="text-lg font-semibold text-horta-ink">{item.title}</DialogTitle>
@@ -42,12 +44,12 @@ export function EvidenceViewer({ item, imageUrl, targetHref, canChange, busy, er
             { label: 'Descrição', value: item.description ?? 'Não informado' },
             { label: 'Data da foto', value: item.capturedOn ? formatDate(item.capturedOn) : 'Não informado' },
             { label: 'Enviada em', value: formatInstant(item.recordedAt) },
-            { label: 'Autor técnico (demonstração)', value: item.recordedByUserId },
+            { label: 'Autor do registro (identificador)', value: item.recordedByUserId },
             { label: 'Arquivo', value: `${item.originalFileName} · ${formatSize(item.sizeBytes)}` },
           ]} />
           <div className="flex flex-wrap gap-2">
             {targetHref && <a className="action-link secondary" href={targetHref} onClick={close}><ExternalLink aria-hidden="true" className="size-4" />Abrir registro vinculado</a>}
-            <a className="action-link secondary" href={imageUrl} target="_blank" rel="noopener">Abrir em tamanho original</a>
+            {image.url && <a className="action-link secondary" href={image.url} target="_blank" rel="noopener">Abrir em tamanho original</a>}
             {valid && canChange && <><button type="button" className="secondary" onClick={() => switchTo('edit')}>Corrigir legenda</button><button type="button" className="danger" onClick={() => switchTo('invalidate')}>Invalidar foto</button></>}
           </div>
         </>}

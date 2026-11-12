@@ -20,6 +20,9 @@ async function openEditor(page: Page) {
   let saved: LayoutSnapshot = { version: 0, savedAt: null, layout: null }
   await page.route('**/api/v1/**', async route => {
     const path = new URL(route.request().url()).pathname
+    // Sessão fictícia de Adm isolada no navegador: o editor de mapa é exclusivo do perfil Adm.
+    if (path.endsWith('/auth/refresh')) return route.fulfill({ json: { accessToken: 'editor-test-token', tokenType: 'Bearer', expiresIn: 900 } })
+    if (path.endsWith('/auth/me')) return route.fulfill({ json: { id: 'editor-test-user', email: 'adm@horta.test', displayName: 'Adm fictício', profile: 'Administrator', mustChangePassword: false } })
     if (path.endsWith('/layout')) {
       if (route.request().method() === 'PUT') { const data = route.request().postDataJSON(); saved = { version: saved.version + 1, savedAt: '2026-10-25T01:00:00Z', layout: data.layout } }
       return route.fulfill({ json: saved })
@@ -28,7 +31,7 @@ async function openEditor(page: Page) {
     return route.fulfill({ json: path.endsWith('/gardens/garden-test') ? garden : { items, page: 1, pageSize: 100, totalCount: items.length, totalPages: 1, hasNextPage: false, hasPreviousPage: false } })
   })
   await page.setViewportSize({ width: 1440, height: 1000 })
-  await page.goto('/#/hortas/garden-test/horta/interativa')
+  await page.goto('/hortas/garden-test/horta/mapa')
   await expect(page.getByRole('heading', { name: 'Mapa interativo da horta' })).toBeVisible()
 }
 
@@ -439,7 +442,7 @@ test('panorâmica preserva texturas, delimita setores sem preenchimento e monta 
   const confirmed = await page.evaluate(() => JSON.parse(sessionStorage.getItem('horta-interativa-layout:v3:garden-test') || '{}'))
   await page.route('**/gardens/garden-test/layout', route => route.fulfill({ json: { version: 1, savedAt: '2026-10-25T01:00:00Z', layout: confirmed } }))
   await page.route('**/crop-visuals**', route => route.fulfill({ json: { items: [{ cycleId: 'crop-cycle', bedId: 'crop-bed', speciesName: 'Alface', speciesCatalogKey: 'embrapa-2023:alface', scientificName: 'Lactuca sativa', cultivarName: null, cultivarCatalogKey: null, occupiedAreaM2: 6, initialQuantity: 24, hasReplacements: false, hasMixedPlantingDates: false, firstPlantedOn: '2026-10-01', lastHarvestedOn: null, visualGrowthDays: 10, visualHarvestDays: 30, stage: 'Growing' }], page: 1, pageSize: 100, totalCount: 1, totalPages: 1, hasNextPage: false, hasPreviousPage: false } }))
-  await page.goto('/#/hortas/garden-test/visao-geral/painel')
+  await page.goto('/hortas/garden-test/visao-geral')
   const scene = page.getByRole('application', { name: 'Mapa panorâmico interativo da horta' })
   await expect(scene.locator('.garden-scene-sector')).toHaveCount(1)
   await expect(scene.locator('.garden-scene-sector polygon')).toHaveAttribute('fill', 'none')
@@ -652,7 +655,7 @@ test('selecionar canteiro aproxima a câmera, evita o painel e permite reenquadr
     return value
   })
   await page.route('**/gardens/garden-test/layout', route => route.fulfill({ json: { version: 1, savedAt: '2026-10-25T01:00:00Z', layout } }))
-  await page.goto('/#/hortas/garden-test/visao-geral/painel')
+  await page.goto('/hortas/garden-test/visao-geral')
   const scene = page.getByRole('application', { name: 'Mapa panorâmico interativo da horta' })
   const bed = scene.getByRole('button', { name: 'Retângulo 2, retângulo', exact: true })
   const zoom = page.locator('.garden-scene-controls').getByText('170%', { exact: true })
@@ -666,7 +669,7 @@ test('selecionar canteiro aproxima a câmera, evita o painel e permite reenquadr
   if (!focused || !panel) throw new Error('Canteiro ou painel ausente')
   expect(focused.width).toBeGreaterThan(before.width * 1.6)
   expect(focused.x).toBeGreaterThan(panel.x + panel.width)
-  await expect(inspector.getByRole('link', { name: 'Ver detalhes do canteiro' })).toHaveAttribute('href', '#/hortas/garden-test/horta/canteiros/bed-focus?returnTo=panorama')
+  await expect(inspector.getByRole('link', { name: 'Ver detalhes do canteiro' })).toHaveAttribute('href', '/hortas/garden-test/horta/canteiros/bed-focus?voltar=%2Fhortas%2Fgarden-test%2Fvisao-geral')
   await page.locator('.garden-scene-wrapper').screenshot({ path: 'test-results/panorama-bed-focus-desktop.png' })
   await page.getByRole('button', { name: 'Enquadrar horta', exact: true }).click()
   await expect(page.locator('.garden-scene-controls').getByText('100%', { exact: true })).toBeVisible()

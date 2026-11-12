@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.CorrectEstablishmentAssessment;
 
 internal sealed record CorrectEstablishmentAssessmentRequest([property: JsonRequired] Guid PlantingId, [property: JsonRequired] DateOnly AssessedOn, [property: JsonRequired] int SurvivingQuantity, [property: JsonRequired] string Method, [property: JsonRequired] string? Notes, [property: JsonRequired] Guid? ResponsibleParticipantId, [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class CorrectEstablishmentAssessmentCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CorrectEstablishmentAssessmentCommandHandler> logger)
+internal sealed class CorrectEstablishmentAssessmentCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CorrectEstablishmentAssessmentCommandHandler> logger)
 {
     public async Task<Result<EstablishmentAssessmentResponse>> HandleAsync(Guid gardenId, Guid id, CorrectEstablishmentAssessmentRequest request, CancellationToken cancellationToken)
     {

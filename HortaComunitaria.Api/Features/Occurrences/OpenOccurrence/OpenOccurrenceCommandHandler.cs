@@ -11,7 +11,7 @@ using HortaComunitaria.Api.Features.Occurrences.Shared;
 namespace HortaComunitaria.Api.Features.Occurrences.OpenOccurrence;
 
 internal sealed record OpenOccurrenceRequest([property: JsonRequired] Guid OperationId, [property: JsonRequired] DateTimeOffset OpenedAt, [property: JsonRequired] string Category, [property: JsonRequired] string Description, Guid? ResponsibleParticipantId, Guid? BedId, Guid? SectorId, Guid? CycleId, Guid? IrrigationId);
-internal sealed class OpenOccurrenceCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<OpenOccurrenceCommandHandler> logger)
+internal sealed class OpenOccurrenceCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<OpenOccurrenceCommandHandler> logger)
 {
     public async Task<Result<CreatedOccurrenceResponse>> HandleAsync(Guid gardenId, OpenOccurrenceRequest request, CancellationToken cancellationToken)
     {

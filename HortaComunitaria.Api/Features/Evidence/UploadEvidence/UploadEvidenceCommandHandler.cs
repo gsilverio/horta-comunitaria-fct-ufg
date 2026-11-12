@@ -18,7 +18,7 @@ internal sealed record UploadEvidenceRequest(string? OperationId, string? Target
 /// <summary>Arquivo recebido, sem depender do tipo HTTP no handler.</summary>
 internal sealed record UploadedFile(string FileName, long Length, Func<Stream> Open);
 
-internal sealed class UploadEvidenceCommandHandler(AppDbContext db, IFileStorage storage, IOptions<FileStorageOptions> options, DemoAuthorContext author,
+internal sealed class UploadEvidenceCommandHandler(AppDbContext db, IFileStorage storage, IOptions<FileStorageOptions> options, CurrentAuthor author,
     TimeProvider clock, ILogger<UploadEvidenceCommandHandler> logger)
 {
     public async Task<Result<CreatedEvidenceResponse>> HandleAsync(Guid gardenId, UploadEvidenceRequest request, UploadedFile? file, CancellationToken cancellationToken)

@@ -24,7 +24,7 @@ Leia este contexto antes de consultar os catálogos da skill. As recomendações
 - Compacto significa reduzir espaço desperdiçado, não reduzir legibilidade, alvo de toque ou foco. Preserve controles de pelo menos 44 px e leitura confortável, incluindo teclado e zoom.
 - Listagens de dados usam paginação e filtros reais da API. Não aplique ordenação/busca apenas sobre a página atual como se abrangesse o catálogo inteiro.
 - Formulários agrupam campos por assunto, exibem unidades, erros locais e ações previsíveis. Mantenha proteção de rascunho, motivo, histórico e versão esperada.
-- O header contém a identificação demonstrativa à direita e o contexto da horta ao lado. O seletor aparece com múltiplas hortas; com uma, a aplicação usa a única disponível. Horta no menu lateral abre a gestão de hortas. Preserve a navegação global e os acessos diretos.
+- O header contém o menu da conta à direita (nome, perfil, Usuários para Adm, Trocar senha, Sair) e o contexto da horta ao lado. O seletor aparece com múltiplas hortas; com uma, a aplicação usa a única disponível. Horta no menu lateral abre a gestão de hortas. Preserve a navegação global e os acessos diretos.
 - Layout desktop prioritário com adaptação completa para 320/390/768 px; confira também desktop em 1280/1920 px quando relevante. Tabelas podem ter rolagem interna identificada; a página não deve transbordar.
 - Reutilize tokens `horta-*` de `styles.css`: forest para identidade/ações, canvas para fundo, ink para texto, muted para secundário, line para divisórias, soft para ênfase, danger para risco e focus para foco. Verifique contraste no uso concreto. Não impor paletas, fontes remotas ou modo escuro sugeridos automaticamente.
 - Use os ícones existentes; Lucide já está disponível. Mantenha semântica, espessura e tamanhos coerentes. Fotos das espécies vêm da API existente; não invente URLs ou substitua os assets do panorama.
@@ -33,7 +33,7 @@ Leia este contexto antes de consultar os catálogos da skill. As recomendações
 ## Limites do domínio e do escopo
 
 - Percurso operacional: horta → setor → canteiro → cultivo/plantio. A interface registra fatos manuais e consulta informações retornadas pela API.
-- Autenticação é pós-MVP; a identidade atual é Operador de demonstração. Não gerar login, perfil, sair ou sistema de usuários.
+- Autenticação existe desde 12/11/2026 (perfis Adm e Operador). O Operador não vê ações de estrutura e catálogos; preserve `useCanManage` ao criar telas dessas áreas. Recuperação de senha ainda não existe.
 - Ausência de dado não equivale a zero. Não calcular indicadores agrícolas no browser, presumir fórmulas, datas agronômicas ou converter unidades livres do desenho em m².
 - Reestruturação visual tradicional não inclui alterar cadastro interativo, geometria, câmera, assets ou lógica panorâmica. Uma mudança nessas áreas deve estar explicitamente no pedido atual.
 - Não executar escrita no banco, preparar demonstração, aplicar migrations ou seed apenas para obter uma captura. Dados reais e demonstrativos têm autorização e finalidade próprias.

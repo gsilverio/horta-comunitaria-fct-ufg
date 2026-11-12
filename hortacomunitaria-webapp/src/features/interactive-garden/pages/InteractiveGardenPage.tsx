@@ -1,8 +1,10 @@
+import type { AppRoute } from '../../../routes/routes'
+import { linkTo } from '../../../routes/routes'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react'
-import type { RecordRoute } from '../../../types/records'
+
 import { registerNavigationGuard } from '../../../services/navigationGuard'
-import { routeHref } from '../../../hooks/useRoute'
+import { confirmAction } from '../../../services/confirmation'
 import { useGardenState } from '../../../hooks/useGardenState'
 import { useRemote } from '../../../hooks/useRemote'
 import { Failure } from '../../../components/Feedback'
@@ -22,6 +24,7 @@ import type { GardenSetupStage } from '../components/GardenSetupSteps'
 import type { MandalaConfig } from '../geometry'
 import type { DemoElement, DemoGarden, ElementShape, Pan } from '../types'
 import { readInteractiveDraft, writeInteractiveDraft } from '../layoutStorage'
+import { useAuth } from '../../auth/hooks/useAuth'
 import { createGardenProjection } from '../projection'
 import type { InteractiveOrganization } from '../projection'
 import { interactiveGardenApi } from '../services/interactiveGardenApi'
@@ -286,7 +289,7 @@ function rotateElementAround(element: DemoElement, center: { x: number; y: numbe
   return { ...element, centerX: rotatedCenter.x, centerY: rotatedCenter.y }
 }
 
-export function InteractiveGardenPage({ route }: { route: RecordRoute }) {
+export function InteractiveGardenPage({ route }: { route: AppRoute }) {
   const workspace = useGardenState()
   const on = today()
   const load = useCallback((signal: AbortSignal) => interactiveGardenApi.get(route.garden, on, signal), [on, route.garden])
@@ -300,7 +303,7 @@ export function InteractiveGardenPage({ route }: { route: RecordRoute }) {
 }
 
 interface InteractiveGardenEditorProps {
-  route: RecordRoute
+  route: AppRoute
   initial: DemoGarden
   projectionWarnings: string[]
   organization?: InteractiveOrganization
@@ -432,7 +435,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
 
   useEffect(() => {
     if (!dirty && !unsaved) return
-    return registerNavigationGuard(() => window.confirm('Há alterações não salvas no mapa. A visão panorâmica mostra somente a configuração salva. Deseja sair mesmo assim?'))
+    return registerNavigationGuard(() => ({ title: 'Sair sem salvar o mapa?', message: 'Há alterações não salvas no mapa. A visão panorâmica e os cadastros mostram somente a configuração salva.', confirmLabel: 'Sair sem salvar', cancelLabel: 'Continuar no mapa', tone: 'danger' }))
   }, [dirty, unsaved, bedMenuId])
 
   useEffect(() => {
@@ -520,12 +523,13 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
     setPan({ x: 0, y: 0 })
   }, [resetBaseline, startingBoundary, startingElements])
 
-  const removeSelected = useCallback((targetId?: string) => {
+  const removeSelected = useCallback(async (targetId?: string) => {
     const currentSelected = elementsRef.current.find((element) => element.id === (targetId ?? selectedId))
     if (!currentSelected) return
     const idsToRemove = targetId ? [targetId] : selectedIds.length > 0 ? selectedIds : [currentSelected.id]
-    const message = idsToRemove.length === 1 ? `Remover “${currentSelected.name}” do rascunho demonstrativo?` : `Remover os ${idsToRemove.length} objetos selecionados do rascunho demonstrativo?`
-    if (!window.confirm(message)) return
+    const single = idsToRemove.length === 1
+    const confirmed = await confirmAction({ title: single ? `Remover “${currentSelected.name}”?` : `Remover ${idsToRemove.length} objetos?`, message: single ? 'O objeto sai do rascunho do mapa. Você pode desfazer com Ctrl+Z até salvar a configuração.' : 'Os objetos selecionados saem do rascunho do mapa. Você pode desfazer com Ctrl+Z até salvar a configuração.', confirmLabel: 'Remover', tone: 'danger' })
+    if (!confirmed) return
     const removedSectorIds = new Set(elementsRef.current.filter((element) => idsToRemove.includes(element.id) && element.role === 'sector').map((element) => element.id))
     const next = elementsRef.current
       .filter((element) => !idsToRemove.includes(element.id))
@@ -546,7 +550,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
       const target = event.target as HTMLElement | null
       const editing = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement
       const modifier = event.ctrlKey || event.metaKey
-      if (mandalaOpen || propertiesOpen || bedMenuId || saving.busy || saving.uncertain) return
+      if (mandalaOpen || propertiesOpen || bedMenuId || saving.busy || saving.uncertain || document.querySelector('[role="alertdialog"]')) return
       if (event.code === 'Space' && !editing) {
         event.preventDefault()
         setSpacePressed(true)
@@ -559,7 +563,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
         redo()
       } else if (event.key === 'Delete' && !editing) {
         event.preventDefault()
-        removeSelected()
+        void removeSelected()
       } else if (!editing && !modifier && !event.altKey) {
         // Atalhos de ferramenta: só trocam o modo do cursor; nenhum cria ou remove objetos.
         const key = event.key.toLowerCase()
@@ -1331,7 +1335,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
           return <li key={sector.id} className={`flex items-center gap-1 rounded-md border pr-1 ${active ? 'border-horta-forest bg-[#eef4e8]' : 'border-horta-line bg-white'}`}>
             <button type="button" className="min-h-10 min-w-0 flex-1 truncate rounded-md border-0 bg-transparent px-2 text-left text-sm font-medium text-horta-ink shadow-none hover:!bg-transparent" aria-pressed={active} disabled={drawingOutline} onClick={() => chooseSector(sector.id)}>{sector.name}<span className="ml-1 text-xs font-normal text-horta-muted">· {count} {count === 1 ? 'canteiro' : 'canteiros'}</span></button>
             <button type="button" className="interactive-icon-button" title={`Editar ${sector.name}`} aria-label={`Editar ${sector.name}`} disabled={drawingOutline} onClick={() => editSector(sector)}><Pencil aria-hidden="true" /></button>
-            <button type="button" className="interactive-icon-button danger" title={`Excluir ${sector.name}`} aria-label={`Excluir ${sector.name}`} disabled={drawingOutline} onClick={() => removeSelected(sector.id)}><Trash2 aria-hidden="true" /></button>
+            <button type="button" className="interactive-icon-button danger" title={`Excluir ${sector.name}`} aria-label={`Excluir ${sector.name}`} disabled={drawingOutline} onClick={() => void removeSelected(sector.id)}><Trash2 aria-hidden="true" /></button>
           </li>
         })}
       </ul>}
@@ -1362,17 +1366,19 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
       {selectedBed ? <div className="grid gap-1.5">
         <p className="m-0 truncate text-sm font-semibold text-horta-forest">{selectedBed.name}</p>
         <button type="button" className="primary w-full" onClick={() => { setPropertiesOpen(false); setBedMenuId(selectedBed.id) }}>Cultivo e plantio</button>
-        <div className="grid grid-cols-2 gap-1.5"><button type="button" className="secondary !min-h-10 !text-xs" onClick={() => setPropertiesOpen(true)}>Editar forma</button><button type="button" className="danger-outline !min-h-10 !text-xs" onClick={() => removeSelected()}>Remover</button></div>
+        <div className="grid grid-cols-2 gap-1.5"><button type="button" className="secondary !min-h-10 !text-xs" onClick={() => setPropertiesOpen(true)}>Editar forma</button><button type="button" className="danger-outline !min-h-10 !text-xs" onClick={() => void removeSelected()}>Remover</button></div>
       </div> : selectedElements.length > 1 ? <div className="grid gap-1.5">
         <p className="m-0 text-sm"><strong>{selectedElements.length}</strong> objetos selecionados</p>
         <p className="m-0 text-[11px] text-horta-muted">Arraste para mover juntos ou use o arco para girar o grupo.</p>
-        <button type="button" className="danger-outline !min-h-10 !text-xs" onClick={() => removeSelected()}>Remover selecionados</button>
+        <button type="button" className="danger-outline !min-h-10 !text-xs" onClick={() => void removeSelected()}>Remover selecionados</button>
       </div> : <p className="m-0 text-xs text-horta-muted">Clique num canteiro para configurar cultivo e plantio. Shift soma à seleção; arraste numa área vazia para selecionar vários.</p>}
     </PanelSection>
   </>
 
   const drawingTools = editorStage === 'terrain' ? terrainTools : editorStage === 'sectors' ? sectorTools : bedTools
-  const saveDisabled = !organization || saving.busy || saving.error?.status === 409 || drawingOutline && boundaryDraft.length > 0 || !boundary && saving.version === 0
+  // Salvar o mapa altera a estrutura da horta: exclusivo do perfil Adm (o servidor também recusa).
+  const canManage = useAuth().isAdministrator
+  const saveDisabled = !canManage || !organization || saving.busy || saving.error?.status === 409 || drawingOutline && boundaryDraft.length > 0 || !boundary && saving.version === 0
   const hasChanges = dirty || unsaved
   const saveStatus = saving.busy ? { tone: 'pending', text: 'Salvando…' }
     : saving.uncertain ? { tone: 'warning', text: 'Confirmação pendente' }
@@ -1395,9 +1401,9 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
         </div>
       </div>
       <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-        <span className={`interactive-save-status w-full sm:w-auto ${saveStatus.tone}`} role="status">{saveStatus.text}</span>
-        <a className="secondary action-link flex-1 sm:flex-none" href={routeHref(route.garden, 'visao-geral', 'painel')}>Ver visão panorâmica</a>
-        {saving.error?.status === 409 && <button type="button" className="secondary" onClick={() => { if (window.confirm('Seu rascunho será descartado para carregar a configuração atual. Continuar?')) { window.sessionStorage.removeItem('horta-interativa-layout:v3:' + route.garden); window.location.reload() } }}>Recarregar configuração salva</button>}
+        <span className={`interactive-save-status w-full sm:w-auto ${canManage ? saveStatus.tone : ''}`} role="status">{canManage ? saveStatus.text : 'Somente o perfil Adm salva alterações do mapa.'}</span>
+        <a className="secondary action-link flex-1 sm:flex-none" href={linkTo(route.garden, 'visao-geral')}>Ver visão panorâmica</a>
+        {saving.error?.status === 409 && <button type="button" className="secondary" onClick={() => void confirmAction({ title: 'Recarregar configuração salva?', message: 'Seu rascunho será descartado para carregar a configuração atual do mapa.', confirmLabel: 'Descartar e recarregar', tone: 'danger' }).then(confirmed => { if (confirmed) { window.sessionStorage.removeItem('horta-interativa-layout:v3:' + route.garden); window.location.reload() } })}>Recarregar configuração salva</button>}
         <button type="button" className="primary inline-flex flex-1 items-center justify-center gap-2 sm:flex-none" disabled={saveDisabled} onClick={() => void saveConfiguration()}><Save aria-hidden="true" className="size-4" />{saving.busy ? 'Salvando configuração…' : saving.uncertain ? 'Tentar salvar novamente' : 'Salvar configuração'}</button>
       </div>
     </header>
@@ -1431,7 +1437,6 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
         </form>
       </section>
     </div>}
-
 
     {propertiesOpen && selected && <section className="interactive-properties-popover" style={propertiesPosition} role="dialog" aria-labelledby="properties-title" onPointerDown={(event) => event.stopPropagation()}>
         <header className="interactive-properties-header">
@@ -1469,7 +1474,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
               <label>Raio <span className="interactive-unit">u</span><input inputMode="decimal" type="text" value={valueFor(selected, 'radius')} onChange={(event) => updateElementLive(selected.id, 'radius', event.target.value)} onBlur={() => commitField(selected, 'radius')} /></label>
             </>}
           </div>
-          <div className="interactive-properties-actions"><button type="button" className="danger-outline" onClick={() => removeSelected()}>Remover objeto</button><button type="button" className="primary" onClick={() => setPropertiesOpen(false)}>Concluir</button></div>
+          <div className="interactive-properties-actions"><button type="button" className="danger-outline" onClick={() => void removeSelected()}>Remover objeto</button><button type="button" className="primary" onClick={() => setPropertiesOpen(false)}>Concluir</button></div>
         </div>
     </section>}
 
@@ -1537,7 +1542,6 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
         {bedMenuElement?.role === 'bed' ? <InteractiveBedMenu key={bedMenuElement.id} garden={route.garden} element={bedMenuElement} editing={setBedFormOpen} needsMapSave={dirty || unsaved} saving={saving.busy} uncertain={saving.uncertain} saveError={saving.error} saveBlocked={!organization || saving.error?.status === 409 || drawingOutline && boundaryDraft.length > 0} saveMap={saveConfiguration} close={() => setBedMenuId(undefined)} editShape={() => { setSelectedId(bedMenuElement.id); setSelectedIds([bedMenuElement.id]); setBedMenuId(undefined); setPropertiesOpen(true) }} /> : <DrawingMenu steps={<div inert={saving.busy || saving.uncertain}>{stepsNav}</div>} title={stageInfo[editorStage].title} description={stageInfo[editorStage].description}>{drawingTools}</DrawingMenu>}
         </div>
       </section>
-
 
     </div>
   </div>

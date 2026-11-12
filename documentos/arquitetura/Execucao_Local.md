@@ -11,17 +11,18 @@ O projeto existente `HortaComunitaria.Api/HortaComunitaria.Api.csproj` é o exec
 | Componente | Versão fixada |
 | --- | --- |
 | SDK .NET | 10.0.301, sem roll-forward em global.json |
-| ASP.NET Core OpenAPI / host de testes | 10.0.9 |
+| ASP.NET Core OpenAPI | 10.0.12 |
+| ASP.NET Core Identity EF Core / host de testes | 10.0.9 |
 | EF Core / Relational / Design / dotnet-ef | 10.0.9 |
 | Npgsql EF Core | 10.0.3 |
 | PostgreSQL local / imagem de testes | 17.0 |
 | Serilog.AspNetCore / Compact JSON | 10.0.0 / 3.0.0 |
 | Swagger UI | 10.3.0 |
-| Microsoft.OpenApi | 2.7.5 |
+| Microsoft.OpenApi | 2.12.0 |
 | xUnit / runner / Microsoft.NET.Test.Sdk | 2.9.3 / 3.1.4 / 17.14.1 |
 | Testcontainers.PostgreSql | 4.15.0 |
 
-Os pacotes transitivos estão em `packages.lock.json`, por projeto; o manifest local `dotnet-tools.json` fixa o CLI. Microsoft.OpenApi foi fixado explicitamente na versão corrigida indicada pelo [advisory oficial](https://github.com/advisories/GHSA-v5pm-xwqc-g5wc), sem suprimir a auditoria NuGet.
+Os pacotes transitivos estão em `packages.lock.json`, por projeto; o manifest local `dotnet-tools.json` fixa o CLI. Microsoft.OpenApi foi fixado explicitamente, inicialmente na versão corrigida indicada pelo [advisory oficial](https://github.com/advisories/GHSA-v5pm-xwqc-g5wc) e, em 12/11/2026, na 2.12.0 exigida pelo ASP.NET Core OpenAPI 10.0.12, sem suprimir a auditoria NuGet.
 
 ## PostgreSQL demonstrativo
 
@@ -39,14 +40,11 @@ Na primeira execução, os casos funcionais passaram, mas o descarte de duas cla
 
 É possível usar o PostgreSQL **17** já instalado, sem iniciar outro servidor. Nesta máquina, o serviço `postgresql-x64-17` usa a porta **5432**; o PostgreSQL 16 usa **5433** e não é a versão adotada para esta aplicação.
 
-Use apenas `HortaComunitaria.Api/appsettings.json` como base e `HortaComunitaria.Api/appsettings.Development.json` para o desenvolvimento. O segundo guarda a conexão local com credenciais e é ignorado pelo Git. Nesta máquina já está configurado. Em outra instalação, crie/edite esse arquivo com sua conexão e os opt-ins demonstrativos:
+Use apenas `HortaComunitaria.Api/appsettings.json` como base e `HortaComunitaria.Api/appsettings.Development.json` para o desenvolvimento. O segundo guarda a conexão local com credenciais e é ignorado pelo Git. Nesta máquina já está configurado. Em outra instalação, crie/edite esse arquivo com sua conexão:
 
 ```json
 {
   "Observability": { "ConsoleFormat": "Text" },
-  "DemoMode": {
-    "Enabled": true
-  },
   "Persistence": {
     "ApplyMigrationsOnStartup": true,
     "ConnectionString": "Host=127.0.0.1;Port=5432;Database=horta_demo;Username=SEU_USUARIO;Password=SUA_SENHA_LOCAL"
@@ -79,11 +77,13 @@ Para o Compose, ajuste `Persistence:ConnectionString` no `appsettings.Developmen
 
 | Configuração | Comportamento |
 | --- | --- |
-| DemoMode:Enabled | Opt-in obrigatório; somente Development |
+| Authentication:AccessTokenLifetime / RefreshTokenLifetime | 15 min / 7 dias por padrão; validados no startup |
+| Authentication:KeysPath | Chaves do Data Protection (`App_Data/keys`); precisam persistir entre reinícios, ou todas as sessões caem |
+| Authentication:RateLimitPerMinute | Limite por IP das rotas de autenticação (padrão 10) |
 | Persistence:ConnectionString | Conexão local obrigatória |
 | Persistence:ApplyMigrationsOnStartup | Default false; true somente Development |
 
-A API recusa startup fora de Development ou sem modo demo explícito. O host usa o carregamento padrão: `appsettings.json`, arquivo do ambiente e variáveis de ambiente, que prevalecem. O EF CLI lê os mesmos arquivos a partir da raiz ou da pasta do projeto; selecione Development com `DOTNET_ENVIRONMENT` (ou `ASPNETCORE_ENVIRONMENT`). Sem variável de ambiente, a factory usa Production e exige conexão fornecida para esse ambiente. Nunca inclua conexão/senha na linha de comando versionada. O arquivo base mantém modo demo e migrations automáticas desabilitados. Não há configuração de seed.
+Desde 12/11/2026 não há modo demonstrativo: toda rota exige login, exceto autenticação, health checks e OpenAPI. O host usa o carregamento padrão: `appsettings.json`, arquivo do ambiente e variáveis de ambiente, que prevalecem. O EF CLI lê os mesmos arquivos a partir da raiz ou da pasta do projeto; selecione Development com `DOTNET_ENVIRONMENT` (ou `ASPNETCORE_ENVIRONMENT`). Sem variável de ambiente, a factory usa Production e exige conexão fornecida para esse ambiente. Nunca inclua conexão/senha na linha de comando versionada. O arquivo base mantém migrations automáticas desabilitadas. Não há configuração de seed; o primeiro administrador é criado por `--bootstrap-admin` (ver [Get Started](../Get_Started.md#3-criar-o-primeiro-administrador-e-os-cadastros)).
 
 A simplificação dos arquivos foi verificada em 08/10/2026: build Release sem erros/avisos, sete testes de inicialização/health/logs aprovados com bancos PostgreSQL descartáveis, EF CLI consultando as migrations aplicadas tanto pela raiz quanto pela pasta da API e readiness HTTP 200 usando Development. O seed existente permaneceu idempotente. O encerramento intencional do host pelo tooling EF não é registrado como falha de startup. A API usada na verificação foi encerrada; o banco e o serviço PostgreSQL foram preservados.
 
@@ -138,6 +138,8 @@ npm run test:e2e
 
 Substitua a conexão no ambiente por uma conta de um PostgreSQL **17** local dedicado a testes, com permissão de criar bancos. A API precisa estar restaurada com `--locked-mode`. A suíte cria/removerá somente seu próprio banco `horta_e2e_<uuid>`, inicia API em **5279** e preview em **5183** e encerra esses processos no teardown. Não depende do banco demonstrativo manual nem de servidores já iniciados. Chromium usa Asia/Tokyo para verificar a conversão de fuso; logs, screenshots e relatórios são ignorados pelo Git.
 
+Autenticação no E2E: após a API aplicar as migrations no banco exclusivo, o setup cria o Adm fictício `adm-e2e@horta.test` pelo comando `--bootstrap-admin`, troca a senha inicial pela API (senhas aleatórias a cada execução) e entra pela tela de login, guardando o cookie de renovação em um arquivo temporário fora do repositório (`storageState`). Cada teste abre a aplicação com a sessão restaurada; o `request` dos testes (de `e2e/fixtures.ts`) obtém um access token pelo login. A API do E2E usa chaves do Data Protection temporárias e limite de autenticação elevado; ambos são removidos/irrelevantes fora da suíte. Os testes do editor (`editor-tests`) simulam a sessão de Adm no navegador.
+
 O [roteiro de demonstração](../planejamento/Validacao_PO_MVP_Irrigacao.md) está pronto; a reunião e o aceite funcional continuam pendentes.
 
 ## Consultas
@@ -169,7 +171,7 @@ O vínculo histórico guarda GardenId para reforçar a mesma horta por FKs compo
 
 Use o [arquivo HTTP](../../HortaComunitaria.Api/HortaComunitaria.Api.http) ou Swagger para registrar 120 L medidos no S1, B1–B4, em 08/10/2026 às 08:00–08:30 -03:00. O exemplo define uma operationId v7 para permitir reenvio: preserve-a ao repetir o envio e gere outra para outro evento legítimo. O POST retorna o id e Location para consultar a origem.
 
-Instantes de entrada exigem offset e são persistidos/retornados em UTC. Volume (L), vazão (L/min) e duração ativa (minutos) aceitam até três casas decimais e 11 dígitos inteiros; excesso é rejeitado antes de gravar. Volume desconhecido usa null em volumeLiters, volumeSource e volumeMethod; zero conhecido exige origem e método. A autoria sempre vem de demo:operator no servidor, separada do responsável opcional selecionado.
+Instantes de entrada exigem offset e são persistidos/retornados em UTC. Volume (L), vazão (L/min) e duração ativa (minutos) aceitam até três casas decimais e 11 dígitos inteiros; excesso é rejeitado antes de gravar. Volume desconhecido usa null em volumeLiters, volumeSource e volumeMethod; zero conhecido exige origem e método. A autoria sempre vem do usuário autenticado no servidor, separada do responsável opcional selecionado.
 
 O indicador soma uma vez o volume de cada evento válido, incluindo Interrupted. No exemplo, resumo e S1 mostram 120 L e um evento, mesmo com quatro canteiros; S2 mostra NoData e volume null. Com pageSize=1, S2 aparece na segunda página e o resumo continua 120 L. As situações NoData, Unavailable, Partial e Available distinguem ausência, desconhecido e zero observado; includesEstimatedVolume informa a presença de estimativas válidas.
 
@@ -193,7 +195,7 @@ Detalhe fora da transação de escrita e histórico paginado usam RepeatableRead
 
 A precisão temporal segue o armazenamento PostgreSQL, de um microssegundo, enquanto .NET representa frações de 100 ns ([Npgsql](https://www.npgsql.org/doc/types/datetime.html)). Instantes de correção, metadados do relógio e snapshots são normalizados nessa precisão para evitar alterações artificiais e diferenças entre resposta e auditoria. O CreationPayload inicial continua preservando sua normalização UTC original, inclusive frações enviadas, para manter a compatibilidade dos retries já registrados; nunca é reconstruído a partir do estado corrigido. A precisão numérica permanece validada, sem arredondamento de medidas.
 
-O gerador automático de comentários XML do OpenAPI 10.0.9 apresentou chaves duplicadas ao documentar Page<T> também aninhado no indicador. A aplicação usa nome de documento em variável para evitar essa interceptação, conforme [comportamento documentado pela Microsoft](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/openapi-comments?view=aspnetcore-10.0#enable-xml-documentation-in-an-aspnet-core-api-project). O XML continua gerado e validado na compilação; summaries, descriptions, formatos, campos obrigatórios e enums são definidos/conferidos explicitamente nos contratos HTTP. Há [relato equivalente no ASP.NET Core](https://github.com/dotnet/aspnetcore/issues/64378); a limitação foi reproduzida localmente nesta versão, sem atualização de pacotes para contorná-la.
+O gerador automático de comentários XML do OpenAPI 10.0.9 gerava chaves duplicadas para `Page<T>` (uma por tipo construído usado nos endpoints), o que fazia `/openapi/v1.json` responder 500 ([relato no ASP.NET Core](https://github.com/dotnet/aspnetcore/issues/64378)). O contorno anterior, nome do documento em variável, deixou de valer quando `AddOpenApi` passou a receber opções (esquema Bearer do Swagger), pois essa sobrecarga é interceptada. Em 12/11/2026 o pacote foi atualizado para 10.0.12, cujo código gerado foi conferido sem chaves duplicadas; os comentários XML voltam a complementar o OpenAPI, e summaries/descriptions continuam definidos explicitamente nos slices.
 
 ## Verificação
 
@@ -301,7 +303,7 @@ Rótulos da panorâmica: desligados por padrão, ativados por checkbox acessíve
 
 O menu de canteiro no editor compõe os serviços HTTP existentes de área/setor, ciclos de cultivo, espécies e plantios. Nenhuma migration nova é necessária para esta integração. O painel lateral começa pela escolha da espécie no catálogo fotográfico paginado (nove itens por página). A seleção é preservada ao paginar. Depois da escolha, canteiros sem vínculo solicitam o salvamento do mapa; em seguida vêm área real, dados do cultivo e quantidade plantada. Fotos são consultadas por espécie e mantidas em memória, com autor, licença, origem e indicação de imagem ilustrativa; ausência/falha da imagem não impede a seleção. O menu consulta novamente os registros confirmados, permite retomar um cultivo pendente e preserva a tentativa original em falhas de rede. O cenário `e2e/interactive-cultivation.spec.ts` usa API/PostgreSQL descartáveis e percorre o fluxo pelo navegador, incluindo criação de espécie, retomada e resposta perdida do plantio.
 
-Para executar o E2E do catálogo completo em banco descartável, definir `HORTA_E2E_EMBRAPA=true` além de `HORTA_E2E_POSTGRES_URL`. O setup importa o pacote offline após criar a autoria técnica, somente no banco exclusivo do teste. No banco de uso, a importação permanece administrativa explícita e exige conciliar nomes manuais duplicados conforme [Catálogo Embrapa](Catalogo_Embrapa.md).
+Para executar o E2E do catálogo completo em banco descartável, definir `HORTA_E2E_EMBRAPA=true` além de `HORTA_E2E_POSTGRES_URL`. O setup importa o pacote offline após criar o Adm fictício (autor da importação), somente no banco exclusivo do teste. No banco de uso, a importação permanece administrativa explícita e exige conciliar nomes manuais duplicados conforme [Catálogo Embrapa](Catalogo_Embrapa.md).
 
 ### Configuração padrão e ficha de plantio
 

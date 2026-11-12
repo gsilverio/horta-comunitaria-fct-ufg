@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Activities.Shared;
 namespace HortaComunitaria.Api.Features.Activities.UpdateInput;
 
 internal sealed record UpdateInputRequest([property: JsonRequired] string Name, [property: JsonRequired] string? Category, [property: JsonRequired] string ReferenceUnit, [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class UpdateInputCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<UpdateInputCommandHandler> logger)
+internal sealed class UpdateInputCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<UpdateInputCommandHandler> logger)
 {
     public async Task<Result<AgriculturalInputResponse>> HandleAsync(Guid id, UpdateInputRequest request, CancellationToken cancellationToken)
     {

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, e2eAdministrator } from './fixtures'
 import type { Page, APIRequestContext } from '@playwright/test'
 import pg from 'pg'
 import { secondGarden, secondSector } from './setup'
@@ -15,7 +15,7 @@ test.beforeEach(async () => {
   try { await db.query('BEGIN; DELETE FROM audit_entries; DELETE FROM irrigation_beds; DELETE FROM irrigations; COMMIT') } finally { await db.end() }
 })
 async function home(page: Page) {
-  await page.goto(`/#/hortas/${garden}/irrigacao/registros`)
+  await page.goto(`/hortas/${garden}/irrigacao`)
   await expect(page.getByRole('heading', { name: 'Irrigação', exact: true })).toBeVisible()
   await page.getByLabel('De', { exact: true }).fill('2026-10-08')
   await page.getByLabel('Até', { exact: true }).fill('2026-10-08')
@@ -72,7 +72,7 @@ test('percurso real 120 → 100 → Invalid/NoData, com quatro canteiros e hist�
   const history = await request.get(`${path()}/irrigations/${created.id}/history`)
   const audit = await history.json() as { items: { before: { volumeLiters: number } | null; after: { volumeLiters: number }; actor: { displayName: string } }[] }
   expect(audit.items[0].before?.volumeLiters).toBe(120); expect(audit.items[0].after.volumeLiters).toBe(100)
-  expect(audit.items[0].actor.displayName).toBe('Operador de demonstração')
+  expect(audit.items[0].actor.displayName).toBe(e2eAdministrator.displayName)
   await page.getByRole('button', { name: 'Invalidar registro' }).click()
   await page.getByLabel('Motivo da invalidação *').fill('Registro lançado por engano')
   await page.getByRole('button', { name: 'Confirmar invalidação' }).click()
@@ -218,7 +218,7 @@ test('erro na consulta oferece recuperação sem fabricar dados', async ({ page 
   await page.route('**/api/v1/gardens/*/irrigations?*', async route => {
     if (unavailable) await route.abort('failed'); else await route.continue()
   })
-  await page.goto(`/#/hortas/${garden}/irrigacao/registros`)
+  await page.goto(`/hortas/${garden}/irrigacao`)
   await expect(page.getByRole('alert')).toBeVisible()
   await expect(page.getByText('Não foi possível acessar a API.', { exact: false })).toBeVisible()
   unavailable = false

@@ -12,7 +12,7 @@ namespace HortaComunitaria.Api.Features.Cultivation.ConfigureCultivarVisualGrowt
 
 internal sealed record ConfigureCultivarVisualGrowthRequest([property: JsonRequired] int? VisualGrowthDays, [property: JsonRequired] int? VisualHarvestDays,
     [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class ConfigureCultivarVisualGrowthCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<ConfigureCultivarVisualGrowthCommandHandler> logger)
+internal sealed class ConfigureCultivarVisualGrowthCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<ConfigureCultivarVisualGrowthCommandHandler> logger)
 {
     public async Task<Result<CultivarResponse>> HandleAsync(Guid speciesId, Guid id, ConfigureCultivarVisualGrowthRequest request, CancellationToken cancellationToken)
     {

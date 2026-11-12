@@ -13,7 +13,7 @@ using Npgsql;
 namespace HortaComunitaria.Api.Features.Activities.InactivateParticipant;
 
 internal sealed record InactivateParticipantRequest([property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class InactivateParticipantCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<InactivateParticipantCommandHandler> logger)
+internal sealed class InactivateParticipantCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<InactivateParticipantCommandHandler> logger)
 {
     public async Task<Result<ParticipantResponse>> HandleAsync(Guid gardenId, Guid id, InactivateParticipantRequest request, CancellationToken cancellationToken)
     {

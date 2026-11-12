@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Activities.Shared;
 namespace HortaComunitaria.Api.Features.Activities.CreateInstitution;
 
 internal sealed record CreateInstitutionRequest([property: JsonRequired] string Name, string? Acronym, string? Type);
-internal sealed class CreateInstitutionCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CreateInstitutionCommandHandler> logger)
+internal sealed class CreateInstitutionCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CreateInstitutionCommandHandler> logger)
 {
     public async Task<Result<InstitutionResponse>> HandleAsync(CreateInstitutionRequest request, CancellationToken cancellationToken)
     {

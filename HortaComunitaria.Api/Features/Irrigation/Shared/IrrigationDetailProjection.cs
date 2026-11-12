@@ -42,7 +42,7 @@ internal static class IrrigationDetailProjection
                                 irrigation.FlowRateLitersPerMinute, irrigation.VolumeSource, irrigation.VolumeMethod,
                                 irrigation.Status, irrigation.ResponsibleParticipantId, irrigation.Notes,
                                 irrigation.Validity, irrigation.Version, irrigation.RecordedAt, irrigation.UpdatedAt,
-                                new RecordedByResponse(author.Id, author.DisplayName, author.AuthenticationIdentifier == "demo:operator"),
+                                new RecordedByResponse(author.Id, author.DisplayName, author.IsDemonstration),
                                 Array.Empty<IrrigatedBedResponse>()))
                             .TagWith("Irrigation.Detail").SingleOrDefaultAsync(cancellationToken);
         if (detail is null) return null;

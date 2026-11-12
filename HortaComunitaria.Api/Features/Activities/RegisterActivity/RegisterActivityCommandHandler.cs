@@ -11,7 +11,7 @@ using HortaComunitaria.Api.Features.Activities.Shared;
 namespace HortaComunitaria.Api.Features.Activities.RegisterActivity;
 
 internal sealed record RegisterActivityRequest([property: JsonRequired] Guid OperationId, [property: JsonRequired] string Title, [property: JsonRequired] string Category, [property: JsonRequired] DateOnly PerformedOn, string? Description, Guid? BedId, Guid? SectorId, Guid? CycleId, Guid? OccurrenceId, bool? IsOperational, bool IsSocial, bool IsEducational, string? Objective, string? Modality, int? ReportedAudienceTotal, bool? AudienceListComplete, [property: JsonRequired] ActivityParticipantRequest[]? Participants, [property: JsonRequired] InputUsageRequest[]? InputUsages, [property: JsonRequired] ActivityInstitutionRequest[]? Institutions);
-internal sealed class RegisterActivityCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<RegisterActivityCommandHandler> logger)
+internal sealed class RegisterActivityCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<RegisterActivityCommandHandler> logger)
 {
     public async Task<Result<CreatedActivityResponse>> HandleAsync(Guid gardenId, RegisterActivityRequest request, CancellationToken cancellationToken)
     {

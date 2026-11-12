@@ -9,6 +9,7 @@ import { PageHeader } from "./PageHeader";
 import { RecordTabs } from "./RecordTabs";
 import type { RecordTab } from "./RecordTabs";
 import type { useRecord } from "../hooks/useRecord";
+import { useCanManage } from "../features/auth/hooks/useAuth";
 
 /**
  * Detalhe padrão: cabeçalho com a ação principal e abas do mesmo registro.
@@ -59,7 +60,9 @@ export function RecordDetail<T>({
   requireActiveGarden?: boolean;
 }) {
   const garden = useGardenState();
-  const canChange = active && (!requireActiveGarden || garden.isActive);
+  // Em estrutura e catálogos, editar e inativar são do perfil Adm; nas demais páginas, ambos os perfis alteram.
+  const canManage = useCanManage();
+  const canChange = canManage && active && (!requireActiveGarden || garden.isActive);
   const statusLabel = catalog ? (active ? "Ativo" : "Inativo") : active ? "Válido" : "Invalidado";
   const editButton = state.detail.data && canChange && (
     <button className="secondary" disabled={state.busy} onClick={edit}>

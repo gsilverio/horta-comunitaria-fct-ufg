@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Activities.Shared;
 namespace HortaComunitaria.Api.Features.Activities.UpdateInstitution;
 
 internal sealed record UpdateInstitutionRequest([property: JsonRequired] string Name, [property: JsonRequired] string? Acronym, [property: JsonRequired] string? Type, [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class UpdateInstitutionCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<UpdateInstitutionCommandHandler> logger)
+internal sealed class UpdateInstitutionCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<UpdateInstitutionCommandHandler> logger)
 {
     public async Task<Result<InstitutionResponse>> HandleAsync(Guid id, UpdateInstitutionRequest request, CancellationToken cancellationToken)
     {

@@ -14,7 +14,7 @@ namespace HortaComunitaria.Api.Features.Irrigation.InvalidateIrrigation;
 /// <summary>Invalidação exige a versão observada e motivo; não recebe autoria do cliente.</summary>
 internal sealed record InvalidateIrrigationRequest([property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
 
-internal sealed class InvalidateIrrigationCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock,
+internal sealed class InvalidateIrrigationCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock,
     ILogger<InvalidateIrrigationCommandHandler> logger)
 {
     public async Task<Result<IrrigationDetailResponse>> HandleAsync(Guid gardenId, Guid id, InvalidateIrrigationRequest request,

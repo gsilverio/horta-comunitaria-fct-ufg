@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.CorrectHarvest;
 
 internal sealed record CorrectHarvestRequest([property: JsonRequired] Guid CycleId, [property: JsonRequired] DateOnly HarvestedOn, [property: JsonRequired] decimal FreshMassKg, [property: JsonRequired] decimal? UsableMassKg, [property: JsonRequired] string? LossReason, [property: JsonRequired] Guid? ResponsibleParticipantId, [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class CorrectHarvestCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CorrectHarvestCommandHandler> logger)
+internal sealed class CorrectHarvestCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CorrectHarvestCommandHandler> logger)
 {
     public async Task<Result<HarvestResponse>> HandleAsync(Guid gardenId, Guid id, CorrectHarvestRequest request, CancellationToken cancellationToken)
     {

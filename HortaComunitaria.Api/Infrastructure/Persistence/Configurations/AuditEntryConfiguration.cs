@@ -1,6 +1,6 @@
 using HortaComunitaria.Api.Domain.Gardens;
 using HortaComunitaria.Api.Domain.History;
-using HortaComunitaria.Api.Domain.Identity;
+using HortaComunitaria.Api.Infrastructure.Identity;
 using IrrigationRecord = HortaComunitaria.Api.Domain.Irrigation.Irrigation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -21,7 +21,7 @@ internal sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEn
         builder.Property(x => x.Before).HasColumnType("jsonb");
         builder.Property(x => x.After).HasColumnType("jsonb").IsRequired();
         builder.HasOne<Garden>().WithMany().HasForeignKey(x => x.GardenId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
         // FK opcional mantém a proteção do histórico de irrigação ao ampliar a auditoria a outros registros.
         builder.HasOne<IrrigationRecord>().WithMany().HasForeignKey(x => new { x.GardenId, x.IrrigationId })
             .HasPrincipalKey(x => new { x.GardenId, x.Id }).OnDelete(DeleteBehavior.Restrict);

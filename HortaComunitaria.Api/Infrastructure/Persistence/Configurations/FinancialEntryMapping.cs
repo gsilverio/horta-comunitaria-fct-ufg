@@ -24,7 +24,7 @@ internal sealed class FinancialEntryMapping : IEntityTypeConfiguration<Financial
         builder.HasIndex(x => new { x.GardenId, x.OperationId }).IsUnique().HasDatabaseName("ux_financial_entries_garden_operation");
         builder.HasIndex(x => new { x.GardenId, x.EntryDate, x.Id }).IsDescending(false, true, true);
         builder.HasOne<Garden>().WithMany().HasForeignKey(x => x.GardenId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<Domain.Identity.User>().WithMany().HasForeignKey(x => x.RecordedByUserId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Identity.AppUser>().WithMany().HasForeignKey(x => x.RecordedByUserId).OnDelete(DeleteBehavior.Restrict);
         builder.Property(x => x.Description).HasMaxLength(1000).IsRequired(); builder.Property(x => x.Category).HasMaxLength(120).IsRequired(); builder.Property(x => x.AmountBrl).HasPrecision(14, 2); builder.Property(x => x.Nature).HasColumnType("financial_nature"); builder.HasOne<Bed>().WithMany().HasForeignKey(x => new { x.GardenId, x.BedId }).HasPrincipalKey(x => new { x.GardenId, x.Id }).OnDelete(DeleteBehavior.Restrict); builder.HasOne<CultivationCycle>().WithMany().HasForeignKey(x => new { x.GardenId, x.CycleId }).HasPrincipalKey(x => new { x.GardenId, x.Id }).OnDelete(DeleteBehavior.Restrict);
     }
 }

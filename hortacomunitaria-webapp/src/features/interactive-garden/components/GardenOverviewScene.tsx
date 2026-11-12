@@ -1,12 +1,13 @@
+import { linkTo, withReturn } from '../../../routes/routes'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent, ReactNode } from 'react'
 import { Info, Layers, Maximize2, Minimize2, Minus, Plus, Scan } from 'lucide-react'
-import { routeHref } from '../../../hooks/useRoute'
 import { useCanvasWheel, wheelZoomFactor } from '../hooks/useCanvasWheel'
 import { elementArea, elementBounds, pointInPolygon } from '../geometry'
 import type { DemoElement, DemoGarden, RectangleElement } from '../types'
 import { bedCropSymbols, cropAsset, cropDensity, stageLabels } from '../cropVisuals'
 import type { GardenCrop } from '../cropVisuals'
+import { BedCropDetails } from './BedCropDetails'
 
 interface Point { x: number; y: number }
 interface Camera {
@@ -252,8 +253,25 @@ function SceneLife({ element, camera, crops, elevation = 0 }: { element: DemoEle
       const projected = project(point, camera)
       const asset = cropAsset(symbol.crop)
       return <g key={`${symbol.crop.cycleId}-${symbol.index}`} data-crop-stage={symbol.crop.stage} data-density={cropDensity(symbol.crop)}>
-        <image href={asset.url} x={projected.x - spriteSize / 2} y={projected.y - elevation - spriteSize * 1.05} width={spriteSize} height={spriteSize * 1.25} preserveAspectRatio="xMidYMid meet" style={{ imageRendering: 'pixelated' }} pointerEvents="none" />
+        <image className={symbol.crop.stage === 'HarvestExpected' ? 'garden-scene-ready-sprite' : undefined} href={asset.url} x={projected.x - spriteSize / 2} y={projected.y - elevation - spriteSize * 1.05} width={spriteSize} height={spriteSize * 1.25} preserveAspectRatio="xMidYMid meet" style={{ imageRendering: 'pixelated' }} pointerEvents="none" />
       </g>
+    })}
+  </g>
+}
+
+/** Prazo de colheita da espécie/cultivar atingido a partir da data de plantio; previsão, não maturidade confirmada. */
+function isReadyForHarvest(crop: GardenCrop) {
+  return crop.stage === 'HarvestExpected'
+}
+
+/** Faíscas sobre o canteiro pronto: reforço visual do brilho, sem alterar a quantidade de símbolos. */
+function ReadySparkles({ element, camera, elevation }: { element: DemoElement; camera: Camera; elevation: number }) {
+  const size = Math.max(5, Math.min(12, camera.scale * .42))
+  return <g className="garden-scene-ready-sparkles" aria-hidden="true" pointerEvents="none">
+    {cropPoints(element, 3).map((point, index) => {
+      const p = project(point, camera)
+      const x = p.x + (index - 1) * size * .6, y = p.y - elevation - size * (2.4 + index % 2)
+      return <path key={index} style={{ animationDelay: `${index * 420}ms` }} d={`M ${x} ${y - size} Q ${x} ${y} ${x + size} ${y} Q ${x} ${y} ${x} ${y + size} Q ${x} ${y} ${x - size} ${y} Q ${x} ${y} ${x} ${y - size} Z`} fill="#fff6c4" />
     })}
   </g>
 }
@@ -346,8 +364,9 @@ function SceneElement({ element, crops, camera, selected, hovered, onSelect, onH
   const projected = footprint.map((point) => ({ ...point, y: point.y - wallDepth }))
   const shadow = footprint.map((point) => ({ x: point.x + 3, y: point.y + 4 }))
   const isBed = element.role === 'bed'
+  const ready = isBed && crops.some(isReadyForHarvest)
   const walls = isBed ? bedWallSegments(projected, wallDepth) : []
-  return <g className={stateClass} role="button" tabIndex={0} aria-pressed={selected} aria-label={elementTitle(element)} {...handlers}>
+  return <g className={stateClass} role="button" tabIndex={0} aria-pressed={selected} aria-label={`${elementTitle(element)}${ready ? ', pronto para colheita' : ''}`} data-ready={ready || undefined} {...handlers}>
     <polygon points={pointsAttribute(shadow)} className="garden-scene-object-shadow" />
     {walls.map(({ wall, point, next, index }) => {
       const length = Math.hypot(points[(index + 1) % points.length].x - points[index].x, points[(index + 1) % points.length].y - points[index].y)
@@ -368,8 +387,10 @@ function SceneElement({ element, crops, camera, selected, hovered, onSelect, onH
     {walls.map(({ point, next, index }) => <path key={`${element.id}-rim-${index}`} d={`M ${point.x} ${point.y} L ${next.x} ${next.y}`} stroke="#e2a35b" strokeWidth="3.4" strokeLinecap="round" opacity=".9" pointerEvents="none" />)}
 
     {!isBed && <path d={`M ${projected[0].x} ${projected[0].y} L ${projected[1].x} ${projected[1].y}`} stroke="#f5dcae" strokeWidth="2" opacity=".65" />}
+    {ready && <polygon className="garden-scene-ready-glow" points={pointsAttribute(projected)} fill="#ffe58a" fillOpacity=".12" stroke="#ffe27a" strokeWidth="5" strokeLinejoin="round" filter="url(#garden-scene-ready-blur)" pointerEvents="none" />}
     <SceneLife element={element} crops={crops} camera={camera} elevation={wallDepth} />
-    <title>{elementTitle(element)}</title>
+    {ready && <ReadySparkles element={element} camera={camera} elevation={wallDepth} />}
+    <title>{elementTitle(element)}{ready ? ' · pronto para colheita' : ''}</title>
   </g>
 }
 
@@ -461,7 +482,7 @@ const EMPTY_CROPS: readonly GardenCrop[] = []
  * Viewport da panorâmica: a cena ocupa a área inteira e os controles ficam em um HUD sobreposto.
  * O motor (projeção, câmera, assets, fases e densidade) permanece o mesmo; muda apenas a moldura e a interação ao redor.
  */
-export function GardenOverviewScene({ gardenId, garden, crops, heading, actions, legendNote }: { gardenId: string; garden: DemoGarden; crops?: readonly GardenCrop[]; heading?: ReactNode; actions?: ReactNode; legendNote?: ReactNode }) {
+export function GardenOverviewScene({ gardenId, garden, crops, sceneDate, heading, actions, legendNote }: { gardenId: string; garden: DemoGarden; crops?: readonly GardenCrop[]; sceneDate: string; heading?: ReactNode; actions?: ReactNode; legendNote?: ReactNode }) {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const [fullscreen, setFullscreen] = useState(false)
   const [legendOpen, setLegendOpen] = useState(false)
@@ -649,6 +670,7 @@ export function GardenOverviewScene({ gardenId, garden, crops, heading, actions,
         <clipPath id="garden-scene-terrain-clip"><polygon points={pointsAttribute(ground)} /></clipPath>
         <pattern id="garden-scene-cultivated-texture" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform={textureTransform(camera)}><image href={CULTIVATED_GRASS_URL} width="5" height="5" preserveAspectRatio="none" style={{ imageRendering: 'pixelated' }} /></pattern>
         <filter id="garden-scene-soft-shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7" /></filter>
+        <filter id="garden-scene-ready-blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
       </defs>
       <rect width={VIEWBOX.width} height={VIEWBOX.height} fill="url(#garden-scene-backdrop)" />
       <polygon points={pointsAttribute(ground.map(point => ({ x: point.x, y: point.y + camera.scale * .45 + 10 })))} fill="#050c08" opacity=".45" filter="url(#garden-scene-soft-shadow)" />
@@ -694,6 +716,7 @@ export function GardenOverviewScene({ gardenId, garden, crops, heading, actions,
     {legendOpen && <section id="garden-scene-legend" className="scene-legend" aria-label="Legenda da cena">
       <h3>Fases do cultivo</h3>
       <ul>{Object.entries(stageLabels).map(([stage, label]) => <li key={stage}>{label}</li>)}</ul>
+      <p>Canteiros com contorno dourado e brilho já atingiram o prazo de colheita configurado na espécie ou cultivar, contado a partir da data de plantio.</p>
       <h3>Como ler</h3>
       <p>Norte para o topo da cena. Desenho sem escala métrica; posições e formas vêm da última configuração salva.</p>
       {legendNote}
@@ -702,8 +725,10 @@ export function GardenOverviewScene({ gardenId, garden, crops, heading, actions,
     </section>}
   </div>
     {selectedElement && <aside className="garden-scene-inspector" aria-live="polite" aria-label={`Dados de ${selectedElement.name}`}>
-      <div className="garden-scene-inspector-header"><div><span className="eyebrow">{elementRole(selectedElement)} selecionado</span><strong>{selectedElement.name}</strong></div><button type="button" aria-label="Fechar detalhes do elemento" onClick={() => selectElement(undefined)}>×</button></div>
-      <dl className="garden-scene-facts">
+      {selectedElement.role === 'bed' ? <div className="garden-scene-inspector-header"><div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1"><strong className="!mt-0">{selectedElement.name}</strong>{selectedElement.sectorName && <span className="garden-scene-sector-tag">{selectedElement.sectorName}</span>}</div><button type="button" aria-label="Fechar detalhes do canteiro" onClick={() => selectElement(undefined)}>×</button></div>
+        : <div className="garden-scene-inspector-header"><div><span className="eyebrow">{elementRole(selectedElement)} selecionado</span><strong>{selectedElement.name}</strong></div><button type="button" aria-label="Fechar detalhes do elemento" onClick={() => selectElement(undefined)}>×</button></div>}
+      {selectedElement.role === 'bed' ? (selectedElement.entityId ? <BedCropDetails crops={crops === undefined ? undefined : cropsByBed.get(selectedElement.entityId) ?? EMPTY_CROPS} on={sceneDate} /> : <p className="mt-3 text-sm">Elemento do rascunho, sem vínculo com plantio.</p>)
+      : <dl className="garden-scene-facts">
         <div><dt>Formato</dt><dd>{elementKind(selectedElement)}</dd></div>
         {selectedElement.entityId && <div><dt>Origem</dt><dd>{selectedElement.role === 'sector' ? 'Setor cadastrado' : 'Canteiro cadastrado'}</dd></div>}
         {selectedElement.sectorName && <div><dt>Setor</dt><dd>{selectedElement.sectorName}</dd></div>}
@@ -712,17 +737,8 @@ export function GardenOverviewScene({ gardenId, garden, crops, heading, actions,
         {selectedElement.shape === 'rectangle' && !selectedElement.mandala && <div><dt>Dimensões</dt><dd>{formatMeters(selectedElement.width)} × {formatMeters(selectedElement.height)} u</dd></div>}
         {selectedElement.shape === 'rectangle' && selectedElement.mandala && <div><dt>Posição radial</dt><dd>Raio {formatMeters(selectedElement.mandala.ringRadius)} u · {formatMeters(selectedElement.mandala.angleDeg)}°</dd></div>}
         {selectedElement.isEstimated && <div><dt>Dimensão</dt><dd>Estimativa a partir da área cadastrada</dd></div>}
-        {selectedElement.role === 'bed' && !selectedElement.entityId && <div><dt>Cultivo</dt><dd>Elemento do rascunho, sem vínculo com plantio</dd></div>}
-        {selectedElement.role === 'bed' && selectedElement.entityId && <div><dt>Cultivos</dt><dd>{crops === undefined ? 'Dados de cultivo indisponíveis' : cropsByBed.get(selectedElement.entityId)?.length ? 'Conforme registros na data da cena' : 'Nenhum cultivo vigente'}</dd></div>}
-      </dl>
-      {selectedElement.role === 'bed' && selectedElement.entityId && <a className="action-link mt-3 w-full justify-center" href={routeHref(gardenId, 'horta', 'canteiros', selectedElement.entityId, new URLSearchParams({ returnTo: 'panorama' }))}>Ver detalhes do canteiro</a>}
-      {selectedElement.entityId && cropsByBed.get(selectedElement.entityId)?.map(crop => <div key={crop.cycleId} className="mt-3 border-t border-horta-line pt-3 text-sm">
-        <strong>{crop.speciesName}{crop.cultivarName ? ` · ${crop.cultivarName}` : ''}</strong>
-        <p className="my-1">{stageLabels[crop.stage]}</p>
-        <p className="my-1">{crop.initialQuantity === null ? 'Quantidade inicial não informada' : `${crop.initialQuantity.toLocaleString('pt-BR')} plantas iniciais · densidade visual ${cropDensity(crop)?.toLocaleLowerCase('pt-BR') ?? 'indisponível'}`}</p>
-        {crop.hasReplacements && <p className="my-1">Há reposições; não somadas à referência visual. Sobrevivência não inferida.</p>}
-        {cropAsset(crop).generic ? <p className="my-1">Ícone genérico: espécie sem asset específico.</p> : crop.cultivarName && cropAsset(crop).sharedWithSpecies && <p className="my-1">Ilustração compartilhada com a espécie.</p>}
-      </div>)}
+      </dl>}
+      {selectedElement.role === 'bed' && selectedElement.entityId && <a className="action-link mt-3 w-full justify-center" href={linkTo(gardenId, 'horta/canteiros', selectedElement.entityId, withReturn({}, linkTo(gardenId, 'visao-geral')))}>Ver detalhes do canteiro</a>}
     </aside>}
   </div>
 }

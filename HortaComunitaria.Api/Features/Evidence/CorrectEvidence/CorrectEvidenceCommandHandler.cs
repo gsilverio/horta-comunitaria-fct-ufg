@@ -12,7 +12,7 @@ namespace HortaComunitaria.Api.Features.Evidence.CorrectEvidence;
 
 internal sealed record CorrectEvidenceRequest([property: JsonRequired] string Title, string? Description, DateOnly? CapturedOn, [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
 
-internal sealed class CorrectEvidenceCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CorrectEvidenceCommandHandler> logger)
+internal sealed class CorrectEvidenceCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CorrectEvidenceCommandHandler> logger)
 {
     public async Task<Result<EvidenceResponse>> HandleAsync(Guid gardenId, Guid id, CorrectEvidenceRequest request, CancellationToken cancellationToken)
     {

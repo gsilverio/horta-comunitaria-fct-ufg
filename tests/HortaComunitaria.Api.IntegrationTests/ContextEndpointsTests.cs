@@ -18,7 +18,7 @@ public sealed class ContextEndpointsTests(PostgresFixture postgres) : IClassFixt
     private static string GardenPath => $"/api/v1/gardens/{DemoIds.Garden}";
 
     [Fact]
-    public async Task Lists_explicit_test_context_and_keeps_technical_author_separate()
+    public async Task Lists_explicit_test_context_and_keeps_authors_out_of_participants()
     {
         using var factory = await postgres.CreateFactoryAsync();
         using var client = factory.CreateClient();
@@ -32,13 +32,14 @@ public sealed class ContextEndpointsTests(PostgresFixture postgres) : IClassFixt
             Assert.Equal(2, await db.IrrigationSectors.CountAsync());
             Assert.Equal(4, await db.Beds.CountAsync());
             Assert.Equal(ids, await db.BedSectorAssignments.OrderBy(x => x.Id).Select(x => x.Id).ToListAsync());
-            Assert.Equal("demo:operator", (await db.Users.SingleAsync()).AuthenticationIdentifier);
+            Assert.Equal(TestAccounts.All.Select(x => x.Id).Order(), (await db.Users.Select(x => x.Id).ToListAsync()).Order());
         });
         var participants = await client.GetFromJsonAsync<Page<ListParticipantsResponse>>(GardenPath + "/participants");
         Assert.Equal(DemoIds.Participant, Assert.Single(participants!.Items).Id);
         var raw = await client.GetStringAsync(GardenPath + "/participants");
-        Assert.DoesNotContain("authenticationIdentifier", raw);
+        Assert.DoesNotContain("email", raw, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(DemoIds.Operator.ToString(), raw);
+        Assert.DoesNotContain(DemoIds.Administrator.ToString(), raw);
     }
 
     [Fact]
@@ -58,7 +59,8 @@ public sealed class ContextEndpointsTests(PostgresFixture postgres) : IClassFixt
             Assert.Equal(0, await db.Beds.CountAsync());
             Assert.Equal(0, await db.BedSectorAssignments.CountAsync());
             Assert.Equal(0, await db.Participants.CountAsync());
-            Assert.Equal(0, await db.Users.CountAsync());
+            // Só as contas criadas pela fixture de autenticação; o startup não cria usuários nem dados.
+            Assert.Equal(TestAccounts.All.Count, await db.Users.CountAsync());
         });
     }
 

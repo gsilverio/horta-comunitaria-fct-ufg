@@ -1,4 +1,4 @@
-import { readRoute } from "../../../hooks/useRoute"
+import { readRoute } from '../../../routes/navigation'
 import { useState } from "react"
 import { EditorFrame } from "../../../components/EditorFrame"
 import { Field, Facts, Toggle, Group } from "../../../components/Fields"

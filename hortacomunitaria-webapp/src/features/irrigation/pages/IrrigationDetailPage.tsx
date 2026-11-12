@@ -2,6 +2,7 @@ import { RecordTabs } from '../../../components/RecordTabs'
 import { useGardenState } from "../../../hooks/useGardenState"
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Failure } from '../../../components/Feedback'
+import { RequiredMark } from '../../../components/Fields'
 import { apiFailure } from '../../../services/http'
 import type { ApiFailure } from '../../../types/api'
 import { formatInstant, formatNumber, formatVolume, statusLabel } from '../formValues'
@@ -54,7 +55,7 @@ export function IrrigationDetailPage({ garden, id, back, changed, sectors, parti
       </>}
       {invalidating && <form className="invalidation" onSubmit={event => { event.preventDefault(); void invalidate() }}><h3>Invalidar com motivo</h3><p>Os dados permanecerão no histórico e sairão do indicador.</p>{error && <Failure error={error} />}
         {error?.status === 409 && <button className="secondary" type="button" onClick={refresh}>Recarregar registro para revisão</button>}
-        <label htmlFor="invalidation-reason">Motivo da invalidação *<textarea id="invalidation-reason" required maxLength={500} rows={3} value={reason} disabled={busy} aria-invalid={!!error?.fields.reason} onChange={event => setReason(event.target.value)} /></label>
+        <label htmlFor="invalidation-reason">Motivo da invalidação<RequiredMark /><textarea id="invalidation-reason" required maxLength={500} rows={3} value={reason} disabled={busy} aria-invalid={!!error?.fields.reason} onChange={event => setReason(event.target.value)} /></label>
         <div className="mt-6 mb-4 flex flex-wrap justify-end gap-3 max-sm:[&>button]:flex-1"><button className="secondary" type="button" disabled={busy} onClick={() => setInvalidating(false)}>Cancelar invalidação</button><button className="danger" disabled={busy || !detail || detail.validity === 'Invalid' || error?.status === 409}>{busy ? 'Invalidando…' : 'Confirmar invalidação'}</button></div></form>}
     </section> }, { id: 'historico', label: 'Histórico', content: history.loading ? <p role="status">Carregando histórico…</p> : history.error ? <Failure error={history.error} retry={refresh} /> : history.data && <HistoryPanel data={history.data} changePage={setHistoryPage} sectors={sectors} participants={participants} /> }]} />
   </>

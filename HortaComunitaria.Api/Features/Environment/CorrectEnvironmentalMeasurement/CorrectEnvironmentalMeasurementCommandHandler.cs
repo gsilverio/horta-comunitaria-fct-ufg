@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Environment.Shared;
 namespace HortaComunitaria.Api.Features.Environment.CorrectEnvironmentalMeasurement;
 
 internal sealed record CorrectEnvironmentalMeasurementRequest([property: JsonRequired] Guid SamplingPointId, [property: JsonRequired] Guid VariableId, [property: JsonRequired] DateTimeOffset CollectedAt, [property: JsonRequired] decimal Value, [property: JsonRequired] string Unit, [property: JsonRequired] string Method, [property: JsonRequired] MeasurementQuality Quality, [property: JsonRequired] Guid? ResponsibleParticipantId, [property: JsonRequired] string? Notes, [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class CorrectEnvironmentalMeasurementCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CorrectEnvironmentalMeasurementCommandHandler> logger)
+internal sealed class CorrectEnvironmentalMeasurementCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CorrectEnvironmentalMeasurementCommandHandler> logger)
 {
     public async Task<Result<EnvironmentalMeasurementResponse>> HandleAsync(Guid gardenId, Guid id, CorrectEnvironmentalMeasurementRequest request, CancellationToken cancellationToken)
     {

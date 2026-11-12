@@ -12,7 +12,7 @@ namespace HortaComunitaria.Api.Features.Evidence.InvalidateEvidence;
 
 internal sealed record InvalidateEvidenceRequest([property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
 
-internal sealed class InvalidateEvidenceCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<InvalidateEvidenceCommandHandler> logger)
+internal sealed class InvalidateEvidenceCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<InvalidateEvidenceCommandHandler> logger)
 {
     public async Task<Result<EvidenceResponse>> HandleAsync(Guid gardenId, Guid id, InvalidateEvidenceRequest request, CancellationToken cancellationToken)
     {

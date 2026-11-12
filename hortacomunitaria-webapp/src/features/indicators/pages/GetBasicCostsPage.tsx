@@ -1,3 +1,5 @@
+import type { AppRoute } from '../../../routes/routes'
+import { linkTo, withReturn } from '../../../routes/routes'
 import { formatDate } from "../../../services/dates"
 import { useCallback } from "react"
 import { IndicatorPanel } from "../../../components/IndicatorPanel"
@@ -6,12 +8,11 @@ import { Failure } from "../../../components/Feedback"
 import { useListFilters } from "../../../hooks/useListFilters"
 import { useLookups } from "../../../hooks/useLookups"
 import { useRemote } from "../../../hooks/useRemote"
-import { indicatorOriginHref as routeHref } from "../../../services/indicatorOriginHref"
 import { enumLabels } from "../../../services/labels"
 import { formatNumber } from "../../irrigation/formValues"
-import type { RecordRoute } from "../../../types/records"
+
 import { indicatorApi } from "../services/indicatorApi"
-export function GetBasicCostsPage({ route }: { route: RecordRoute }) {
+export function GetBasicCostsPage({ route }: { route: AppRoute }) {
 const filters = useListFilters(route, ['from', 'to', 'category', 'bedId', 'cycleId'], true)
 const options = useLookups(route.garden, ['bed', 'cultivationCycle'])
 const load = useCallback((signal: AbortSignal) => indicatorApi.getBasicCosts(route.garden, { page: filters.page, pageSize: 5, from: filters.values.from || undefined, to: filters.values.to || undefined, category: filters.values.category || undefined, bedId: filters.values.bedId || undefined, cycleId: filters.values.cycleId || undefined }, signal), [route.garden, filters.page, filters.values.from, filters.values.to, filters.values.category, filters.values.bedId, filters.values.cycleId])
@@ -23,5 +24,5 @@ return <IndicatorPanel title="Custos previstos e realizados" unit="BRL · difere
 <SelectField name="bedId" label="Canteiro" value={filters.draft.bedId} change={value => filters.change("bedId", value)} options={options.data?.bed ?? []} />
 <SelectField name="cycleId" label="Ciclo" value={filters.draft.cycleId} change={value => filters.change("cycleId", value)} options={options.data?.cultivationCycle ?? []} />
 {options.error && <Failure error={options.error} retry={options.retry} />}</>}
->{record?.origins.items.map((item, index) => <li key={index} className="border-b border-horta-line py-3"><Facts items={[{ label: 'Data de competência', value: formatDate(item.entryDate) }, { label: 'Categoria', value: item.category }, { label: 'Natureza', value: enumLabels[item.nature] }, { label: 'Valor (BRL)', value: formatNumber(item.amountBrl) }, { label: 'Canteiro', value: item.bedId === null ? "Não informado" : item.bedId }, { label: 'Ciclo', value: item.cycleId === null ? "Não informado" : item.cycleId }]} /><a className="mt-4 inline-block font-semibold underline" href={routeHref(route.garden, 'custos', 'registros', item.id, new URLSearchParams({ from: filters.values.from, to: filters.values.to, category: filters.values.category, bedId: filters.values.bedId, cycleId: filters.values.cycleId }))}>Abrir origem</a></li>)}</IndicatorPanel>
+>{record?.origins.items.map((item, index) => <li key={index} className="border-b border-horta-line py-3"><Facts items={[{ label: 'Data de competência', value: formatDate(item.entryDate) }, { label: 'Categoria', value: item.category }, { label: 'Natureza', value: enumLabels[item.nature] }, { label: 'Valor (BRL)', value: formatNumber(item.amountBrl) }, { label: 'Canteiro', value: item.bedId === null ? "Não informado" : item.bedId }, { label: 'Ciclo', value: item.cycleId === null ? "Não informado" : item.cycleId }]} /><a className="mt-4 inline-block font-semibold underline" href={linkTo(route.garden, 'custos', item.id, withReturn(new URLSearchParams({ from: filters.values.from, to: filters.values.to, category: filters.values.category, bedId: filters.values.bedId, cycleId: filters.values.cycleId })))}>Abrir origem</a></li>)}</IndicatorPanel>
 }

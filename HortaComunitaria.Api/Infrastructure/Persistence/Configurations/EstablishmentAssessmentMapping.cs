@@ -24,7 +24,7 @@ internal sealed class EstablishmentAssessmentMapping : IEntityTypeConfiguration<
         builder.HasIndex(x => new { x.GardenId, x.OperationId }).IsUnique().HasDatabaseName("ux_establishment_assessments_garden_operation");
         builder.HasIndex(x => new { x.GardenId, x.AssessedOn, x.Id }).IsDescending(false, true, true);
         builder.HasOne<Garden>().WithMany().HasForeignKey(x => x.GardenId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<Domain.Identity.User>().WithMany().HasForeignKey(x => x.RecordedByUserId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Identity.AppUser>().WithMany().HasForeignKey(x => x.RecordedByUserId).OnDelete(DeleteBehavior.Restrict);
         builder.Property(x => x.Method).HasMaxLength(200).IsRequired(); builder.Property(x => x.Notes).HasMaxLength(1000); builder.HasOne<Planting>().WithMany().HasForeignKey(x => new { x.GardenId, x.PlantingId }).HasPrincipalKey(x => new { x.GardenId, x.Id }).OnDelete(DeleteBehavior.Restrict); builder.HasOne<Participant>().WithMany().HasForeignKey(x => new { x.GardenId, x.ResponsibleParticipantId }).HasPrincipalKey(x => new { x.GardenId, x.Id }).OnDelete(DeleteBehavior.Restrict);
     }
 }

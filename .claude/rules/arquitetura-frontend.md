@@ -5,7 +5,7 @@ paths:
   - "documentos/planejamento/frontend/**/*"
 ---
 
-<!-- Gerado de .codex/arquitetura-frontend.mdc. Não editar este espelho; executar .claude/scripts/sync-architecture.ps1. -->
+<!-- Gerado de .codex/arquitetura-frontend.mdc. NÃ£o editar este espelho; executar .claude/scripts/sync-architecture.ps1. -->
 
 # Regras de arquitetura do frontend da horta
 
@@ -19,7 +19,8 @@ O `AGENTS.md` da raiz orienta a leitura integral deste documento antes de planej
 - Fontes funcionais: [requisitos 0.0.1](../../documentos/Documento_Tecnico_Requisitos_Horta.md), [planejamento do MVP](../../documentos/planejamento/mvp/README.md), [planejamento completo do frontend](../../documentos/planejamento/frontend/README.md) e plano autorizado do fluxo. Para irrigação, ler o [contrato](../../documentos/planejamento/mvp-irrigacao/Contrato_Fluxo.md), a [etapa 4](../../documentos/planejamento/mvp-irrigacao/Etapa_04_Interface_PO.md) e o OpenAPI real da API. A [modelagem preliminar](../../documentos/arquitetura/Modelagem_Preliminar_Dados_Horta.md) não define contratos TypeScript.
 - Consumir a API HTTP existente. Regras de integridade, autoria, persistência, auditoria e cálculo dos indicadores permanecem no servidor, conforme a [arquitetura do backend](arquitetura-backend.md).
 - Priorizar o fluxo autorizado completo e utilizável. No primeiro fluxo: contexto, registro manual, lista, detalhe, consumo, correção, invalidação e histórico. Não criar telas de módulos futuros apenas para preencher navegação.
-- Autenticação e autorização pertencem ao pós-MVP. A interface local identifica dados fictícios e autoria demonstrativa; responsável pelo trabalho e autor do registro são papéis distintos. Não adicionar login, tokens ou administração de usuários nesta etapa.
+- Autenticação (12/11/2026): `features/auth` guarda o access token somente em memória (`src/services/session.ts`), recupera a sessão pelo cookie HttpOnly de renovação ao abrir, renova uma única vez de forma compartilhada em 401 e encerra a sessão se a renovação falhar. `AuthProvider` mostra a entrada sem alterar o endereço e a troca obrigatória da senha inicial. Nunca guardar tokens em localStorage/sessionStorage nem em variáveis `VITE_*`. Arquivos protegidos (fotografias) são carregados pelo cliente HTTP e exibidos por URL local (blob), pois `<img>` não envia o token.
+- Autorização na interface: o perfil Operador não vê criar/editar/inativar em estrutura e catálogos (`isManagedPage`, `useCanManage`) nem salva o mapa; endereços diretos dessas ações mostram aviso de acesso restrito. A interface apenas oculta; o servidor continua sendo a garantia. Gestão de usuários (`/usuarios`) é exclusiva do Adm; troca da própria senha em `/conta/senha`. Responsável pelo trabalho e autor do registro continuam sendo papéis distintos.
 - Estas regras não iniciam a implementação nem aprovam hipóteses funcionais pendentes. Mudanças na API exigem leitura integral das regras do backend e verificação dos contratos afetados.
 - Preservar a stack existente. Na implementação, fixar versões compatíveis das dependências diretas e do runtime Node, versionar o lockfile e documentar instalação reproduzível com `npm ci`. Não atualizar majors ou adicionar roteador, estado global, cache, biblioteca visual/formulários ou gerador de clientes sem necessidade concreta.
 
@@ -96,7 +97,7 @@ hortacomunitaria-webapp/
 - Mensagens de carregamento/resultado relevantes são anunciadas com aria-live quando necessário. Diálogos têm identificação, foco inicial, restauração do foco e funcionamento por teclado. Não depender apenas de cor para informar situação.
 - Layout utilizável em celular e desktop, com campos, unidades, ações e mensagens legíveis. Não exigir rolagem horizontal para registrar irrigação; adaptar listas/tabelas preservando contexto e ações.
 - Usar Tailwind CSS com o plugin oficial de Vite, versões fixas e import no CSS da aplicação. Layout, espaçamento, responsividade e estados usam utilitários nos componentes. Tokens de cores/tipografia ficam em `@theme`; estilos base e padrões visuais realmente reutilizados podem usar `@layer`/`@apply`. Evitar folhas CSS paralelas que recriem a base do Tailwind ou classes montadas dinamicamente que o scanner não detecte. Não instalar outro design system apenas para o primeiro formulário.
-- Textos destinados às pessoas e documentação em pt-BR; identificadores e código em inglês. Exibir explicitamente a autoria demonstrativa, sem representar o operador técnico como pessoa autenticada.
+- Textos destinados às pessoas e documentação em pt-BR; identificadores e código em inglês. Registros antigos do protótipo continuam identificando a autoria demonstrativa (`isDemonstration`).
 
 ## 8. Qualidade, diagnóstico e entrega
 

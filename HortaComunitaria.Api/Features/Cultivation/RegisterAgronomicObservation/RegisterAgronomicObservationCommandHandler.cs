@@ -11,7 +11,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.RegisterAgronomicObservation;
 
 internal sealed record RegisterAgronomicObservationRequest([property: JsonRequired] Guid OperationId, [property: JsonRequired] Guid CycleId, [property: JsonRequired] DateOnly ObservedOn, [property: JsonRequired] string Category, [property: JsonRequired] string Description, decimal? Measurement, string? Unit, string? Method, Guid? ResponsibleParticipantId);
-internal sealed class RegisterAgronomicObservationCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<RegisterAgronomicObservationCommandHandler> logger)
+internal sealed class RegisterAgronomicObservationCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<RegisterAgronomicObservationCommandHandler> logger)
 {
     public async Task<Result<CreatedAgronomicObservationResponse>> HandleAsync(Guid gardenId, RegisterAgronomicObservationRequest request, CancellationToken cancellationToken)
     {

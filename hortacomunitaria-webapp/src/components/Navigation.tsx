@@ -1,48 +1,64 @@
-import { routeHref } from '../hooks/useRoute'
-import type { RecordRoute } from '../types/records'
-import { modulePages, navigationItems } from './navigationItems'
+import { useLayoutEffect, useRef } from 'react'
+import { areaHomePage, areaOf, linkTo, navigationGroups, pageMeta } from '../routes/routes'
+import type { AppRoute, PageKey } from '../routes/routes'
 import { Icon } from './Icon'
 
-const groups = [
-  { label: 'Acompanhamento', ids: ['visao-geral'] },
-  { label: 'Organização', ids: ['horta', 'atividades', 'ocorrencias', 'custos'] },
-  { label: 'No campo', ids: ['irrigacao', 'ambiente', 'cultivo', 'producao', 'fotos'] },
-]
+/** Altura mínima da lista de páginas (três itens) antes de o menu inteiro passar a rolar. */
+const MIN_PAGES_HEIGHT = 120
 
-function queryFor(route: RecordRoute, resource: string) {
+/** Filtros que acompanham a troca de página dentro da mesma área. */
+function queryFor(route: AppRoute, target: PageKey) {
   const query = new URLSearchParams()
-  if (route.module === 'visao-geral') for (const key of ['from', 'to']) { const value = route.search.get(key); if (value) query.set(key, value) }
-  if (route.module === 'cultivo' && ['cultivares', 'origens'].includes(resource)) {
-    const species = route.resource === 'especies' && route.id && route.id !== 'novo' ? route.id : route.search.get('speciesId')
+  if (areaOf(route.page)?.id === 'visao-geral' && target.startsWith('visao-geral/')) for (const key of ['from', 'to']) { const value = route.search.get(key); if (value) query.set(key, value) }
+  if (target === 'catalogo/cultivares') {
+    const species = route.page === 'catalogo/especies' && route.id && route.id !== 'novo' ? route.id : route.search.get('speciesId')
     if (species) query.set('speciesId', species)
   }
   return query
 }
 
-export function Navigation({ route, onNavigate }: { route: RecordRoute; onNavigate?: () => void }) {
+/** `garden` é a horta de contexto: em catálogos e na lista de hortas, os links das áreas continuam nela. */
+export function Navigation({ route, onNavigate }: { route: AppRoute; onNavigate?: () => void }) {
   const close = (event: React.MouseEvent) => { if (!event.defaultPrevented) onNavigate?.() }
-  const activeModule = route.garden ? route.module : route.search.get('nextModule') || 'horta'
-  const preserve = (id: string) => route.module === 'horta' && route.resource === 'interativa' && id === 'visao-geral' ? 'true' : undefined
+  // As páginas da área aberta ocupam só o espaço livre do menu e rolam internamente, para que todas as áreas
+  // continuem visíveis. Abaixo de três itens de altura, o menu inteiro volta a rolar.
+  const pagesRef = useRef<HTMLUListElement>(null)
+  const area = areaOf(route.page)?.id
+  useLayoutEffect(() => {
+    const list = pagesRef.current, container = list?.closest<HTMLElement>('.workspace-sidebar, .navigation-dialog')
+    if (!list || !container) return
+    const fit = () => {
+      if (!container.clientHeight) return
+      list.style.maxHeight = ''
+      const others = container.scrollHeight - list.offsetHeight
+      list.style.maxHeight = `${Math.max(MIN_PAGES_HEIGHT, container.clientHeight - others)}px`
+      const item = list.querySelector<HTMLElement>('[aria-current=page]')
+      if (!item) return
+      const top = item.offsetTop - list.offsetTop, bottom = top + item.offsetHeight
+      if (top < list.scrollTop || bottom > list.scrollTop + list.clientHeight) list.scrollTop = top - (list.clientHeight - item.offsetHeight) / 2
+    }
+    fit()
+    const observer = new ResizeObserver(fit)
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [area, route.page, route.garden])
+  const current = areaOf(route.page)?.id ?? (route.scope === 'gardens' ? 'horta' : undefined)
+  const preserve = route.page === 'horta/mapa' ? 'true' : undefined
   return <nav className="primary-navigation" aria-label="Áreas da aplicação">
-    {groups.map(group => <div className="nav-group" key={group.label}>
+    {navigationGroups.map(group => <div className="nav-group" key={group.label}>
       <p className="nav-group-title">{group.label}</p>
-      {group.ids.map(id => {
-        const item = navigationItems.find(value => value.id === id)
-        if (!item) return null
-        const open = activeModule === item.id
-        const pages = open && route.garden ? modulePages(item.id) : []
-        const isCatalog = item.id === 'horta' && route.resource === 'hortas' && !route.id
-        const current = open && (pages.length === 0 || isCatalog)
-        const href = item.id === 'horta' ? routeHref(route.garden, 'horta', 'hortas') : route.garden ? routeHref(route.garden, item.id, item.items[0].id) : routeHref('', 'horta', 'hortas', '', new URLSearchParams({ nextModule: item.id }))
-        return <div key={item.id}>
-          <a className="nav-link" aria-current={current ? 'page' : undefined} data-open={open} data-preserve-draft={preserve(item.id)} href={href} onClick={close}>
-            <Icon name={item.id} /><span>{item.label}</span>
+      {group.areas.map(area => {
+        const open = current === area.id
+        const pages = open && route.garden && area.pages.length > 1 ? area.pages : []
+        const single = area.pages.length === 1 && route.page === area.pages[0]
+        // Horta abre a gestão de hortas; as demais áreas abrem sua página inicial na horta de contexto.
+        const href = area.id === 'horta' || !route.garden ? linkTo('', 'hortas') : linkTo(route.garden, areaHomePage(area.id))
+        return <div key={area.id}>
+          <a className="nav-link" aria-current={single || (open && route.scope === 'gardens') ? 'page' : undefined} data-open={open} data-preserve-draft={area.id === 'visao-geral' ? preserve : undefined} href={href} onClick={close}>
+            <Icon name={area.id} /><span>{area.label}</span>
           </a>
-          {pages.length > 0 && <ul className="nav-pages" aria-label={`Páginas de ${item.label}`}>
-            {pages.map(page => {
-              const pageCurrent = page.id === route.resource && !isCatalog
-              return <li key={page.id}><a className="nav-page" aria-current={pageCurrent ? 'page' : undefined} href={routeHref(route.garden, item.id, page.id, item.id === 'horta' && page.id === 'hortas' ? route.garden : '', queryFor(route, page.id))} onClick={close}>{page.label}</a></li>
-            })}
+          {pages.length > 0 && <ul ref={pagesRef} className="nav-pages" aria-label={`Páginas de ${area.label}`}>
+            {pages.map(key => <li key={key}><a className="nav-page" aria-current={key === route.page ? 'page' : undefined} href={linkTo(route.garden, key, '', queryFor(route, key))} onClick={close}>{pageMeta(key)?.label}</a></li>)}
           </ul>}
         </div>
       })}

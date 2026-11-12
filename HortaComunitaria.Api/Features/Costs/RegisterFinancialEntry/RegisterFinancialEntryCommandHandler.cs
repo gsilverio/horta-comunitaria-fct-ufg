@@ -11,7 +11,7 @@ using HortaComunitaria.Api.Features.Costs.Shared;
 namespace HortaComunitaria.Api.Features.Costs.RegisterFinancialEntry;
 
 internal sealed record RegisterFinancialEntryRequest([property: JsonRequired] Guid OperationId, [property: JsonRequired] DateOnly EntryDate, [property: JsonRequired] string Description, [property: JsonRequired] string Category, [property: JsonRequired] decimal AmountBrl, [property: JsonRequired] FinancialNature Nature, Guid? BedId, Guid? CycleId);
-internal sealed class RegisterFinancialEntryCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<RegisterFinancialEntryCommandHandler> logger)
+internal sealed class RegisterFinancialEntryCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<RegisterFinancialEntryCommandHandler> logger)
 {
     public async Task<Result<CreatedFinancialEntryResponse>> HandleAsync(Guid gardenId, RegisterFinancialEntryRequest request, CancellationToken cancellationToken)
     {

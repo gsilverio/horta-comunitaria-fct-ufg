@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Costs.Shared;
 namespace HortaComunitaria.Api.Features.Costs.CorrectFinancialEntry;
 
 internal sealed record CorrectFinancialEntryRequest([property: JsonRequired] DateOnly EntryDate, [property: JsonRequired] string Description, [property: JsonRequired] string Category, [property: JsonRequired] decimal AmountBrl, [property: JsonRequired] FinancialNature Nature, [property: JsonRequired] Guid? BedId, [property: JsonRequired] Guid? CycleId, [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class CorrectFinancialEntryCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CorrectFinancialEntryCommandHandler> logger)
+internal sealed class CorrectFinancialEntryCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CorrectFinancialEntryCommandHandler> logger)
 {
     public async Task<Result<FinancialEntryResponse>> HandleAsync(Guid gardenId, Guid id, CorrectFinancialEntryRequest request, CancellationToken cancellationToken)
     {

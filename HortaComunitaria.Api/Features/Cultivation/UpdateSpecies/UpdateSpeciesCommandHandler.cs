@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.UpdateSpecies;
 
 internal sealed record UpdateSpeciesRequest([property: JsonRequired] string CommonName, [property: JsonRequired] string? ScientificName, [property: JsonRequired] string? Description, [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class UpdateSpeciesCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<UpdateSpeciesCommandHandler> logger)
+internal sealed class UpdateSpeciesCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<UpdateSpeciesCommandHandler> logger)
 {
     public async Task<Result<SpeciesResponse>> HandleAsync(Guid id, UpdateSpeciesRequest request, CancellationToken cancellationToken)
     {

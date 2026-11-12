@@ -14,7 +14,7 @@ namespace HortaComunitaria.Api.Features.Gardens.SaveLayout;
 
 internal sealed record SaveLayoutRequest(Guid OperationId, int ExpectedVersion, LayoutDocument Layout);
 
-internal sealed class SaveLayoutCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<SaveLayoutCommandHandler> logger)
+internal sealed class SaveLayoutCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<SaveLayoutCommandHandler> logger)
 {
     public async Task<Result<LayoutResponse>> HandleAsync(Guid gardenId, SaveLayoutRequest request, CancellationToken token)
     {

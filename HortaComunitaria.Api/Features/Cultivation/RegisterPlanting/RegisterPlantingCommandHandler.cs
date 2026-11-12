@@ -11,7 +11,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.RegisterPlanting;
 
 internal sealed record RegisterPlantingRequest([property: JsonRequired] Guid OperationId, [property: JsonRequired] Guid CycleId, Guid? PropagationLotId, Guid? ReplacedPlantingId, [property: JsonRequired] DateOnly PlantedOn, [property: JsonRequired] PlantingKind Kind, [property: JsonRequired] int PlantedQuantity, decimal? PlantSpacingCm, decimal? RowSpacingCm, Guid? ResponsibleParticipantId);
-internal sealed class RegisterPlantingCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<RegisterPlantingCommandHandler> logger)
+internal sealed class RegisterPlantingCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<RegisterPlantingCommandHandler> logger)
 {
     public async Task<Result<CreatedPlantingResponse>> HandleAsync(Guid gardenId, RegisterPlantingRequest request, CancellationToken cancellationToken)
     {

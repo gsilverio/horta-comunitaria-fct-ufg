@@ -7,9 +7,12 @@ const FilterMode = createContext(false)
 /** Em filtros, campo vazio significa "todos" e a marca de opcional seria ruído visual. */
 export function FilterFields({ children }: { children: ReactNode }) { return <FilterMode.Provider value={true}>{children}</FilterMode.Provider> }
 
+/** Marca visual de obrigatório; o atributo `required` do controle informa leitores de tela. */
+export function RequiredMark() { return <span className="required-mark" aria-hidden="true">*</span> }
+
 function FieldLabel({ label, required }: { label: string; required: boolean }) {
   const filter = useContext(FilterMode)
-  return <span className="field-label">{label}{required ? ' *' : <span className={filter ? 'sr-only' : 'field-optional'}> (opcional)</span>}</span>
+  return <span className="field-label">{label}{required && !filter && <RequiredMark />}</span>
 }
 
 export function Field({ name, label, value, change, error, required = false, type = 'text', hint, maxLength = 1000, suggestions }: { name: string; label: string; value: string; change: (value: string) => void; error?: ApiFailure; required?: boolean; type?: string; hint?: string; maxLength?: number; /** Valores frequentes oferecidos sem impedir texto livre. */ suggestions?: string[] }) {

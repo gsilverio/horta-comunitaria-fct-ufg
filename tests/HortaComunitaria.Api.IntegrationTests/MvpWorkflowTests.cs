@@ -70,7 +70,7 @@ public sealed class MvpWorkflowTests(PostgresFixture postgres) : IClassFixture<P
             Assert.Equal(1, await db.Plantings.CountAsync());
             Assert.Equal(1, await db.EstablishmentAssessments.CountAsync());
             Assert.Equal(5m, await db.DryingItems.Select(x => x.AllocatedMassKg).SingleAsync());
-            Assert.Equal(DemoIds.Operator, await db.Harvests.Select(x => x.RecordedByUserId).SingleAsync());
+            Assert.Equal(DemoIds.Administrator, await db.Harvests.Select(x => x.RecordedByUserId).SingleAsync());
         });
     }
 

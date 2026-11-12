@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.CorrectPropagationLot;
 
 internal sealed record CorrectPropagationLotRequest(string? Code, [property: JsonRequired] Guid SpeciesId, [property: JsonRequired] Guid? CultivarId, [property: JsonRequired] MaterialType MaterialType, [property: JsonRequired] string? Origin, [property: JsonRequired] DateOnly? ReceivedOn, [property: JsonRequired] string? Notes, [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class CorrectPropagationLotCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CorrectPropagationLotCommandHandler> logger)
+internal sealed class CorrectPropagationLotCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CorrectPropagationLotCommandHandler> logger)
 {
     public async Task<Result<PropagationLotResponse>> HandleAsync(Guid gardenId, Guid id, CorrectPropagationLotRequest request, CancellationToken cancellationToken)
     {

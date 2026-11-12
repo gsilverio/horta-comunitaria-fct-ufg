@@ -13,6 +13,7 @@ internal static class ResultHttpExtensions
                 ErrorCategory.Validation => 400,
                 ErrorCategory.NotFound => 404,
                 ErrorCategory.Conflict => 409,
+                ErrorCategory.Unauthorized => 401,
                 _ => throw new InvalidOperationException("Categoria de erro sem tradução.")
             };
             ProblemDetails problem = error.Fields is null

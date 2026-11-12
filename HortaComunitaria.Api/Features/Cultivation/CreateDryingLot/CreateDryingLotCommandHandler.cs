@@ -11,7 +11,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.CreateDryingLot;
 
 internal sealed record CreateDryingLotRequest([property: JsonRequired] Guid OperationId, string? Code, string? Method, [property: JsonRequired] DateOnly StartedOn, Guid? ResponsibleParticipantId, [property: JsonRequired] DryingItemRequest[]? Items);
-internal sealed class CreateDryingLotCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CreateDryingLotCommandHandler> logger)
+internal sealed class CreateDryingLotCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CreateDryingLotCommandHandler> logger)
 {
     public async Task<Result<CreatedDryingLotResponse>> HandleAsync(Guid gardenId, CreateDryingLotRequest request, CancellationToken cancellationToken)
     {

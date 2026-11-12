@@ -12,7 +12,7 @@ using Npgsql;
 namespace HortaComunitaria.Api.Features.Gardens.CreateIrrigationSector;
 
 internal sealed record CreateIrrigationSectorRequest(string? Code, [property: JsonRequired] string Name, string? Description);
-internal sealed class CreateIrrigationSectorCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CreateIrrigationSectorCommandHandler> logger)
+internal sealed class CreateIrrigationSectorCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CreateIrrigationSectorCommandHandler> logger)
 {
     public async Task<Result<IrrigationSectorResponse>> HandleAsync(Guid gardenId, CreateIrrigationSectorRequest request, CancellationToken cancellationToken)
     {

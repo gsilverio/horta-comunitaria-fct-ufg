@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 import type { APIRequestContext, Page } from '@playwright/test'
 import { today } from '../src/features/irrigation/formValues'
 
@@ -84,7 +84,7 @@ test('percurso horta → setor → canteiro, contexto, retorno e apresentação'
 
 test('resposta perdida após salvar área: retoma sem duplicar configuração nem canteiro', async ({ page, request }) => {
   const { garden, sector, prefix } = await context(request)
-  await page.goto(`/#/hortas/${garden.id}/horta/setores/${sector.id}`)
+  await page.goto(`/hortas/${garden.id}/horta/setores/${sector.id}`)
   await createBed(page, 'Canteiro com retomada')
   const bedId = new URL(page.url()).hash.split('?')[0].split('/').at(-1)
   await page.getByLabel('Área cultivável (m²)').fill('8')
@@ -113,7 +113,7 @@ test('resposta perdida após salvar área: retoma sem duplicar configuração ne
 test('cadastro incompleto é recuperável pela horta, com recarga e conclusão no mesmo canteiro', async ({ page, request }) => {
   const { garden, sector, prefix } = await context(request)
   const bed = await post(request, `${prefix}/beds`, { name: 'Canteiro pendente' })
-  await page.goto(`/#/hortas/${garden.id}/horta/setores`)
+  await page.goto(`/hortas/${garden.id}/horta/setores`)
   await page.getByRole('link', { name: 'Todos os canteiros e cadastros pendentes', exact: true }).click()
   await expect(page.getByText('Cadastro pendente', { exact: true })).toBeVisible()
   await page.getByRole('link', { name: 'Ver canteiro: Canteiro pendente', exact: true }).click()
@@ -137,7 +137,7 @@ test('paginação mantém o setor e voltar/avançar mantém a página; rota de o
     expect(response.status()).toBe(201)
   }
   const other = await context(request)
-  await page.goto(`/#/hortas/${secondGarden}/horta/setores/${secondSector}`)
+  await page.goto(`/hortas/${secondGarden}/horta/setores/${secondSector}`)
   await expect(page.getByRole('link', { name: 'Ver canteiro: Canteiro demonstrativo 1', exact: true })).toBeVisible()
   await page.getByRole('navigation', { name: 'Páginas de Canteiros do setor' }).getByRole('button', { name: 'Próxima' }).click()
   await expect(page).toHaveURL(new RegExp(`${secondSector}\\?page=2$`))
@@ -148,14 +148,14 @@ test('paginação mantém o setor e voltar/avançar mantém a página; rota de o
   await expect(page.getByRole('link', { name: 'Ver canteiro: Canteiro demonstrativo 1', exact: true })).toBeVisible()
   await page.goForward()
   await expect(page.getByRole('link', { name: 'Ver canteiro: Canteiro demonstrativo 11', exact: true })).toBeVisible()
-  await page.goto(`/#/hortas/${other.garden.id}/horta/setores/${secondSector}`)
+  await page.goto(`/hortas/${other.garden.id}/horta/setores/${secondSector}`)
   await expect(page.getByRole('alert')).toBeVisible()
   await expect(page.getByRole('link', { name: 'Ver canteiro: Canteiro demonstrativo 11', exact: true })).toHaveCount(0)
 })
 
 test('edição concorrente preserva o rascunho e exige revisão explícita', async ({ page, request }) => {
   const { garden, sector, prefix } = await context(request)
-  await page.goto(`/#/hortas/${garden.id}/horta/setores/${sector.id}?edit=1`)
+  await page.goto(`/hortas/${garden.id}/horta/setores/${sector.id}/editar`)
   await page.getByLabel('Nome do setor').fill('Nome revisado no formulário')
   await page.getByLabel('Motivo da alteração').fill('Ajuste da identificação')
   const updated = await request.put(`${api()}${prefix}/sectors/${sector.id}`, { data: { name: 'Alterado por outra pessoa', description: null, expectedVersion: 1, reason: 'Revisão concorrente' } })
@@ -179,7 +179,7 @@ test('canteiro permite definir a planta, cadastrar espécie e registrar o planti
   response = await request.post(`${api()}${prefix}/beds/${bed.id}/sector-assignments`, { data: { sectorId: sector.id, validFrom: today(), expectedBedVersion: 2 } })
   expect(response.status()).toBe(201)
   await page.setViewportSize({ width: 1440, height: 1000 })
-  await page.goto(`/#/hortas/${garden.id}/horta/canteiros/${bed.id}`)
+  await page.goto(`/hortas/${garden.id}/horta/canteiros/${bed.id}`)
   await expect(page.getByText('Nenhum cultivo cadastrado', { exact: true })).toBeVisible()
   await page.getByRole('link', { name: 'Adicionar cultivo', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'O que será plantado?', exact: true })).toBeVisible()
@@ -213,13 +213,13 @@ test('canteiro permite definir a planta, cadastrar espécie e registrar o planti
   await page.screenshot({ path: 'test-results/bed-cultivation-desktop.png', fullPage: true })
   await page.getByRole('link', { name: /^20 plantas/ }).click()
   await expect(page.getByRole('heading', { name: 'Plantio', exact: true })).toBeVisible()
-  await page.getByRole('link', { name: '← Voltar ao canteiro', exact: true }).click()
+  await page.getByRole('link', { name: '← Voltar: Canteiro', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Canteiro da entrada', exact: true })).toBeVisible()
   await page.setViewportSize({ width: 390, height: 844 })
   await noOverflow(page)
   await page.screenshot({ path: 'test-results/bed-cultivation-mobile.png', fullPage: true })
   const other = await post(request, `${prefix}/beds`, { name: 'Outro canteiro' })
-  await page.goto(`/#/hortas/${garden.id}/horta/canteiros/${other.id}?plantingCycle=${crops.items[0].id}`)
+  await page.goto(`/hortas/${garden.id}/horta/canteiros/${other.id}/plantar?cycleId=${crops.items[0].id}`)
   await expect(page.getByRole('alert')).toContainText('outro canteiro')
   await expect(page.getByLabel('Quantidade plantada')).toHaveCount(0)
 })
@@ -227,16 +227,15 @@ test('canteiro permite definir a planta, cadastrar espécie e registrar o planti
 test('menu mantém todos os módulos, organização antes de campo e marca integrada, inclusive no celular', async ({ page, request }) => {
   const { garden } = await context(request)
   await page.setViewportSize({ width: 1440, height: 1000 })
-  await page.goto(`/#/hortas/${garden.id}/horta/setores`)
+  await page.goto(`/hortas/${garden.id}/horta/setores`)
   const sidebar = page.getByRole('complementary', { name: 'Navegação principal' })
   await sidebar.getByRole('link', { name: 'Horta Comunitária, todas as hortas', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Hortas', exact: true })).toBeVisible()
   await expect(sidebar).toBeVisible()
+  // A lista de hortas mantém a última horta aberta como contexto do menu.
   await sidebar.getByRole('link', { name: 'Visão geral', exact: true }).click()
-  await expect(page.getByText('Escolha uma horta para acessar Visão geral.')).toBeVisible()
-  await expect(sidebar.getByRole('combobox', { name: 'Horta', exact: true })).toHaveValue('')
-  await sidebar.getByRole('combobox', { name: 'Horta', exact: true }).selectOption(garden.id)
-  await expect(page.getByRole('heading', { name: 'Dashboard da horta', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Visão panorâmica da horta', exact: true })).toBeVisible()
+  await expect(page).toHaveURL(new RegExp(`/hortas/${garden.id}/visao-geral$`))
   await sidebar.getByRole('link', { name: 'Horta', exact: true }).click()
   await expect(sidebar.getByRole('link', { name: 'Horta Comunitária, todas as hortas' })).toBeVisible()
   await expect(sidebar.locator('.nav-group-title')).toHaveText(['Acompanhamento', 'Organização', 'No campo'])
@@ -244,7 +243,7 @@ test('menu mantém todos os módulos, organização antes de campo e marca integ
   await expect(page.locator('.masthead')).toHaveCount(0)
   await expect(page.getByRole('navigation', { name: 'Seções da área' })).toHaveCount(0)
   const destinations = [
-    ['Visão geral', 'Dashboard da horta'], ['Irrigação', 'Irrigação'], ['Ambiente', 'Variáveis ambientais'],
+    ['Visão geral', 'Visão panorâmica da horta'], ['Irrigação', 'Irrigação'], ['Ambiente', 'Variáveis ambientais'],
     ['Cultivo', 'Espécies'], ['Produção', 'Colheitas'], ['Atividades', 'Atividades'],
     ['Ocorrências', 'Ocorrências'], ['Custos', 'Lançamentos financeiros'],
   ]
@@ -253,7 +252,7 @@ test('menu mantém todos os módulos, organização antes de campo e marca integ
     await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible()
   }
   await sidebar.getByRole('link', { name: 'Visão geral', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Dashboard da horta', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Visão panorâmica da horta', exact: true })).toBeVisible()
   await page.screenshot({ path: 'test-results/menu-integrated-desktop.png', fullPage: true })
   await sidebar.getByRole('link', { name: 'Horta', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Horta para organização', exact: true })).toBeVisible()
@@ -266,11 +265,11 @@ test('menu mantém todos os módulos, organização antes de campo e marca integ
   await page.keyboard.press('Escape')
   await expect(page.getByRole('button', { name: 'Abrir menu de navegação', exact: true })).toBeFocused()
   await noOverflow(page)
-  await page.goto('/#/hortas/_/horta/hortas')
+  await page.goto('/hortas')
   await page.getByRole('button', { name: 'Abrir menu de navegação', exact: true }).click()
   await dialog.getByRole('link', { name: 'Custos', exact: true }).click()
   await expect(dialog).not.toBeVisible()
-  await expect(page.getByText('Escolha uma horta para acessar Custos.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Lançamentos financeiros', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Abrir menu de navegação', exact: true }).click()
   await dialog.getByRole('combobox', { name: 'Horta', exact: true }).selectOption(garden.id)
   await expect(dialog).not.toBeVisible()

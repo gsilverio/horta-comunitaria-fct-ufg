@@ -1,3 +1,5 @@
+import type { AppRoute } from '../../../routes/routes'
+import { linkTo, withReturn } from '../../../routes/routes'
 import { formatDate } from "../../../services/dates"
 import { useCallback } from "react"
 import { IndicatorPanel } from "../../../components/IndicatorPanel"
@@ -6,11 +8,10 @@ import { Failure } from "../../../components/Feedback"
 import { useListFilters } from "../../../hooks/useListFilters"
 import { useLookups } from "../../../hooks/useLookups"
 import { useRemote } from "../../../hooks/useRemote"
-import { indicatorOriginHref as routeHref } from "../../../services/indicatorOriginHref"
 import { formatNumber } from "../../irrigation/formValues"
-import type { RecordRoute } from "../../../types/records"
+
 import { indicatorApi } from "../services/indicatorApi"
-export function GetWorkHoursPage({ route }: { route: RecordRoute }) {
+export function GetWorkHoursPage({ route }: { route: AppRoute }) {
 const filters = useListFilters(route, ['from', 'to', 'participantId', 'category'], true)
 const options = useLookups(route.garden, ['participant'])
 const load = useCallback((signal: AbortSignal) => indicatorApi.getWorkHours(route.garden, { page: filters.page, pageSize: 5, from: filters.values.from || undefined, to: filters.values.to || undefined, participantId: filters.values.participantId || undefined, category: filters.values.category || undefined }, signal), [route.garden, filters.page, filters.values.from, filters.values.to, filters.values.participantId, filters.values.category])
@@ -21,5 +22,5 @@ return <IndicatorPanel title="Horas de trabalho" unit="Horas individuais (h)" co
 <SelectField name="participantId" label="Participante" value={filters.draft.participantId} change={value => filters.change("participantId", value)} options={options.data?.participant ?? []} />
 <Field name="category" label="Categoria" type="text" value={filters.draft.category} change={value => filters.change("category", value)} />
 {options.error && <Failure error={options.error} retry={options.retry} />}</>}
->{record?.origins.items.map((item, index) => <li key={index} className="border-b border-horta-line py-3"><Facts items={[{ label: 'Data da atividade', value: formatDate(item.performedOn) }, { label: 'Participante', value: options.data?.participant?.find(person => person.id === item.participantId)?.label ?? item.participantId }, { label: 'Horas individuais (h)', value: item.workHours === null ? "Não informado" : formatNumber(item.workHours) }]} /><a className="mt-4 inline-block font-semibold underline" href={routeHref(route.garden, 'atividades', 'registros', item.activityId, new URLSearchParams({ from: filters.values.from, to: filters.values.to, participantId: filters.values.participantId, category: filters.values.category }))}>Abrir origem</a></li>)}</IndicatorPanel>
+>{record?.origins.items.map((item, index) => <li key={index} className="border-b border-horta-line py-3"><Facts items={[{ label: 'Data da atividade', value: formatDate(item.performedOn) }, { label: 'Participante', value: options.data?.participant?.find(person => person.id === item.participantId)?.label ?? item.participantId }, { label: 'Horas individuais (h)', value: item.workHours === null ? "Não informado" : formatNumber(item.workHours) }]} /><a className="mt-4 inline-block font-semibold underline" href={linkTo(route.garden, 'atividades/registros', item.activityId, withReturn(new URLSearchParams({ from: filters.values.from, to: filters.values.to, participantId: filters.values.participantId, category: filters.values.category })))}>Abrir origem</a></li>)}</IndicatorPanel>
 }

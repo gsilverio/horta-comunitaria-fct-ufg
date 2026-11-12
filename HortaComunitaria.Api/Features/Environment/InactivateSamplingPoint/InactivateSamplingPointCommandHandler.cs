@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Environment.Shared;
 namespace HortaComunitaria.Api.Features.Environment.InactivateSamplingPoint;
 
 internal sealed record InactivateSamplingPointRequest([property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class InactivateSamplingPointCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<InactivateSamplingPointCommandHandler> logger)
+internal sealed class InactivateSamplingPointCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<InactivateSamplingPointCommandHandler> logger)
 {
     public async Task<Result<SamplingPointResponse>> HandleAsync(Guid gardenId, Guid id, InactivateSamplingPointRequest request, CancellationToken cancellationToken)
     {

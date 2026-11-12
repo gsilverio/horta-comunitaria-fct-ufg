@@ -24,5 +24,6 @@ internal static class PostgresEnums
         options.MapEnum<MeasurementQuality>("measurement_quality");
         options.MapEnum<OccurrenceStatus>("occurrence_status");
         options.MapEnum<FinancialNature>("financial_nature");
+        options.MapEnum<HortaComunitaria.Api.Infrastructure.Identity.UserProfile>("user_profile");
     }
 }

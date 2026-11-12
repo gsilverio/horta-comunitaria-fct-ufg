@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Costs.Shared;
 namespace HortaComunitaria.Api.Features.Costs.InvalidateFinancialEntry;
 
 internal sealed record InvalidateFinancialEntryRequest([property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class InvalidateFinancialEntryCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<InvalidateFinancialEntryCommandHandler> logger)
+internal sealed class InvalidateFinancialEntryCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<InvalidateFinancialEntryCommandHandler> logger)
 {
     public async Task<Result<FinancialEntryResponse>> HandleAsync(Guid gardenId, Guid id, InvalidateFinancialEntryRequest request, CancellationToken cancellationToken)
     {

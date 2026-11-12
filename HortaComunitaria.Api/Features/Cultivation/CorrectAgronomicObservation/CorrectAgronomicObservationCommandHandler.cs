@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.CorrectAgronomicObservation;
 
 internal sealed record CorrectAgronomicObservationRequest([property: JsonRequired] Guid CycleId, [property: JsonRequired] DateOnly ObservedOn, [property: JsonRequired] string Category, [property: JsonRequired] string Description, [property: JsonRequired] decimal? Measurement, [property: JsonRequired] string? Unit, [property: JsonRequired] string? Method, [property: JsonRequired] Guid? ResponsibleParticipantId, [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class CorrectAgronomicObservationCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CorrectAgronomicObservationCommandHandler> logger)
+internal sealed class CorrectAgronomicObservationCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CorrectAgronomicObservationCommandHandler> logger)
 {
     public async Task<Result<AgronomicObservationResponse>> HandleAsync(Guid gardenId, Guid id, CorrectAgronomicObservationRequest request, CancellationToken cancellationToken)
     {

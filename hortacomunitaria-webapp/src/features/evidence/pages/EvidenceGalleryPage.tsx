@@ -1,10 +1,11 @@
+import { linkTo } from '../../../routes/routes'
+import type { AppRoute } from '../../../routes/routes'
 import { useState } from 'react'
 import { FilterFields, SelectField } from '../../../components/Fields'
 import { Failure, Pagination } from '../../../components/Feedback'
 import { PageHeader } from '../../../components/PageHeader'
 import { useGardenState } from '../../../hooks/useGardenState'
-import { routeHref } from '../../../hooks/useRoute'
-import type { RecordRoute } from '../../../types/records'
+
 import { EvidenceGrid } from '../components/EvidenceGrid'
 import { EvidenceViewer } from '../components/EvidenceViewer'
 import { useEvidenceGallery } from '../hooks/useEvidenceGallery'
@@ -15,7 +16,7 @@ const targetOptions = (Object.keys(evidenceTargets) as EvidenceTarget[]).map(id 
 const isTarget = (value: string | null): value is EvidenceTarget => !!value && value in evidenceTargets
 
 /** Galeria geral da horta. O envio acontece no registro (aba Fotos), para que toda foto tenha um vínculo concreto. */
-export function EvidenceGalleryPage({ route }: { route: RecordRoute }) {
+export function EvidenceGalleryPage({ route }: { route: AppRoute }) {
   const garden = useGardenState()
   const requested = route.search.get('targetType')
   const [targetType, setTargetType] = useState<EvidenceTarget | ''>(isTarget(requested) ? requested : '')
@@ -37,7 +38,7 @@ export function EvidenceGalleryPage({ route }: { route: RecordRoute }) {
     {items.length > 0 && <EvidenceGrid items={items} imageUrl={gallery.imageUrl} showTarget open={item => { gallery.clearChangeError(); setOpen(item) }} />}
     {gallery.list.data && <div className="mt-4"><Pagination data={gallery.list.data} change={gallery.setPage} label="Páginas da galeria" /></div>}
     {open && <EvidenceViewer key={open.id} item={open} imageUrl={gallery.imageUrl(open.id)} canChange={garden.isActive}
-      targetHref={routeHref(route.garden, evidenceTargets[open.targetType].module, evidenceTargets[open.targetType].resource, open.targetId, new URLSearchParams({ tab: 'fotos' }))}
+      targetHref={linkTo(route.garden, evidenceTargets[open.targetType].page, open.targetId, new URLSearchParams({ tab: 'fotos' }))}
       busy={gallery.changing} error={gallery.changeError} clearError={gallery.clearChangeError}
       correct={async (values, reason) => !!await gallery.correct(open, values, reason)} invalidate={async reason => !!await gallery.invalidate(open, reason)} close={() => setOpen(undefined)} />}
   </>

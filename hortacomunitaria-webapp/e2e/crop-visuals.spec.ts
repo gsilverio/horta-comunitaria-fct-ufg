@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 import type { APIRequestContext } from '@playwright/test'
 import { Temporal } from '@js-temporal/polyfill'
 import { today } from '../src/features/irrigation/formValues'
@@ -15,7 +15,7 @@ async function post(request: APIRequestContext, path: string, data: unknown): Pr
 }
 
 test('faixas visuais preservam ausência, limites, variedade e orçamento sem depender do zoom', () => {
-  const crop: GardenCrop = { cycleId: 'cycle', bedId: 'bed', speciesName: 'Alface', speciesCatalogKey: 'embrapa-2023:alface', scientificName: 'Lactuca sativa', cultivarName: 'BRS Lélia', cultivarCatalogKey: 'embrapa-2023:page-16', occupiedAreaM2: 4, initialQuantity: null, hasReplacements: false, hasMixedPlantingDates: false, firstPlantedOn: today(), lastHarvestedOn: null, visualGrowthDays: null, visualHarvestDays: null, stage: 'Planted' }
+  const crop: GardenCrop = { cycleId: 'cycle', bedId: 'bed', speciesId: 'species', speciesName: 'Alface', speciesCatalogKey: 'embrapa-2023:alface', scientificName: 'Lactuca sativa', speciesImageUrl: null, cultivarName: 'BRS Lélia', cultivarCatalogKey: 'embrapa-2023:page-16', occupiedAreaM2: 4, initialQuantity: null, hasReplacements: false, hasMixedPlantingDates: false, firstPlantedOn: today(), lastHarvestedOn: null, visualGrowthDays: null, visualHarvestDays: null, stage: 'Planted' }
   expect(cropSymbolCount(crop)).toBe(0)
   expect(cropDensity(crop)).toBeUndefined()
   expect(cropSymbolCount({ ...crop, initialQuantity: 1 })).toBe(1)
@@ -50,14 +50,14 @@ test('panorama usa plantios reais, densidades distintas e prazos configurados pe
     cycles.push(cycle.id)
     if (quantity) await post(request, prefix + '/plantings', { operationId: uuidV7(), cycleId: cycle.id, plantedOn, kind: 'Initial', plantedQuantity: quantity })
   }
-  await page.goto(`/#/hortas/${garden.id}/cultivo/especies/${species.id}?visual=1`)
+  await page.goto(`/catalogo/especies/${species.id}/fases`)
   await page.getByLabel('Dias para crescimento intermediário').fill('5')
   await page.getByLabel('Dias para colheita prevista').fill('20')
   await page.getByLabel('Motivo da alteração').fill('Prazos fictícios usados apenas neste teste')
   await page.getByRole('button', { name: 'Salvar prazos visuais', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Alface visual', exact: true })).toBeVisible()
   await page.setViewportSize({ width: 1440, height: 1000 })
-  await page.goto(`/#/hortas/${garden.id}/visao-geral/painel`)
+  await page.goto(`/hortas/${garden.id}/visao-geral`)
   const scene = page.getByRole('application', { name: 'Mapa panorâmico interativo da horta' })
   await expect(scene.locator('[data-crop-stage="Growing"]')).toHaveCount(12)
   await expect(scene.locator('[data-density="Baixa"]')).toHaveCount(2)

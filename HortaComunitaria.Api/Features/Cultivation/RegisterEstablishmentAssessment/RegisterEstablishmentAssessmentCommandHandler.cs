@@ -11,7 +11,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.RegisterEstablishmentAssessment;
 
 internal sealed record RegisterEstablishmentAssessmentRequest([property: JsonRequired] Guid OperationId, [property: JsonRequired] Guid PlantingId, [property: JsonRequired] DateOnly AssessedOn, [property: JsonRequired] int SurvivingQuantity, [property: JsonRequired] string Method, string? Notes, Guid? ResponsibleParticipantId);
-internal sealed class RegisterEstablishmentAssessmentCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<RegisterEstablishmentAssessmentCommandHandler> logger)
+internal sealed class RegisterEstablishmentAssessmentCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<RegisterEstablishmentAssessmentCommandHandler> logger)
 {
     public async Task<Result<CreatedEstablishmentAssessmentResponse>> HandleAsync(Guid gardenId, RegisterEstablishmentAssessmentRequest request, CancellationToken cancellationToken)
     {

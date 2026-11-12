@@ -17,7 +17,7 @@ Consulte o [Get Started](documentos/Get_Started.md) para iniciar sem seed e test
 
 Compostagem, integração com sensores e automação da irrigação ficam fora desta etapa.
 
-O [planejamento do MVP](documentos/planejamento/mvp/README.md) divide os fluxos dos requisitos em entregas graduais. O [primeiro fluxo sugerido](documentos/planejamento/mvp-irrigacao/README.md) conecta irrigação manual, consulta, correção e consumo de água por setor em quatro etapas. Autenticação e autorização ficam para o pós-MVP.
+O [planejamento do MVP](documentos/planejamento/mvp/README.md) divide os fluxos dos requisitos em entregas graduais. O [primeiro fluxo sugerido](documentos/planejamento/mvp-irrigacao/README.md) conecta irrigação manual, consulta, correção e consumo de água por setor em quatro etapas. Autenticação e autorização (perfis Adm e Operador, ASP.NET Core Identity com bearer token) seguem o [plano de autenticação](documentos/planejamento/autenticacao/Plano_Autenticacao_Autorizacao.md).
 
 Conforme o anexo de setembro de 2026, a horta ainda não foi implantada fisicamente. O desenho preliminar prevê 20 canteiros e cinco setores de irrigação, mas depende da aprovação da área e de validações técnicas. Essas quantidades são referências de planejamento e poderão mudar.
 

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 import type { Page, APIRequestContext } from '@playwright/test'
 import pg from 'pg'
 import { uuidV7 } from './setup'
@@ -26,8 +26,10 @@ async function context(request: APIRequestContext) {
   expect(assignment.status()).toBe(201)
   return { garden, prefix, sector, bed, suffix }
 }
-async function open(page: Page, garden: string, module: string, resource: string, id = '', query = '') {
-  await page.goto(`/#/hortas/${garden || '_'}/${module}/${resource}${id ? '/' + id : ''}${query ? '?' + query : ''}`)
+/** Abre uma página pela chave de rota (ex.: 'cultivo/ciclos', 'catalogo/especies', 'hortas'). */
+async function open(page: Page, garden: string, key: string, id = '', query = '') {
+  const base = key === 'hortas' ? '/hortas' : key.startsWith('catalogo/') ? `/${key}` : `/hortas/${garden}/${key}`
+  await page.goto(`${base}${id ? '/' + id : ''}${query ? '?' + query : ''}`)
   await expect(page.locator('main')).toBeVisible()
 }
 async function enterGarden(page: Page, name: string) {
@@ -66,7 +68,7 @@ async function save(page: Page, route: string): Promise<Created> {
   return body.detail ?? body
 }
 async function indicator(page: Page, garden: string, slug: string) {
-  await open(page, garden, 'visao-geral', slug, '', `from=${date}&to=${date}`)
+  await open(page, garden, `visao-geral/${slug}`, '', `from=${date}&to=${date}`)
   await expect(page.getByRole('heading', { name: 'Resultado do período' })).toBeVisible()
 }
 async function metric(page: Page, label: string, value: string) {
@@ -75,7 +77,7 @@ async function metric(page: Page, label: string, value: string) {
 }
 
 test('organização pela interface, vigências, manutenção de inativos e acesso direto', async ({ page, request }) => {
-  await open(page, '', 'horta', 'hortas', 'novo')
+  await open(page, '', 'hortas', 'novo')
   await page.getByLabel('Nome da horta').fill('Horta criada pela interface')
   const garden = await save(page, '/gardens'), prefix = `/gardens/${garden.id}`
   await page.getByRole('link', { name: 'Novo setor', exact: true }).click()
@@ -97,80 +99,80 @@ test('organização pela interface, vigências, manutenção de inativos e acess
   await page.getByText('Consultar ou alterar área e setor por data', { exact: true }).click()
   await page.getByText('Consultar área, setor e histórico de vigências', { exact: true }).click()
   await expect(page.getByText(/2026-10-01 → sem fim · 5 m²/)).toBeVisible()
-  await open(page, garden.id, 'atividades', 'participantes', 'novo'); await fill(page, 'displayName', 'Participante fictício da interface')
+  await open(page, garden.id, 'atividades/participantes', 'novo'); await fill(page, 'displayName', 'Participante fictício da interface')
   const participant = await save(page, `${prefix}/participants`)
   await page.getByText('Inativar cadastro', { exact: true }).click(); await fill(page, 'reason', 'Conferência do cadastro de teste')
   await page.getByRole('button', { name: 'Confirmar inativação' }).click()
   await expect(page.getByText('Inativo · Versão 2')).toBeVisible()
-  await open(page, garden.id, 'atividades', 'participantes', '', 'isActive=false')
+  await open(page, garden.id, 'atividades/participantes', '', 'isActive=false')
   await expect(page.getByRole('link', { name: 'Participante fictício da interface', exact: true })).toBeVisible()
   expect(await (await request.get(`${api()}${prefix}/participants`)).json()).toMatchObject({ totalCount: 0 })
-  await open(page, garden.id, 'horta', 'canteiros', bed.id); await page.reload()
+  await open(page, garden.id, 'horta/canteiros', bed.id); await page.reload()
   await expect(page.getByRole('heading', { name: 'Canteiro adicional pela interface', exact: true })).toBeVisible()
-  await open(page, garden.id, 'atividades', 'participantes', participant.id)
+  await open(page, garden.id, 'atividades/participantes', participant.id)
   await expect(page.getByText('Inativo · Versão 2')).toBeVisible()
 })
 
 test('ambiente: catálogos, medição zero, qualidade, fuso, correção e origem', async ({ page, request }) => {
   const ctx = await context(request)
-  await open(page, ctx.garden.id, 'ambiente', 'variaveis', 'novo'); await fill(page, 'name', 'Umidade do solo'); await page.getByRole('checkbox', { name: 'Esta variável mede umidade do solo' }).check(); await fill(page, 'quantity', 'Umidade'); await fill(page, 'referenceUnit', '%')
+  await open(page, ctx.garden.id, 'ambiente/variaveis', 'novo'); await fill(page, 'name', 'Umidade do solo'); await page.getByRole('checkbox', { name: 'Esta variável mede umidade do solo' }).check(); await fill(page, 'quantity', 'Umidade'); await fill(page, 'referenceUnit', '%')
   const variable = await save(page, '/environmental-variables')
   expect(variable.isSoilMoisture).toBe(true)
-  await open(page, ctx.garden.id, 'ambiente', 'pontos', 'novo'); await fill(page, 'description', 'Ponto fictício'); await choose(page, 'bedId', ctx.bed.id)
+  await open(page, ctx.garden.id, 'ambiente/pontos', 'novo'); await fill(page, 'description', 'Ponto fictício'); await choose(page, 'bedId', ctx.bed.id)
   const point = await save(page, `${ctx.prefix}/sampling-points`)
-  await open(page, ctx.garden.id, 'ambiente', 'medicoes', 'novo'); await choose(page, 'samplingPointId', point.id); await choose(page, 'variableId', variable.id)
+  await open(page, ctx.garden.id, 'ambiente/medicoes', 'novo'); await choose(page, 'samplingPointId', point.id); await choose(page, 'variableId', variable.id)
   await expect(page.locator('[name="unit"]')).toHaveValue('%'); await fill(page, 'collectedAt', `${date}T09:15`); await fill(page, 'value', '0'); await fill(page, 'method', 'Método manual'); await choose(page, 'quality', 'Questionable')
   const measurement = await save(page, `${ctx.prefix}/environmental-measurements`)
   expect(measurement.collectedAt).toBe(`${date}T12:15:00+00:00`)
   await page.reload(); await expect(page.getByRole('definition').filter({ hasText: /^Questionável$/ })).toBeVisible(); await metric(page, 'Valor medido', '0')
-  await indicator(page, ctx.garden.id, 'soil-moisture'); await metric(page, 'Coletas questionáveis', '1'); await page.getByRole('link', { name: 'Abrir origem', exact: true }).click()
+  await indicator(page, ctx.garden.id, 'umidade'); await metric(page, 'Coletas questionáveis', '1'); await page.getByRole('link', { name: 'Abrir origem', exact: true }).click()
   await page.getByRole('button', { name: 'Corrigir registro', exact: true }).click(); await fill(page, 'value', '12,5'); await fill(page, 'reason', 'Conferência da coleta')
   await page.getByRole('button', { name: 'Salvar registro', exact: true }).click(); await expect(page.getByRole('listitem').filter({ hasText: 'Motivo: Conferência da coleta' })).toBeVisible()
   const history = await request.get(`${api()}${ctx.prefix}/environmental-measurements/${measurement.id}/history`), audit = await history.json()
   const correction = audit.items.find((item: { operation: string }) => item.operation === 'Corrected'); expect(correction).toBeTruthy(); expect(JSON.parse(correction.before).value).toBe(0); expect(JSON.parse(correction.after).value).toBe(12.5)
-  await page.getByRole('link', { name: 'Voltar ao indicador com os mesmos filtros', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Resultado do período' })).toBeVisible(); await expect(page.locator('dd').filter({ hasText: /^12,5$/ }).first()).toBeVisible(); expect(new URLSearchParams(page.url().split('?')[1]).get('from')).toBe(date)
+  await page.getByRole('link', { name: /^← Voltar: / }).click(); await expect(page.getByRole('heading', { name: 'Resultado do período' })).toBeVisible(); await expect(page.locator('dd').filter({ hasText: /^12,5$/ }).first()).toBeVisible(); expect(new URLSearchParams(page.url().split('?')[1]).get('from')).toBe(date)
 })
 
 test('cultivo e produção: espécie/origem, ciclo, plantio, avaliações, observação, colheitas e secagem', async ({ page, request }) => {
   const ctx = await context(request)
-  await open(page, ctx.garden.id, 'cultivo', 'especies', 'novo'); await fill(page, 'commonName', `Espécie fictícia ${ctx.suffix}`)
+  await open(page, ctx.garden.id, 'catalogo/especies', 'novo'); await fill(page, 'commonName', `Espécie fictícia ${ctx.suffix}`)
   const species = await save(page, '/species')
-  await open(page, ctx.garden.id, 'cultivo', 'cultivares', 'novo', `speciesId=${species.id}`); await fill(page, 'name', 'Cultivar fictícia')
+  await open(page, ctx.garden.id, 'catalogo/cultivares', 'novo', `speciesId=${species.id}`); await fill(page, 'name', 'Cultivar fictícia')
   const cultivar = await save(page, `/species/${species.id}/cultivars`)
-  await open(page, ctx.garden.id, 'cultivo', 'origens', 'novo'); await choose(page, 'speciesId', species.id); await choose(page, 'cultivarId', cultivar.id)
+  await open(page, ctx.garden.id, 'cultivo/origens', 'novo'); await choose(page, 'speciesId', species.id); await choose(page, 'cultivarId', cultivar.id)
   const lot = await save(page, `${ctx.prefix}/propagation-lots`)
-  await open(page, ctx.garden.id, 'cultivo', 'ciclos', 'novo'); await choose(page, 'bedId', ctx.bed.id); await choose(page, 'speciesId', species.id); await choose(page, 'cultivarId', cultivar.id); await fill(page, 'startedOn', '2026-10-01'); await fill(page, 'occupiedAreaM2', '5')
+  await open(page, ctx.garden.id, 'cultivo/ciclos', 'novo'); await choose(page, 'bedId', ctx.bed.id); await choose(page, 'speciesId', species.id); await choose(page, 'cultivarId', cultivar.id); await fill(page, 'startedOn', '2026-10-01'); await fill(page, 'occupiedAreaM2', '5')
   const cycle = await save(page, `${ctx.prefix}/cultivation-cycles`)
   await metric(page, 'Área de referência preservada (m²)', '5')
-  await open(page, ctx.garden.id, 'cultivo', 'plantios', 'novo', `cycleId=${cycle.id}`); await expect(page.locator('[name="cycleId"]')).toHaveValue(cycle.id); await choose(page, 'propagationLotId', lot.id); await fill(page, 'plantedQuantity', '40'); await fill(page, 'plantedOn', date)
+  await open(page, ctx.garden.id, 'cultivo/plantios', 'novo', `cycleId=${cycle.id}`); await expect(page.locator('[name="cycleId"]')).toHaveValue(cycle.id); await choose(page, 'propagationLotId', lot.id); await fill(page, 'plantedQuantity', '40'); await fill(page, 'plantedOn', date)
   const planting = await save(page, `${ctx.prefix}/plantings`)
-  await open(page, ctx.garden.id, 'cultivo', 'avaliacoes', 'novo', `plantingId=${planting.id}`); await fill(page, 'assessedOn', date); await fill(page, 'survivingQuantity', '36'); await fill(page, 'method', 'Contagem manual')
+  await open(page, ctx.garden.id, 'cultivo/avaliacoes', 'novo', `plantingId=${planting.id}`); await fill(page, 'assessedOn', date); await fill(page, 'survivingQuantity', '36'); await fill(page, 'method', 'Contagem manual')
   const assessment = await save(page, `${ctx.prefix}/establishment-assessments`)
-  await indicator(page, ctx.garden.id, 'seedling-establishment'); await expect(page.locator('dd').filter({ hasText: /^90$/ }).first()).toBeVisible()
-  await open(page, ctx.garden.id, 'cultivo', 'avaliacoes', assessment.id); await page.getByRole('button', { name: 'Corrigir registro' }).click(); await fill(page, 'survivingQuantity', '32'); await fill(page, 'reason', 'Recontagem de sobreviventes'); await page.getByRole('button', { name: 'Salvar registro', exact: true }).click(); await expect(page.getByRole('listitem').filter({ hasText: 'Motivo: Recontagem de sobreviventes' })).toBeVisible()
-  await indicator(page, ctx.garden.id, 'seedling-establishment'); await expect(page.locator('dd').filter({ hasText: /^80$/ }).first()).toBeVisible()
-  await open(page, ctx.garden.id, 'cultivo', 'observacoes', 'novo', `cycleId=${cycle.id}`); await fill(page, 'observedOn', date); await fill(page, 'category', 'Crescimento'); await fill(page, 'description', 'Observação fictícia sem diagnóstico')
+  await indicator(page, ctx.garden.id, 'pegamento'); await expect(page.locator('dd').filter({ hasText: /^90$/ }).first()).toBeVisible()
+  await open(page, ctx.garden.id, 'cultivo/avaliacoes', assessment.id); await page.getByRole('button', { name: 'Corrigir registro' }).click(); await fill(page, 'survivingQuantity', '32'); await fill(page, 'reason', 'Recontagem de sobreviventes'); await page.getByRole('button', { name: 'Salvar registro', exact: true }).click(); await expect(page.getByRole('listitem').filter({ hasText: 'Motivo: Recontagem de sobreviventes' })).toBeVisible()
+  await indicator(page, ctx.garden.id, 'pegamento'); await expect(page.locator('dd').filter({ hasText: /^80$/ }).first()).toBeVisible()
+  await open(page, ctx.garden.id, 'cultivo/observacoes', 'novo', `cycleId=${cycle.id}`); await fill(page, 'observedOn', date); await fill(page, 'category', 'Crescimento'); await fill(page, 'description', 'Observação fictícia sem diagnóstico')
   await save(page, `${ctx.prefix}/agronomic-observations`)
-  await open(page, ctx.garden.id, 'producao', 'colheitas', 'novo', `cycleId=${cycle.id}`); await fill(page, 'harvestedOn', date); await fill(page, 'freshMassKg', '10'); await fill(page, 'usableMassKg', '8')
+  await open(page, ctx.garden.id, 'producao/colheitas', 'novo', `cycleId=${cycle.id}`); await fill(page, 'harvestedOn', date); await fill(page, 'freshMassKg', '10'); await fill(page, 'usableMassKg', '8')
   const harvest = await save(page, `${ctx.prefix}/harvests`)
-  await open(page, ctx.garden.id, 'producao', 'colheitas', 'novo', `cycleId=${cycle.id}`); await fill(page, 'harvestedOn', date); await fill(page, 'freshMassKg', '5')
+  await open(page, ctx.garden.id, 'producao/colheitas', 'novo', `cycleId=${cycle.id}`); await fill(page, 'harvestedOn', date); await fill(page, 'freshMassKg', '5')
   await save(page, `${ctx.prefix}/harvests`)
-  await indicator(page, ctx.garden.id, 'productivity'); await metric(page, 'Massa fresca (kg)', '15'); await metric(page, 'Produtividade (kg/m²)', '3')
-  await indicator(page, ctx.garden.id, 'harvest-losses'); await metric(page, 'Perda conhecida (kg)', '2'); await metric(page, 'Percentual (%)', '20'); await expect(page.getByText('Informação parcial', { exact: true })).toBeVisible()
-  await open(page, ctx.garden.id, 'producao', 'secagens', 'novo'); await fill(page, 'startedOn', date); await page.getByRole('button', { name: 'Adicionar colheita de origem' }).click(); await choose(page, 'items[0].harvestId', harvest.id); await fill(page, 'items[0].allocatedMassKg', '5')
+  await indicator(page, ctx.garden.id, 'produtividade'); await metric(page, 'Massa fresca (kg)', '15'); await metric(page, 'Produtividade (kg/m²)', '3')
+  await indicator(page, ctx.garden.id, 'perdas'); await metric(page, 'Perda conhecida (kg)', '2'); await metric(page, 'Percentual (%)', '20'); await expect(page.getByText('Informação parcial', { exact: true })).toBeVisible()
+  await open(page, ctx.garden.id, 'producao/secagens', 'novo'); await fill(page, 'startedOn', date); await page.getByRole('button', { name: 'Adicionar colheita de origem' }).click(); await choose(page, 'items[0].harvestId', harvest.id); await fill(page, 'items[0].allocatedMassKg', '5')
   const drying = await save(page, `${ctx.prefix}/drying-lots`)
   await page.getByText('Finalizar secagem com pesagem', { exact: true }).click(); await fill(page, 'endedOn', date); await fill(page, 'totalDryMassKg', '1'); await fill(page, 'reason', 'Pesagem final fictícia'); await page.getByRole('button', { name: 'Confirmar finalização' }).click(); await expect(page.getByRole('listitem').filter({ hasText: 'Motivo: Pesagem final fictícia' })).toBeVisible()
-  await indicator(page, ctx.garden.id, 'drying-yield'); await metric(page, 'Percentual (%)', '20'); await page.getByRole('link', { name: 'Abrir origem' }).click(); expect(page.url()).toContain(drying.id)
-  await open(page, ctx.garden.id, 'producao', 'colheitas', harvest.id); await metric(page, 'Saldo aproveitável (kg)', '3')
-  await open(page, ctx.garden.id, 'cultivo', 'ciclos', cycle.id); await page.getByText('Encerrar ciclo', { exact: true }).click(); await fill(page, 'endedOn', date); await fill(page, 'reason', 'Encerramento da experiência'); await page.getByRole('button', { name: 'Confirmar encerramento' }).click(); await expect(page.getByRole('listitem').filter({ hasText: 'Motivo: Encerramento da experiência' })).toBeVisible()
+  await indicator(page, ctx.garden.id, 'secagem'); await metric(page, 'Percentual (%)', '20'); await page.getByRole('link', { name: 'Abrir origem' }).click(); expect(page.url()).toContain(drying.id)
+  await open(page, ctx.garden.id, 'producao/colheitas', harvest.id); await metric(page, 'Saldo aproveitável (kg)', '3')
+  await open(page, ctx.garden.id, 'cultivo/ciclos', cycle.id); await page.getByText('Encerrar ciclo', { exact: true }).click(); await fill(page, 'endedOn', date); await fill(page, 'reason', 'Encerramento da experiência'); await page.getByRole('button', { name: 'Confirmar encerramento' }).click(); await expect(page.getByRole('listitem').filter({ hasText: 'Motivo: Encerramento da experiência' })).toBeVisible()
 })
 
 test('atividades e ocorrências: cadastros, filhos, público, instituições, providência e resolução', async ({ page, request }) => {
   const ctx = await context(request)
-  await open(page, ctx.garden.id, 'atividades', 'participantes', 'novo'); await fill(page, 'displayName', 'Pessoa fictícia de teste'); const person = await save(page, `${ctx.prefix}/participants`)
-  await open(page, ctx.garden.id, 'atividades', 'insumos', 'novo'); await fill(page, 'name', `Insumo fictício ${ctx.suffix}`); await fill(page, 'referenceUnit', 'kg'); const input = await save(page, '/inputs')
-  await open(page, ctx.garden.id, 'atividades', 'instituicoes', 'novo'); await fill(page, 'name', `Instituição fictícia ${ctx.suffix}`); const institution = await save(page, '/institutions')
-  await open(page, ctx.garden.id, 'ocorrencias', 'registros', 'novo'); await fill(page, 'openedAt', `${date}T08:00`); await fill(page, 'category', 'Inspeção'); await fill(page, 'description', 'Falha fictícia em acompanhamento'); const occurrence = await save(page, `${ctx.prefix}/occurrences`)
+  await open(page, ctx.garden.id, 'atividades/participantes', 'novo'); await fill(page, 'displayName', 'Pessoa fictícia de teste'); const person = await save(page, `${ctx.prefix}/participants`)
+  await open(page, ctx.garden.id, 'atividades/insumos', 'novo'); await fill(page, 'name', `Insumo fictício ${ctx.suffix}`); await fill(page, 'referenceUnit', 'kg'); const input = await save(page, '/inputs')
+  await open(page, ctx.garden.id, 'atividades/instituicoes', 'novo'); await fill(page, 'name', `Instituição fictícia ${ctx.suffix}`); const institution = await save(page, '/institutions')
+  await open(page, ctx.garden.id, 'ocorrencias', 'novo'); await fill(page, 'openedAt', `${date}T08:00`); await fill(page, 'category', 'Inspeção'); await fill(page, 'description', 'Falha fictícia em acompanhamento'); const occurrence = await save(page, `${ctx.prefix}/occurrences`)
   await page.getByRole('link', { name: 'Registrar providência como atividade' }).click(); await expect(page.locator('[name="occurrenceId"]')).toHaveValue(occurrence.id)
   await fill(page, 'title', 'Providência e oficina fictícia'); await fill(page, 'category', 'Manejo'); await fill(page, 'performedOn', date); await page.getByLabel('Social', { exact: true }).check(); await page.getByLabel('Educacional', { exact: true }).check(); await fill(page, 'objective', 'Demonstração de manejo'); await fill(page, 'modality', 'Oficina'); await fill(page, 'reportedAudienceTotal', '20'); await choose(page, 'audienceListComplete', 'false')
   await page.getByRole('button', { name: 'Adicionar participação', exact: true }).click(); await choose(page, 'participants[0].participantId', person.id); await fill(page, 'participants[0].workHours', '2'); await page.getByLabel('Conta como público').check()
@@ -178,35 +180,35 @@ test('atividades e ocorrências: cadastros, filhos, público, instituições, pr
   await page.getByRole('button', { name: 'Adicionar instituição', exact: true }).click(); await choose(page, 'institutions[0].institutionId', institution.id)
   const activity = await save(page, `${ctx.prefix}/activities`)
   await page.reload(); await expect(page.getByText('Pessoa fictícia de teste', { exact: true }).first()).toBeVisible()
-  await indicator(page, ctx.garden.id, 'work-hours'); await metric(page, 'Horas conhecidas (h)', '2')
-  await indicator(page, ctx.garden.id, 'social-educational-participation'); await metric(page, 'Público conhecido', '20'); await metric(page, 'Presenças nominais', '1'); await metric(page, 'Pessoas identificadas distintas', '1'); await metric(page, 'Atividades distintas', '1')
-  await open(page, ctx.garden.id, 'ocorrencias', 'registros', occurrence.id); await expect(page.getByRole('link', { name: /Providência e oficina fictícia/ })).toBeVisible(); await page.getByText('Acompanhar ou resolver ocorrência', { exact: true }).click(); await fill(page, 'reason', 'Verificação final fictícia'); await fill(page, 'resolvedAt', `${date}T17:00`); await fill(page, 'resolution', 'Providência concluída'); await page.getByRole('button', { name: 'Confirmar resolução' }).click(); await expect(page.getByRole('listitem').filter({ hasText: 'Motivo: Verificação final fictícia' })).toBeVisible()
-  await indicator(page, ctx.garden.id, 'operational-occurrences'); await metric(page, 'Quantidade de origens', '1'); await metric(page, 'Resolvidas', '1')
-  await open(page, ctx.garden.id, 'atividades', 'registros', activity.id); await page.getByRole('button', { name: 'Corrigir registro' }).click(); await fill(page, 'participants[0].workHours', '0'); await fill(page, 'reason', 'Ajuste da participação'); await page.getByRole('button', { name: 'Salvar registro', exact: true }).click(); await expect(page.getByRole('listitem').filter({ hasText: 'Motivo: Ajuste da participação' })).toBeVisible()
-  await indicator(page, ctx.garden.id, 'work-hours'); await metric(page, 'Horas conhecidas (h)', '0')
+  await indicator(page, ctx.garden.id, 'horas'); await metric(page, 'Horas conhecidas (h)', '2')
+  await indicator(page, ctx.garden.id, 'participacao'); await metric(page, 'Público conhecido', '20'); await metric(page, 'Presenças nominais', '1'); await metric(page, 'Pessoas identificadas distintas', '1'); await metric(page, 'Atividades distintas', '1')
+  await open(page, ctx.garden.id, 'ocorrencias', occurrence.id); await expect(page.getByRole('link', { name: /Providência e oficina fictícia/ })).toBeVisible(); await page.getByText('Acompanhar ou resolver ocorrência', { exact: true }).click(); await fill(page, 'reason', 'Verificação final fictícia'); await fill(page, 'resolvedAt', `${date}T17:00`); await fill(page, 'resolution', 'Providência concluída'); await page.getByRole('button', { name: 'Confirmar resolução' }).click(); await expect(page.getByRole('listitem').filter({ hasText: 'Motivo: Verificação final fictícia' })).toBeVisible()
+  await indicator(page, ctx.garden.id, 'ocorrencias'); await metric(page, 'Quantidade de origens', '1'); await metric(page, 'Resolvidas', '1')
+  await open(page, ctx.garden.id, 'atividades/registros', activity.id); await page.getByRole('button', { name: 'Corrigir registro' }).click(); await fill(page, 'participants[0].workHours', '0'); await fill(page, 'reason', 'Ajuste da participação'); await page.getByRole('button', { name: 'Salvar registro', exact: true }).click(); await expect(page.getByRole('listitem').filter({ hasText: 'Motivo: Ajuste da participação' })).toBeVisible()
+  await indicator(page, ctx.garden.id, 'horas'); await metric(page, 'Horas conhecidas (h)', '0')
 })
 
 test('custos: precisão, envio incerto sem duplicação, conflito real com rascunho e invalidação', async ({ page, request }) => {
   const ctx = await context(request)
-  await open(page, ctx.garden.id, 'custos', 'registros', 'novo'); await fill(page, 'entryDate', date); await fill(page, 'description', 'Previsão fictícia'); await fill(page, 'category', 'Materiais'); await fill(page, 'amountBrl', '100'); const planned = await save(page, `${ctx.prefix}/financial-entries`)
-  await open(page, ctx.garden.id, 'custos', 'registros', 'novo'); await fill(page, 'entryDate', date); await fill(page, 'description', 'Realização fictícia'); await fill(page, 'category', 'Materiais'); await fill(page, 'amountBrl', '120,001'); await choose(page, 'nature', 'Actual'); await page.getByRole('button', { name: 'Salvar registro', exact: true }).click(); await expect(page.locator('[name="amountBrl"]')).toHaveAttribute('aria-invalid', 'true'); await fill(page, 'amountBrl', '120')
+  await open(page, ctx.garden.id, 'custos', 'novo'); await fill(page, 'entryDate', date); await fill(page, 'description', 'Previsão fictícia'); await fill(page, 'category', 'Materiais'); await fill(page, 'amountBrl', '100'); const planned = await save(page, `${ctx.prefix}/financial-entries`)
+  await open(page, ctx.garden.id, 'custos', 'novo'); await fill(page, 'entryDate', date); await fill(page, 'description', 'Realização fictícia'); await fill(page, 'category', 'Materiais'); await fill(page, 'amountBrl', '120,001'); await choose(page, 'nature', 'Actual'); await page.getByRole('button', { name: 'Salvar registro', exact: true }).click(); await expect(page.locator('[name="amountBrl"]')).toHaveAttribute('aria-invalid', 'true'); await fill(page, 'amountBrl', '120')
   let calls = 0, operationId = ''
   await page.route(`**/api/v1${ctx.prefix}/financial-entries`, async route => { if (route.request().method() !== 'POST') return route.continue(); calls++; const payload: { operationId: string } = route.request().postDataJSON(); if (calls === 1) { operationId = payload.operationId; await route.fetch(); await route.abort('failed') } else { expect(payload.operationId).toBe(operationId); await route.continue() } })
   await page.getByRole('button', { name: 'Salvar registro', exact: true }).click(); await expect(page.getByRole('button', { name: 'Confirmar tentativa original' })).toBeVisible(); await expect(page.locator('[name="amountBrl"]')).toBeDisabled()
   await page.getByRole('button', { name: 'Confirmar tentativa original' }).click(); await expect(page.getByRole('heading', { name: 'Histórico de alterações' })).toBeVisible(); await page.unroute(`**/api/v1${ctx.prefix}/financial-entries`)
   const all = await request.get(`${api()}${ctx.prefix}/financial-entries?from=${date}&to=${date}`), records = await all.json(); expect(records.totalCount).toBe(2); const actual = records.items.find((x: { nature: string }) => x.nature === 'Actual'); expect(actual).toBeTruthy()
-  await indicator(page, ctx.garden.id, 'basic-costs'); await metric(page, 'Previsto (BRL)', '100'); await metric(page, 'Realizado (BRL)', '120'); await metric(page, 'Diferença (BRL)', '20')
-  await open(page, ctx.garden.id, 'custos', 'registros', actual.id); await page.getByRole('button', { name: 'Corrigir registro' }).click(); await fill(page, 'amountBrl', '115'); await fill(page, 'reason', 'Rascunho preservado')
+  await indicator(page, ctx.garden.id, 'custos'); await metric(page, 'Previsto (BRL)', '100'); await metric(page, 'Realizado (BRL)', '120'); await metric(page, 'Diferença (BRL)', '20')
+  await open(page, ctx.garden.id, 'custos', actual.id); await page.getByRole('button', { name: 'Corrigir registro' }).click(); await fill(page, 'amountBrl', '115'); await fill(page, 'reason', 'Rascunho preservado')
   const concurrent = await request.put(`${api()}${ctx.prefix}/financial-entries/${actual.id}`, { data: { entryDate: date, description: 'Realização fictícia', category: 'Materiais', amountBrl: 125, nature: 'Actual', bedId: null, cycleId: null, expectedVersion: 1, reason: 'Outra conferência' } }); expect(concurrent.status()).toBe(200)
   await page.getByRole('button', { name: 'Salvar registro', exact: true }).click(); await expect(page.locator('[name="amountBrl"]')).toHaveValue('115'); await expect(page.getByRole('button', { name: 'Salvar registro', exact: true })).toBeDisabled(); await page.getByRole('button', { name: 'Recarregar para comparar' }).click(); await expect(page.getByRole('heading', { name: 'Estado atual do servidor' })).toBeVisible(); await page.getByRole('button', { name: 'Revisei e reconheço a versão atual' }).click(); await page.getByRole('button', { name: 'Salvar registro', exact: true }).click(); await expect(page.getByRole('listitem').filter({ hasText: 'Motivo: Rascunho preservado' })).toBeVisible()
-  await open(page, ctx.garden.id, 'custos', 'registros', planned.id); await page.getByText('Invalidar registro', { exact: true }).click(); await fill(page, 'reason', 'Previsão cancelada'); await page.getByRole('button', { name: 'Confirmar invalidação' }).click(); await expect(page.getByText('Invalidado · Versão 2')).toBeVisible()
-  await indicator(page, ctx.garden.id, 'basic-costs'); await metric(page, 'Previsto (BRL)', 'Não informado'); await metric(page, 'Realizado (BRL)', '115'); await page.getByText('Como interpretar este indicador', { exact: true }).click(); await expect(page.getByText(/sem registros de previsão/i).first()).toBeVisible()
+  await open(page, ctx.garden.id, 'custos', planned.id); await page.getByText('Invalidar registro', { exact: true }).click(); await fill(page, 'reason', 'Previsão cancelada'); await page.getByRole('button', { name: 'Confirmar invalidação' }).click(); await expect(page.getByText('Invalidado · Versão 2')).toBeVisible()
+  await indicator(page, ctx.garden.id, 'custos'); await metric(page, 'Previsto (BRL)', 'Não informado'); await metric(page, 'Realizado (BRL)', '115'); await page.getByText('Como interpretar este indicador', { exact: true }).click(); await expect(page.getByText(/sem registros de previsão/i).first()).toBeVisible()
 })
 
 test('celular, teclado, descarte explícito e leitura falha após gravação confirmada', async ({ page, request }) => {
   const ctx = await context(request)
   await page.setViewportSize({ width: 390, height: 844 })
-  await open(page, ctx.garden.id, 'custos', 'registros', 'novo'); await fill(page, 'entryDate', date); await fill(page, 'description', 'Custo fictício no celular'); await fill(page, 'category', 'Material'); await fill(page, 'amountBrl', '0')
+  await open(page, ctx.garden.id, 'custos', 'novo'); await fill(page, 'entryDate', date); await fill(page, 'description', 'Custo fictício no celular'); await fill(page, 'category', 'Material'); await fill(page, 'amountBrl', '0')
   await page.getByRole('button', { name: 'Abrir menu de navegação' }).click()
   await expect(page.getByRole('dialog', { name: 'Menu de navegação' })).toBeVisible()
   await page.screenshot({ path: 'test-results/mvp-mobile-navigation.png' })
@@ -223,12 +225,12 @@ test('celular, teclado, descarte explícito e leitura falha após gravação con
   await page.unroute(`**/api/v1${ctx.prefix}/financial-entries/**`); await page.getByRole('button', { name: 'Tentar novamente' }).first().click(); await metric(page, 'Valor (BRL)', '0')
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.screenshot({ path: 'test-results/mvp-mobile-detail.png', fullPage: true })
-  await indicator(page, ctx.garden.id, 'basic-costs'); await page.screenshot({ path: 'test-results/mvp-mobile-indicator.png', fullPage: true })
+  await indicator(page, ctx.garden.id, 'custos'); await page.screenshot({ path: 'test-results/mvp-mobile-indicator.png', fullPage: true })
   await page.setViewportSize({ width: 1440, height: 1000 }); await page.screenshot({ path: 'test-results/mvp-desktop-indicator.png', fullPage: true })
-  await open(page, ctx.garden.id, 'custos', 'registros')
+  await open(page, ctx.garden.id, 'custos')
   await expect(page.getByRole('link', { name: 'Custo fictício no celular', exact: true })).toBeVisible()
   await page.screenshot({ path: 'test-results/mvp-desktop-list.png', fullPage: true })
-  await page.setViewportSize({ width: 390, height: 844 }); await open(page, ctx.garden.id, 'atividades', 'registros', 'novo')
+  await page.setViewportSize({ width: 390, height: 844 }); await open(page, ctx.garden.id, 'atividades/registros', 'novo')
   await page.getByRole('button', { name: 'Adicionar participação', exact: true }).click(); await page.getByRole('button', { name: 'Adicionar uso de insumo' }).click(); await page.getByRole('button', { name: 'Adicionar instituição', exact: true }).click()
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.screenshot({ path: 'test-results/mvp-mobile-activity.png', fullPage: true })
@@ -241,7 +243,7 @@ test('celular, teclado, descarte explícito e leitura falha após gravação con
 
 test('cadastro com resposta perdida exige revisar a lista; horta inativa mantém consulta', async ({ page, request }) => {
   const ctx = await context(request)
-  await open(page, ctx.garden.id, 'atividades', 'participantes', 'novo')
+  await open(page, ctx.garden.id, 'atividades/participantes', 'novo')
   await fill(page, 'displayName', 'Pessoa de envio incerto')
   let calls = 0
   await page.route(`**/api/v1${ctx.prefix}/participants`, async route => {
@@ -257,11 +259,11 @@ test('cadastro com resposta perdida exige revisar a lista; horta inativa mantém
   await page.unroute(`**/api/v1${ctx.prefix}/participants`)
   const inactive = await request.post(`${api()}/gardens/${ctx.garden.id}/inactivation`, { data: { expectedVersion: 1, reason: 'Suspensão da horta fictícia' } })
   expect(inactive.status(), await inactive.text()).toBe(200)
-  await open(page, ctx.garden.id, 'atividades', 'participantes'); await page.reload()
+  await open(page, ctx.garden.id, 'atividades/participantes'); await page.reload()
   await expect(page.getByText(/Horta inativa/).first()).toBeVisible()
   await expect(page.getByRole('button', { name: 'Novo registro' })).toBeDisabled()
   await expect(page.getByRole('link', { name: 'Pessoa de envio incerto', exact: true })).toBeVisible()
-  await open(page, ctx.garden.id, 'cultivo', 'especies')
+  await open(page, ctx.garden.id, 'catalogo/especies')
   await expect(page.getByRole('button', { name: 'Novo registro' })).toBeEnabled()
 })
 
@@ -271,8 +273,8 @@ test('dashboard integrado mantém período, zero, origem e falha isolada de um i
   await post(request, `${ctx.prefix}/irrigations`, { operationId: uuidV7(), sectorId: ctx.sector.id, bedIds: [ctx.bed.id], startedAt: `${date}T08:00:00-03:00`, endedAt: `${date}T08:30:00-03:00`, activeDurationMinutes: 30, volumeLiters: 120, volumeSource: 'Measured', volumeMethod: 'Manual', flowRateLitersPerMinute: null, status: 'Completed', responsibleParticipantId: null, notes: null })
   let failures = 0
   await page.route('**/indicators/work-hours?**', async route => { if (failures++ === 0) await route.abort('failed'); else await route.continue() })
-  await open(page, ctx.garden.id, 'visao-geral', 'painel', '', `from=${date}&to=${date}`)
-  await expect(page.getByRole('heading', { name: 'Dashboard da horta' })).toBeVisible()
+  await open(page, ctx.garden.id, 'visao-geral', '', `from=${date}&to=${date}`)
+  await expect(page.getByRole('heading', { name: 'Visão panorâmica da horta', exact: true })).toBeVisible()
   await expect(page.getByRole('article')).toHaveCount(10)
   const water = page.getByRole('article', { name: 'Água e irrigação por setor', exact: true })
   const cost = page.getByRole('article', { name: 'Custos previstos e realizados', exact: true })
@@ -298,7 +300,7 @@ test('dashboard integrado mantém período, zero, origem e falha isolada de um i
 
 test('nova horta abre seus setores e dependências mantêm acesso aos outros módulos', async ({ page, request }) => {
   const old = await context(request)
-  await page.goto('/#/hortas/_/horta/setores/novo')
+  await page.goto('/hortas')
   await expect(page.getByRole('heading', { name: 'Hortas', exact: true })).toBeVisible()
   await expect(page.getByRole('navigation', { name: 'Áreas da aplicação' })).toBeVisible()
   await page.getByRole('link', { name: 'Nova horta', exact: true }).click()
@@ -363,7 +365,7 @@ test('banco descartável sem hortas permite começar pela primeira organização
   await page.getByRole('button', { name: 'Salvar irrigação' }).click()
   await expect(page.getByRole('heading', { name: 'Detalhe da irrigação' })).toBeVisible()
   await nav.getByRole('link', { name: 'Visão geral', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Dashboard da horta' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Visão panorâmica da horta', exact: true })).toBeVisible()
   await expect(page.getByRole('article')).toHaveCount(10)
   await expect(page.getByRole('article', { name: 'Água e irrigação por setor', exact: true }).getByText(/1 irrigações/)).toBeVisible()
 })

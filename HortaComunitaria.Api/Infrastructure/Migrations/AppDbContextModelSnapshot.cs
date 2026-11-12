@@ -6,6 +6,7 @@ using HortaComunitaria.Api.Domain.Environment;
 using HortaComunitaria.Api.Domain.History;
 using HortaComunitaria.Api.Domain.Irrigation;
 using HortaComunitaria.Api.Domain.Occurrences;
+using HortaComunitaria.Api.Infrastructure.Identity;
 using HortaComunitaria.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -36,6 +37,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "occurrence_status", new[] { "in_progress", "open", "resolved" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "planting_kind", new[] { "initial", "replacement" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "record_validity", new[] { "invalid", "valid" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "user_profile", new[] { "administrator", "operator" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "volume_source", new[] { "estimated", "measured" });
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "btree_gist");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -1761,32 +1763,6 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                     b.ToTable("audit_entries", (string)null);
                 });
 
-            modelBuilder.Entity("HortaComunitaria.Api.Domain.Identity.User", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AuthenticationIdentifier")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("DisplayName")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("character varying(120)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuthenticationIdentifier")
-                        .IsUnique();
-
-                    b.ToTable("users", (string)null);
-                });
-
             modelBuilder.Entity("HortaComunitaria.Api.Domain.Irrigation.Irrigation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2012,6 +1988,157 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("HortaComunitaria.Api.Infrastructure.Identity.AppUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDemonstration")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<UserProfile>("Profile")
+                        .HasColumnType("user_profile");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
+
+                    b.ToTable("users", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_users_demonstration_without_credentials", "NOT \"IsDemonstration\" OR (\"PasswordHash\" IS NULL AND NOT \"IsActive\")");
+                        });
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("user_claims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("user_logins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("user_tokens", (string)null);
+                });
+
             modelBuilder.Entity("HortaComunitaria.Api.Domain.Activities.Activity", b =>
                 {
                     b.HasOne("HortaComunitaria.Api.Domain.Gardens.Garden", null)
@@ -2020,7 +2147,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2117,7 +2244,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2144,7 +2271,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2181,7 +2308,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2245,7 +2372,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2266,7 +2393,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2294,7 +2421,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2322,7 +2449,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2383,7 +2510,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2456,7 +2583,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2561,7 +2688,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("SavedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2584,7 +2711,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .HasForeignKey("GardenId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2605,7 +2732,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2657,7 +2784,7 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HortaComunitaria.Api.Domain.Identity.User", null)
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2692,6 +2819,33 @@ namespace HortaComunitaria.Api.Infrastructure.Migrations
                         .HasForeignKey("GardenId", "SectorId")
                         .HasPrincipalKey("GardenId", "Id")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+                {
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+                {
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+                {
+                    b.HasOne("HortaComunitaria.Api.Infrastructure.Identity.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("HortaComunitaria.Api.Domain.Activities.Activity", b =>

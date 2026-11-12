@@ -14,7 +14,7 @@ flowchart LR
 
 A interface envia comandos à API. O servidor valida horta/setor/vínculos de canteiros na data, resolve a autoria, grava em PostgreSQL e calcula os indicadores. Corrigir ou invalidar preserva histórico. Uma irrigação de 120 L atendendo quatro canteiros consome 120 L no total. Volume desconhecido permanece desconhecido; zero informado é uma medida explícita.
 
-A aplicação atual usa autoria técnica `Operador de demonstração`, separada do participante responsável pelo trabalho. Login e permissões RF01 estão previstos para pós-MVP. O modo atual funciona somente em Development com habilitação explícita.
+A aplicação exige login (ASP.NET Core Identity com bearer token) desde 12/11/2026. A autoria de cada registro é a pessoa autenticada, separada do participante responsável pelo trabalho. Há dois perfis: **Adm** (estrutura, catálogos e usuários, além dos fatos de campo) e **Operador** (registra, corrige e invalida fatos de campo). Ver o [plano de autenticação](planejamento/autenticacao/Plano_Autenticacao_Autorizacao.md).
 
 ## 1. Pré-requisitos e configuração
 
@@ -26,7 +26,6 @@ Em outra instalação, crie um banco dedicado chamado `horta_demo` pelo pgAdmin 
 
 ```json
 {
-  "DemoMode": { "Enabled": true },
   "Observability": { "ConsoleFormat": "Text" },
   "Persistence": {
     "ApplyMigrationsOnStartup": true,
@@ -56,24 +55,31 @@ Com migrations automáticas habilitadas, o startup também confere o esquema; o 
 - [OpenAPI](http://localhost:5163/openapi/v1.json): descrição HTTP da implementação atual.
 - [Liveness](http://localhost:5163/health/live): verifica que o processo responde.
 
-## 3. Preparar autoria e escolher como criar os cadastros
+## 3. Criar o primeiro administrador e os cadastros
 
-Não há seed. Um banco novo permanece vazio após migrations. O autor demonstrativo ativo `demo:operator` precisa ser preparado explicitamente uma vez, porque RF01 ainda não tem cadastro/login. Em pgAdmin conectado ao banco dedicado, confira `users`; se ele não existir, execute:
+Não há seed. Um banco novo permanece vazio após migrations. O primeiro administrador é criado uma única vez por comando explícito, com as credenciais apenas no ambiente do terminal (não versionar):
 
-```sql
-INSERT INTO users ("Id", "AuthenticationIdentifier", "DisplayName", "IsActive")
-VALUES ('01a11c0e-0d4c-7928-ab6b-fd88c78ae086', 'demo:operator', 'Operador de demonstração', true)
-ON CONFLICT ("AuthenticationIdentifier") DO NOTHING;
+```powershell
+$env:DOTNET_ENVIRONMENT = 'Development'
+$env:Bootstrap__Email = 'adm@exemplo.org'
+$env:Bootstrap__DisplayName = 'Nome da pessoa administradora'
+$env:Bootstrap__Password = Read-Host 'Senha inicial (12+ caracteres)'
+dotnet run --project HortaComunitaria.Api --no-launch-profile -- --bootstrap-admin
+Remove-Item Env:Bootstrap__Password
 ```
 
-Se já existir, confira se está ativo. Esse usuário técnico não tem senha e não representa o participante responsável. Todos os cadastros de negócio são criados pela interface ou por HTTP, com histórico. Para seguir somente pela interface, após preparar o autor vá à seção 4 e use o roteiro da seção 5; os exemplos HTTP abaixo são uma alternativa. Crie uma horta separada para cada roteiro independente; não execute como carga automática da aplicação.
+O comando não inicia o servidor nem aplica migrations, recusa-se se já houver administrador ativo e marca a senha como inicial: no primeiro acesso a interface exige a troca. Os demais usuários são criados pelo Adm em **Usuários** (menu da conta). Não há redefinição de senha nesta etapa. O antigo autor técnico `demo:operator`, se existir, é convertido pela migration `AddIdentityAuthentication` em registro de demonstração inativo, sem credenciais, apenas para o histórico.
 
-No Swagger, crie horta → setor → canteiro → área e associação → participante. Ou execute explicitamente no PowerShell, com a API iniciada:
+Todos os cadastros de negócio são criados pela interface ou por HTTP autenticado, com histórico. Para seguir somente pela interface, entre como Adm, vá à seção 4 e use o roteiro da seção 5; os exemplos HTTP abaixo são uma alternativa. Crie uma horta separada para cada roteiro independente; não execute como carga automática da aplicação.
+
+No Swagger, faça `POST /api/v1/auth/login`, informe o `accessToken` em **Authorize** e crie horta → setor → canteiro → área e associação → participante. Ou execute explicitamente no PowerShell, com a API iniciada (o token vale 15 minutos):
 
 ```powershell
 $api = 'http://localhost:5163/api/v1'
+$credenciais = @{ email = 'adm@exemplo.org'; password = (Read-Host 'Senha') } | ConvertTo-Json
+$token = (Invoke-RestMethod -Method Post -Uri "$api/auth/login" -ContentType 'application/json' -Body $credenciais).accessToken
 function Post-Horta([string]$path, [object]$body) {
-  Invoke-RestMethod -Method Post -Uri "$api$path" -ContentType 'application/json' -Body ($body | ConvertTo-Json -Depth 12)
+  Invoke-RestMethod -Method Post -Uri "$api$path" -Headers @{ Authorization = "Bearer $token" } -ContentType 'application/json' -Body ($body | ConvertTo-Json -Depth 12)
 }
 $horta = Post-Horta '/gardens' @{ name = 'Horta de teste' }
 $prefixo = "/gardens/$($horta.id)"
@@ -253,11 +259,12 @@ Substitua a credencial local; caracteres especiais na URL precisam ser codificad
 
 | Sintoma | Conferência |
 | --- | --- |
-| API recusa startup | Development, DemoMode habilitado, conexão local configurada; verificar erro estruturado no terminal |
+| API recusa startup | Conexão local configurada e seção `Authentication` válida; verificar erro estruturado no terminal |
 | Readiness 503 | Serviço PostgreSQL, porta, credencial e banco acessíveis |
 | Nenhuma horta | `GET /gardens` e cadastros ativos; migrations não inserem dados |
 | Nenhum canteiro | Setor correto e associação vigente no dia; não basta existir o canteiro |
-| Consulta funciona, mas comando falha | Conferir autor técnico ativo `demo:operator` e erro/traceId; não basta ter participante |
+| Tela de entrada não aceita | E-mail/senha; após 5 falhas a conta fica bloqueada por 15 min; conta inativa não entra |
+| Comando responde 403 | Perfil Operador em ação de estrutura/catálogo ou senha inicial ainda não trocada |
 | Frontend não consulta API | API 5163 ativa e proxy Vite no destino correto; conferir mensagem e traceId |
 | Consumo diferente do exemplo | Mesmo dia/setor, somente válidos, outros registros no recorte e volume conhecido |
 

@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Activities.Shared;
 namespace HortaComunitaria.Api.Features.Activities.CorrectActivity;
 
 internal sealed record CorrectActivityRequest([property: JsonRequired] string Title, [property: JsonRequired] string Category, [property: JsonRequired] DateOnly PerformedOn, [property: JsonRequired] string? Description, [property: JsonRequired] Guid? BedId, [property: JsonRequired] Guid? SectorId, [property: JsonRequired] Guid? CycleId, [property: JsonRequired] Guid? OccurrenceId, [property: JsonRequired] bool IsOperational, [property: JsonRequired] bool IsSocial, [property: JsonRequired] bool IsEducational, [property: JsonRequired] string? Objective, [property: JsonRequired] string? Modality, [property: JsonRequired] int? ReportedAudienceTotal, [property: JsonRequired] bool? AudienceListComplete, [property: JsonRequired] ActivityParticipantRequest[]? Participants, [property: JsonRequired] InputUsageRequest[]? InputUsages, [property: JsonRequired] ActivityInstitutionRequest[]? Institutions, [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class CorrectActivityCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CorrectActivityCommandHandler> logger)
+internal sealed class CorrectActivityCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CorrectActivityCommandHandler> logger)
 {
     public async Task<Result<ActivityResponse>> HandleAsync(Guid gardenId, Guid id, CorrectActivityRequest request, CancellationToken cancellationToken)
     {

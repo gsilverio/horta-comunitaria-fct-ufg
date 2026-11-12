@@ -170,20 +170,19 @@ public sealed class OperationsTests(PostgresFixture postgres) : IClassFixture<Po
     }
 
     [Theory]
-    [InlineData("Development", false)]
-    [InlineData("Production", true)]
-    [InlineData("Staging", true)]
-    public void Unsafe_demo_configuration_refuses_startup(string environment, bool enabled)
+    [InlineData("Authentication:AccessTokenLifetime", "02:00:00")]
+    [InlineData("Authentication:RefreshTokenLifetime", "00:10:00")]
+    [InlineData("Authentication:RateLimitPerMinute", "0")]
+    public void Invalid_authentication_configuration_refuses_startup(string key, string value)
     {
         using var factory = new ApiFactory("Host=127.0.0.1;Port=1;Database=unused;Username=unused",
-            environment: environment, demoEnabled: enabled);
+            settings: new Dictionary<string, string?> { [key] = value });
         // O adaptador WebApplicationFactory pode observar o provider já descartado após falha fatal.
         // A causa original deve permanecer registrada exatamente uma vez pelo host.
         Assert.ThrowsAny<Exception>(() => factory.CreateClient());
         var fatal = Assert.Single(factory.Logs.Events, x => x.Exception is not null);
         var exception = Assert.IsType<OptionsValidationException>(fatal.Exception);
-        Assert.Contains("Development", exception.Message);
-        Assert.Contains("DemoMode:Enabled", exception.Message);
+        Assert.Contains(key, exception.Message);
         Assert.Equal(LogEventLevel.Fatal, fatal.Level);
     }
 }

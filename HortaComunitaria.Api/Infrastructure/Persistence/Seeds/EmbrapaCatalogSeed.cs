@@ -16,7 +16,7 @@ internal sealed record CatalogCultivar(string Name, int SourcePage);
 internal sealed record CatalogSeedResult(int SpeciesCreated, int CultivarsCreated);
 
 // Importação explícita, offline e aditiva. Nunca executada por migrations ou pelo startup HTTP.
-internal sealed class EmbrapaCatalogSeed(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<EmbrapaCatalogSeed> logger)
+internal sealed class EmbrapaCatalogSeed(AppDbContext db, TimeProvider clock, ILogger<EmbrapaCatalogSeed> logger)
 {
     internal static T ReadResource<T>(string name)
     {
@@ -53,7 +53,10 @@ internal sealed class EmbrapaCatalogSeed(AppDbContext db, DemoAuthorContext auth
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await WriteLocks.CatalogsAsync(db, cancellationToken);
-        var actor = await author.ResolveAsync(cancellationToken);
+        // Importação administrativa sem HTTP: autoria do primeiro administrador ativo (criado por --bootstrap-admin).
+        var actor = await db.Users.AsNoTracking().Where(x => x.IsActive && x.Profile == UserProfile.Administrator)
+            .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id).Select(x => (Guid?)x.Id).FirstOrDefaultAsync(cancellationToken)
+            ?? throw new InvalidOperationException("Nenhum administrador ativo; execute --bootstrap-admin antes da importação.");
         var at = InstantPrecision.ForPersistence(clock.GetUtcNow());
         var speciesCreated = 0;
         var cultivarsCreated = 0;

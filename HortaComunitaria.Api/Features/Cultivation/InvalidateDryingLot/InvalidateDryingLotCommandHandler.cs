@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.InvalidateDryingLot;
 
 internal sealed record InvalidateDryingLotRequest([property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class InvalidateDryingLotCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<InvalidateDryingLotCommandHandler> logger)
+internal sealed class InvalidateDryingLotCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<InvalidateDryingLotCommandHandler> logger)
 {
     public async Task<Result<DryingLotResponse>> HandleAsync(Guid gardenId, Guid id, InvalidateDryingLotRequest request, CancellationToken cancellationToken)
     {

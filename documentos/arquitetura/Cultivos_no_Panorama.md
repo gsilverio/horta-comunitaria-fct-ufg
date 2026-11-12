@@ -31,6 +31,49 @@ Contratos PUT:
 
 Corpo: `visualGrowthDays`, `visualHarvestDays`, `expectedVersion`, `reason`. Os dois prazos são inteiros positivos, com colheita posterior ao crescimento; ambos nulos removem a configuração. Domínio valida, banco reforça com checks, e versão/auditoria seguem o cadastro existente. Correções comuns de nome/descrição preservam os prazos. A migration `AddVisualGrowthTiming`, gerada pelo EF CLI, adiciona só quatro colunas opcionais e dois checks.
 
+### Prazos conforme o livro da Embrapa (11/11/2026)
+
+A pedido do responsável, os prazos fictícios de 5/10 e 5/15 dias foram substituídos por valores do livro *Cultivares da Embrapa Hortaliças (1981-2023)*. A gravação foi feita pelo `PUT /api/v1/species/{id}/visual-growth` no banco local, com versão esperada e motivo citando as páginas. Não houve seed, migration nem SQL direto. Cultivares não receberam prazo próprio e herdam o valor da espécie.
+
+Critérios:
+
+- **Colheita prevista:** média, por espécie, dos prazos das cultivares do livro. Para faixas, usa-se o ponto médio. Quando o livro separa por região, vale o Centro-Oeste/"demais regiões"; quando separa por sistema, vale o transplante de mudas.
+- **Crescimento intermediário:** metade do prazo de colheita, arredondada. O livro não define essa fase, e o domínio exige os dois prazos juntos.
+- **Sem prazo no livro:** espécie fica vazia e pode ser preenchida depois em **Cultivo → Espécies → Configurar fases visuais**. A lista de pendências está em [Espécies sem prazo de colheita](Especies_Sem_Prazo_de_Colheita.md).
+- **Referências diferentes:** o livro conta a partir da semeadura, do transplante ou da emergência, conforme a ficha. A aplicação conta sempre a partir da data de plantio registrada. É estimativa, não maturidade confirmada.
+
+| Espécie | Colheita (dias) | Crescimento (dias) | Base no livro |
+| --- | ---: | ---: | --- |
+| Abóbora | — | — | BRS Brasileirinha: só floração; colheita por tamanho do fruto (p. 10) |
+| Abóbora híbrida | 100 | 50 | Jabras 90–110 (p. 12) |
+| Alface | 40 | 20 | Leila, Lélia, Mediterrânea: 35–45 (p. 14–18) |
+| Alho | 134 | 67 | Amarante 130–150, Hozan 150, Ito 95–130 fora do Sul (p. 20–24) |
+| Batata | 106 | 53 | Ana 110, Camila 100–110, Cecília 110, Clara 100, Contenda 100, Potira 110; IPRBel sem dias (p. 220–232) |
+| Batata-doce | 138 | 69 | 9 cultivares, 120 a 150–180 (p. 26–40, 234) |
+| Berinjela | 60 | 30 | Ciça, 60 após transplantio (p. 42) |
+| Cebola | 149 | 75 | 7 cultivares, Centro-Oeste/transplante (p. 44–56) |
+| Cenoura | 99 | 50 | Brasília, Carmela, Esplanada, Paranoá, Planaltina, Kuronan; Alvorada e Planalto sem dias (p. 58–72) |
+| Couve-brócolis | 80 | 40 | Ramoso de Brasília, início da colheita (p. 74) |
+| Ervilha | 95 | 48 | 8 de grão seco (90–110) e 5 de grão verde (81–86); Sulina sem dias (p. 76–102) |
+| Grão-de-bico | 121 | 61 | 6 cultivares, 108–140 (p. 104–114) |
+| Lentilha | 120 | 60 | Precoz 110–120, Silvina 125 (p. 116–118) |
+| Mandioquinha-salsa | 240 | 120 | Início da colheita aos 8 meses (p. 120–126) |
+| Melão | 70 | 35 | Anton 75, Araguaia 70, Eldorado 300 60–70 (p. 128–132) |
+| Milho-doce | 85 | 43 | 5 cultivares, 80–100 (p. 134–142) |
+| Mostarda-branca | 130 | 65 | Gisilba (p. 144) |
+| Pepino | 43 | 22 | 6 cultivares, 36–50 após semeadura (p. 146–156) |
+| Pimenta (*C. chinense*) | 88 | 44 | Araçari 78, demais 90; Juruti sem dias (p. 158–180) |
+| Pimenta dedo-de-moça | 70 | 35 | BRS Mari, ~70 após transplante (p. 170) |
+| Pimenta e pimentão (*C. annuum*) | — | — | Brasilândia só início da frutificação; Ema só precocidade relativa; Garça, Sarakura e Acará sem dias (p. 162–166, 176, 182) |
+| Repolho | — | — | União sem prazo (p. 184) |
+| Tomate | 84 | 42 | 12 cultivares, 60–120; Sena, Kiara e Nagai sem dias; em Couto, os 80 dias referem-se à floração (p. 186–216) |
+
+Observação de catálogo: a cultivar **BRS Alfa São Francisco** (p. 236) está cadastrada como cebola, mas a ficha descreve batata-doce. Ela não entrou em nenhuma média, e o vínculo não foi alterado.
+
+### Destaque de canteiro pronto
+
+Na panorâmica, quando um cultivo do canteiro está na fase **Colheita prevista**, o canteiro recebe contorno dourado pulsante, brilho nos símbolos das plantas e faíscas. Essa fase significa que a data de plantio somada ao prazo de colheita da espécie ou cultivar já foi atingida. O nome acessível do canteiro inclui "pronto para colheita", e a legenda explica o destaque. Com `prefers-reduced-motion`, o brilho fica estático.
+
 ## Quantidade e desenho
 
 A referência é a soma das quantidades dos **plantios iniciais válidos** do ciclo até a data, dividida pela área ocupada do cultivo. Reposições não são somadas novamente; sua existência é informada. A quantidade inicial não é uma contagem de plantas vivas.

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <style>
+    .plant { animation: plant-cycle 2.4s ease-in-out infinite; }
+    .stem { stroke-dasharray: 12; stroke-dashoffset: 12; animation: plant-stem 2.4s ease-out infinite; }
+    .leaf-left { transform-origin: 12px 15px; transform: scale(0); animation: plant-leaf-left 2.4s ease-out infinite; }
+    .leaf-right { transform-origin: 12px 11.5px; transform: scale(0); animation: plant-leaf-right 2.4s ease-out infinite; }
+    @keyframes plant-cycle { 0%, 82% { opacity: 1; } 94%, 100% { opacity: 0; } }
+    @keyframes plant-stem { 0% { stroke-dashoffset: 12; } 35%, 100% { stroke-dashoffset: 0; } }
+    @keyframes plant-leaf-left { 0%, 28% { transform: scale(0); } 50%, 100% { transform: scale(1); } }
+    @keyframes plant-leaf-right { 0%, 42% { transform: scale(0); } 64%, 100% { transform: scale(1); } }
+  </style>
+  <path d="M5 21h14" stroke="#9fb0a5" stroke-width="2" stroke-linecap="round"/>
+  <g class="plant">
+    <path class="stem" d="M12 21V9" stroke="#1c4939" stroke-width="2" stroke-linecap="round"/>
+    <path class="leaf-left" d="M12 15c-3.6 0-5.8-2.1-5.8-5.3 3.6 0 5.8 2.1 5.8 5.3z" fill="#7c9c63"/>
+    <path class="leaf-right" d="M12 11.5c0-3.2 2.2-5.3 5.8-5.3 0 3.2-2.2 5.3-5.8 5.3z" fill="#2c634b"/>
+  </g>
+</svg>

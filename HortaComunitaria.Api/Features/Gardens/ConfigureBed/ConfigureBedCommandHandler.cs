@@ -13,7 +13,7 @@ namespace HortaComunitaria.Api.Features.Gardens.ConfigureBed;
 
 internal sealed record ConfigureBedRequest([property: JsonRequired] decimal CultivableAreaM2, decimal? LengthMeters, decimal? WidthMeters, [property: JsonRequired] DateOnly ValidFrom, [property: JsonRequired] int ExpectedBedVersion, string? Reason);
 internal sealed record ConfigureBedResponse(BedConfigurationResponse Context, int BedVersion);
-internal sealed class ConfigureBedCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<ConfigureBedCommandHandler> logger)
+internal sealed class ConfigureBedCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<ConfigureBedCommandHandler> logger)
 {
     public async Task<Result<ConfigureBedResponse>> HandleAsync(Guid gardenId, Guid bedId, ConfigureBedRequest request, CancellationToken cancellationToken)
     {

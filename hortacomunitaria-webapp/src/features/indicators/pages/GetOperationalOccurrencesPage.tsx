@@ -1,3 +1,5 @@
+import type { AppRoute } from '../../../routes/routes'
+import { linkTo, withReturn } from '../../../routes/routes'
 import { useCallback } from "react"
 import { IndicatorPanel } from "../../../components/IndicatorPanel"
 import { Field, SelectField, Facts } from "../../../components/Fields"
@@ -5,12 +7,11 @@ import { Failure } from "../../../components/Feedback"
 import { useListFilters } from "../../../hooks/useListFilters"
 import { useLookups } from "../../../hooks/useLookups"
 import { useRemote } from "../../../hooks/useRemote"
-import { indicatorOriginHref as routeHref } from "../../../services/indicatorOriginHref"
 import { enumLabels } from "../../../services/labels"
 import { formatNumber, formatInstant } from "../../irrigation/formValues"
-import type { RecordRoute } from "../../../types/records"
+
 import { indicatorApi } from "../services/indicatorApi"
-export function GetOperationalOccurrencesPage({ route }: { route: RecordRoute }) {
+export function GetOperationalOccurrencesPage({ route }: { route: AppRoute }) {
 const filters = useListFilters(route, ['from', 'to', 'category', 'status'], true)
 const options = useLookups(route.garden, [])
 const load = useCallback((signal: AbortSignal) => indicatorApi.getOperationalOccurrences(route.garden, { page: filters.page, pageSize: 5, from: filters.values.from || undefined, to: filters.values.to || undefined, category: filters.values.category || undefined, status: filters.values.status || undefined }, signal), [route.garden, filters.page, filters.values.from, filters.values.to, filters.values.category, filters.values.status])
@@ -21,5 +22,5 @@ return <IndicatorPanel title="Ocorrências abertas no período" unit="Ocorrênci
 <Field name="category" label="Categoria" type="text" value={filters.draft.category} change={value => filters.change("category", value)} />
 <SelectField name="status" label="Situação" value={filters.draft.status} change={value => filters.change("status", value)} options={[{ id: 'Open', label: 'Aberta' }, { id: 'InProgress', label: 'Em andamento' }, { id: 'Resolved', label: 'Resolvida' }]} />
 {options.error && <Failure error={options.error} retry={options.retry} />}</>}
->{record?.origins.items.map((item, index) => <li key={index} className="border-b border-horta-line py-3"><Facts items={[{ label: 'Abertura em', value: formatInstant(item.openedAt) }, { label: 'Categoria', value: item.category }, { label: 'Situação', value: enumLabels[item.status] }]} /><a className="mt-4 inline-block font-semibold underline" href={routeHref(route.garden, 'ocorrencias', 'registros', item.id, new URLSearchParams({ from: filters.values.from, to: filters.values.to, category: filters.values.category, status: filters.values.status }))}>Abrir origem</a></li>)}</IndicatorPanel>
+>{record?.origins.items.map((item, index) => <li key={index} className="border-b border-horta-line py-3"><Facts items={[{ label: 'Abertura em', value: formatInstant(item.openedAt) }, { label: 'Categoria', value: item.category }, { label: 'Situação', value: enumLabels[item.status] }]} /><a className="mt-4 inline-block font-semibold underline" href={linkTo(route.garden, 'ocorrencias', item.id, withReturn(new URLSearchParams({ from: filters.values.from, to: filters.values.to, category: filters.values.category, status: filters.values.status })))}>Abrir origem</a></li>)}</IndicatorPanel>
 }

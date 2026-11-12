@@ -12,7 +12,7 @@ using Npgsql;
 namespace HortaComunitaria.Api.Features.Gardens.CreateBed;
 
 internal sealed record CreateBedRequest(string? Code, [property: JsonRequired] string Name, string? Location);
-internal sealed class CreateBedCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<CreateBedCommandHandler> logger)
+internal sealed class CreateBedCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<CreateBedCommandHandler> logger)
 {
     public async Task<Result<BedResponse>> HandleAsync(Guid gardenId, CreateBedRequest request, CancellationToken cancellationToken)
     {

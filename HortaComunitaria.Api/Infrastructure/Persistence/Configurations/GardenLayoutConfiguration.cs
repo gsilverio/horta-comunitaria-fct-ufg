@@ -1,5 +1,5 @@
 using HortaComunitaria.Api.Domain.Gardens;
-using HortaComunitaria.Api.Domain.Identity;
+using HortaComunitaria.Api.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -15,6 +15,6 @@ internal sealed class GardenLayoutConfiguration : IEntityTypeConfiguration<Garde
         builder.Property(x => x.Version).IsConcurrencyToken();
         builder.Property(x => x.RequestHash).HasMaxLength(64).IsRequired();
         builder.HasOne<Garden>().WithMany().HasForeignKey(x => x.GardenId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<User>().WithMany().HasForeignKey(x => x.SavedByUserId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<AppUser>().WithMany().HasForeignKey(x => x.SavedByUserId).OnDelete(DeleteBehavior.Restrict);
     }
 }

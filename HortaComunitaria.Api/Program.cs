@@ -1,6 +1,7 @@
 using HortaComunitaria.Api.Infrastructure.DependencyInjection;
 using HortaComunitaria.Api.Infrastructure.Endpoints;
 using HortaComunitaria.Api.Infrastructure.Files;
+using HortaComunitaria.Api.Infrastructure.Identity;
 using HortaComunitaria.Api.Infrastructure.Observability;
 using HortaComunitaria.Api.Infrastructure.Persistence;
 using Serilog;
@@ -19,7 +20,7 @@ try
     builder.Services.AddObservability(builder.Configuration, builder.Environment);
     builder.Services.AddPersistence(builder.Configuration, builder.Environment);
     builder.Services.AddFileStorage(builder.Configuration);
-    builder.Services.AddFileStorage(builder.Configuration);
+    builder.Services.AddAppIdentity(builder.Configuration, builder.Environment);
     builder.Services.AddApplication();
     builder.Services.AddTechnicalEndpoints();
 
@@ -35,8 +36,16 @@ try
         await seed.RunAsync(cancellation.Token);
         return;
     }
+    if (args.Contains("--bootstrap-admin", StringComparer.Ordinal))
+    {
+        // Comando administrativo explícito: cria o primeiro Adm sem iniciar servidor nem aplicar migrations.
+        using var bootstrapScope = app.Services.CreateScope();
+        Environment.ExitCode = await bootstrapScope.ServiceProvider.GetRequiredService<AdministratorBootstrap>().RunAsync(CancellationToken.None);
+        return;
+    }
     app.UseObservability();
     app.UseMiddleware<ErrorHandlingMiddleware>();
+    app.UseAppIdentity();
     app.MapAllEndpoints();
     app.MapTechnicalEndpoints();
     app.Lifetime.ApplicationStarted.Register(() =>

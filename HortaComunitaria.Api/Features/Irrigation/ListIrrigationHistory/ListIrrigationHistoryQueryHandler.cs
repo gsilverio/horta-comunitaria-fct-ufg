@@ -43,7 +43,7 @@ internal sealed class ListIrrigationHistoryQueryHandler(AppDbContext db, ILogger
                               entry.OccurredAt,
                               entry.Before,
                               entry.After,
-                              Actor = new RecordedByResponse(actor.Id, actor.DisplayName, actor.AuthenticationIdentifier == "demo:operator")
+                              Actor = new RecordedByResponse(actor.Id, actor.DisplayName, actor.IsDemonstration)
                           })
                           .ToListAsync(cancellationToken);
         var items = rows.Select(x => new IrrigationHistoryResponse(x.Id, x.Operation, x.Reason, x.OccurredAt, x.Actor,

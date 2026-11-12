@@ -1,6 +1,6 @@
 using HortaComunitaria.Api.Domain.Gardens;
 using HortaComunitaria.Api.Domain.Activities;
-using HortaComunitaria.Api.Domain.Identity;
+using HortaComunitaria.Api.Infrastructure.Identity;
 using IrrigationRecord = HortaComunitaria.Api.Domain.Irrigation.Irrigation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -50,7 +50,7 @@ internal sealed class IrrigationConfiguration : IEntityTypeConfiguration<Irrigat
             .HasPrincipalKey(x => new { x.GardenId, x.Id }).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Participant>().WithMany().HasForeignKey(x => new { x.GardenId, x.ResponsibleParticipantId })
             .HasPrincipalKey(x => new { x.GardenId, x.Id }).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<User>().WithMany().HasForeignKey(x => x.RecordedByUserId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<AppUser>().WithMany().HasForeignKey(x => x.RecordedByUserId).OnDelete(DeleteBehavior.Restrict);
         // Setor é contexto do fato, não identidade: poderá ser corrigido na etapa 3.
         // Horta/irrigação têm chave estável; factory/handler conferem o mesmo setor dos filhos.
         builder.HasMany(x => x.Beds).WithOne().HasForeignKey(x => new { x.GardenId, x.IrrigationId })

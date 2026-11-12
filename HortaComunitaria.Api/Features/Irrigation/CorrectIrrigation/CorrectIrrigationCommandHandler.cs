@@ -22,7 +22,7 @@ internal sealed record CorrectIrrigationRequest(
     [property: JsonRequired] Guid? ResponsibleParticipantId, [property: JsonRequired] string? Notes,
     [property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
 
-internal sealed class CorrectIrrigationCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock,
+internal sealed class CorrectIrrigationCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock,
     ILogger<CorrectIrrigationCommandHandler> logger)
 {
     public async Task<Result<IrrigationDetailResponse>> HandleAsync(Guid gardenId, Guid id, CorrectIrrigationRequest request,

@@ -12,7 +12,7 @@ using HortaComunitaria.Api.Features.Cultivation.Shared;
 namespace HortaComunitaria.Api.Features.Cultivation.InvalidateCultivationCycle;
 
 internal sealed record InvalidateCultivationCycleRequest([property: JsonRequired] int ExpectedVersion, [property: JsonRequired] string Reason);
-internal sealed class InvalidateCultivationCycleCommandHandler(AppDbContext db, DemoAuthorContext author, TimeProvider clock, ILogger<InvalidateCultivationCycleCommandHandler> logger)
+internal sealed class InvalidateCultivationCycleCommandHandler(AppDbContext db, CurrentAuthor author, TimeProvider clock, ILogger<InvalidateCultivationCycleCommandHandler> logger)
 {
     public async Task<Result<CultivationCycleResponse>> HandleAsync(Guid gardenId, Guid id, InvalidateCultivationCycleRequest request, CancellationToken cancellationToken)
     {

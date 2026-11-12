@@ -1,3 +1,4 @@
+using HortaComunitaria.Api.Infrastructure.Identity;
 using HortaComunitaria.Api.Infrastructure.Endpoints;
 using HortaComunitaria.Api.Features.Gardens.Shared;
 namespace HortaComunitaria.Api.Features.Gardens.InactivateGarden;
@@ -8,7 +9,7 @@ internal static class InactivateGardenEndpoints
     {
         group.MapPost("/{id:guid}/inactivation", async (Guid id, InactivateGardenRequest request, InactivateGardenCommandHandler handler, HttpContext context, CancellationToken cancellationToken) =>
             (await handler.HandleAsync(id, request, cancellationToken)).ToHttpResult(context))
-            .WithName("Gardens.InactivateGarden").WithTags("Organização")
+            .RequireAdministrator().WithName("Gardens.InactivateGarden").WithTags("Organização")
             .WithSummary("Inativar Garden")
             .WithDescription("Cadastro rastreável do MVP; identidade preservada, sem exclusão física e sem autoria recebida do cliente.")
             .Produces<GardenResponse>(200).ProducesValidationProblem().ProducesProblem(404).ProducesProblem(409).ProducesProblem(500);

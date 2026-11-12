@@ -13,12 +13,8 @@ internal static class PersistenceExtensions
             .Validate(x => IsValidConnectionString(x.ConnectionString), "Configure Persistence:ConnectionString localmente.")
             .Validate(x => !x.ApplyMigrationsOnStartup || environment.IsDevelopment(),
                 "Migrations automáticas são exclusivas de Development.").ValidateOnStart();
-        services.AddOptions<DemoModeOptions>().Bind(configuration.GetSection("DemoMode"))
-            .Validate(x => x.Enabled && environment.IsDevelopment(),
-                "A API requer Development e DemoMode:Enabled=true enquanto não houver autenticação.").ValidateOnStart();
         services.AddDbContext<AppDbContext>((provider, options) =>
             options.UseNpgsql(provider.GetRequiredService<IOptions<PersistenceOptions>>().Value.ConnectionString, PostgresEnums.Configure));
-        services.AddScoped<HortaComunitaria.Api.Infrastructure.Identity.DemoAuthorContext>();
         services.AddSingleton(TimeProvider.System);
         services.AddHostedService<DatabaseInitializationService>();
         return services;

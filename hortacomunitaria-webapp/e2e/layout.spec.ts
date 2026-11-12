@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, administratorStorageState } from './fixtures'
 
 test('editor persiste terreno, setor e canteiro no PostgreSQL e exibe mapa confirmado', async ({ page, request, browser }) => {
   const api = `${process.env.HORTA_E2E_API_URL}/api/v1`
@@ -6,7 +6,7 @@ test('editor persiste terreno, setor e canteiro no PostgreSQL e exibe mapa confi
   expect(created.status()).toBe(201)
   const garden = await created.json() as { id: string }
   await page.setViewportSize({ width: 1440, height: 1000 })
-  await page.goto(`/#/hortas/${garden.id}/horta/interativa`)
+  await page.goto(`/hortas/${garden.id}/horta/mapa`)
   await page.getByRole('button', { name: 'Retangular', exact: true }).click()
   await page.getByRole('button', { name: 'Concluir terreno', exact: true }).click()
   await page.getByRole('button', { name: 'Setor com contorno do terreno', exact: true }).click()
@@ -21,9 +21,9 @@ test('editor persiste terreno, setor e canteiro no PostgreSQL e exibe mapa confi
   expect(saved.layout.elements.filter(item => item.role === 'bed')).toHaveLength(1)
   expect(saved.layout.elements.filter(item => item.role === 'sector')).toHaveLength(1)
   expect(saved.layout.elements.every(item => item.entityId)).toBe(true)
-  const context = await browser.newContext()
+  const context = await browser.newContext({ storageState: administratorStorageState })
   const other = await context.newPage()
-  await other.goto(`http://127.0.0.1:5183/#/hortas/${garden.id}/horta/interativa`)
+  await other.goto(`http://127.0.0.1:5183/hortas/${garden.id}/horta/mapa`)
   await expect(other.getByText('Configuração salva · versão 1', { exact: true })).toBeVisible()
   await other.getByRole('link', { name: 'Ver visão panorâmica', exact: true }).click()
   await expect(other.getByRole('heading', { name: 'Visão panorâmica da horta', exact: true })).toBeVisible()

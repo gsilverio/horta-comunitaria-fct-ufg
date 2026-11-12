@@ -1,5 +1,5 @@
-import { routeHref } from "../../../hooks/useRoute"
-import { readRoute } from "../../../hooks/useRoute"
+import { readRoute } from '../../../routes/navigation'
+import { linkTo } from '../../../routes/routes'
 import { useState } from "react"
 import { EditorFrame } from "../../../components/EditorFrame"
 import { Field, SelectField, Facts, Group } from "../../../components/Fields"
@@ -47,4 +47,4 @@ return <EditorFrame dependenciesReady={!options.loading && !options.error} title
 </Group>
 </div></EditorFrame>
 }
-export function PropagationLotReview({ record }: { record: PropagationLot }) { const options = useLookups(record.gardenId, ['cultivar', 'species']); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Espécie', value: record.speciesId ? <a className="underline" href={routeHref(readRoute().garden, 'cultivo', 'especies', record.speciesId)}>{options.data?.species?.find(x => x.id === record.speciesId)?.label ?? record.speciesId}</a> : "Não informado" }, { label: 'Cultivar', value: record.cultivarId ? <a className="underline" href={routeHref(readRoute().garden, 'cultivo', 'cultivares', record.cultivarId, new URLSearchParams({ speciesId: record.speciesId }))}>{options.data?.cultivar?.find(x => x.id === record.cultivarId)?.label ?? record.cultivarId}</a> : "Não informado" }, { label: 'Tipo de material', value: enumLabels[record.materialType] }, { label: 'Origem', value: record.origin }, { label: 'Recebido em', value: record.receivedOn ? record.receivedOn.split("-").reverse().join("/") : "Não informado" }, { label: 'Observações', value: record.notes }]} /></> }
+export function PropagationLotReview({ record }: { record: PropagationLot }) { const options = useLookups(record.gardenId, ['cultivar', 'species']); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Espécie', value: record.speciesId ? <a className="underline" href={linkTo(readRoute().garden, 'catalogo/especies', record.speciesId)}>{options.data?.species?.find(x => x.id === record.speciesId)?.label ?? record.speciesId}</a> : "Não informado" }, { label: 'Cultivar', value: record.cultivarId ? <a className="underline" href={linkTo(readRoute().garden, 'catalogo/cultivares', record.cultivarId, new URLSearchParams({ speciesId: record.speciesId }))}>{options.data?.cultivar?.find(x => x.id === record.cultivarId)?.label ?? record.cultivarId}</a> : "Não informado" }, { label: 'Tipo de material', value: enumLabels[record.materialType] }, { label: 'Origem', value: record.origin }, { label: 'Recebido em', value: record.receivedOn ? record.receivedOn.split("-").reverse().join("/") : "Não informado" }, { label: 'Observações', value: record.notes }]} /></> }

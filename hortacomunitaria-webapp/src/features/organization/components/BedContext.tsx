@@ -1,4 +1,5 @@
-import { readRoute, routeHref } from '../../../hooks/useRoute'
+import { readRoute } from '../../../routes/navigation'
+import { linkTo } from '../../../routes/routes'
 import { useGardenState } from "../../../hooks/useGardenState"
 import { useCallback, useState } from 'react'
 import { Field, SelectField, Facts } from '../../../components/Fields'
@@ -39,7 +40,7 @@ export function BedContext({ garden, bed, changed }: { garden: string; bed: Bed;
       <form className="setup-form" onSubmit={event => { event.preventDefault(); void command.submit(version => bedContextApi.assign(garden, bed.id, { sectorId: sector, validFrom, reason: optionalText(reason), expectedBedVersion: version })) }}>
         <h3>2. Associação ao setor</h3><p className="hint">{bed.sectorAssignment ? 'Já existe uma associação vigente. Mudanças de setor preservam os registros anteriores.' : 'Pendente: associe o canteiro para que apareça na irrigação.'}</p>
         <fieldset disabled={command.busy} className="grid gap-4"><SelectField name="sectorId" label="Setor da nova associação" required value={sector} change={setSector} options={options.data?.irrigationSector ?? []} error={command.error} /><button className="secondary" disabled={command.error?.status === 409 || options.loading || !!options.error}>Salvar associação de setor</button></fieldset>
-        {!options.loading && !options.error && !options.data?.irrigationSector?.some(item => item.isActive !== false) && <p className="notice">Cadastre um setor antes de fazer a associação. <a className="underline" href={routeHref(garden, 'horta', 'setores', 'novo')}>Cadastrar setor</a></p>}
+        {!options.loading && !options.error && !options.data?.irrigationSector?.some(item => item.isActive !== false) && <p className="notice">Cadastre um setor antes de fazer a associação. <a className="underline" href={linkTo(garden, 'horta/setores', 'novo')}>Cadastrar setor</a></p>}
         {options.error && <Failure error={options.error} retry={options.retry} />}
       </form></div>
       
