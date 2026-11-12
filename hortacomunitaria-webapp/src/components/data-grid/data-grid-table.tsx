@@ -463,9 +463,9 @@ function DataGridTableLoader() {
 
   return (
     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-      <div className="text-horta-muted bg-white  flex items-center gap-2 px-4 py-2 font-medium leading-none text-sm border shadow-xs rounded-md">
-        <PlantLoader className="-ml-1 size-5" />
-        {props.loadingMessage || "Carregando…"}
+      <div role="status" className="flex items-center rounded-md border bg-white p-2 shadow-xs">
+        <PlantLoader className="size-10" />
+        <span className="sr-only">{props.loadingMessage || "Carregando…"}</span>
       </div>
     </div>
   );

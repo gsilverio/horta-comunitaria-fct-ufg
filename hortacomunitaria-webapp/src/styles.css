@@ -203,11 +203,12 @@
   /*
    * Carregamento padrão: <p role="status"> sem classe dentro de <main> ganha a muda que cresce (src/assets/plant-loader.svg).
    * Fora desse padrão, acrescentar a classe .plant-status ao parágrafo ou usar o componente PlantLoader.
-   * O ícone surge após um breve atraso para não piscar em respostas rápidas; o texto aparece de imediato.
+   * O ícone surge após um breve atraso para não piscar em respostas rápidas.
    */
   main p[role=status]:not([class]) { @apply py-2; }
-  main p[role=status]:not([class]), .plant-status { @apply flex items-center gap-2 text-horta-muted; }
-  main p[role=status]:not([class])::before, .plant-status::before { @apply size-5 shrink-0 bg-contain bg-center bg-no-repeat; content: ''; background-image: url('./assets/plant-loader.svg'); animation: plant-loader-reveal .2s ease-out .3s both; }
+  /* Só a muda aparece; o texto fica com tamanho zero, fora da tela, mas continua no role="status" para leitores de tela. */
+  main p[role=status]:not([class]), .plant-status { @apply flex items-center text-[0px] leading-none; }
+  main p[role=status]:not([class])::before, .plant-status::before { @apply size-9 shrink-0 bg-contain bg-center bg-no-repeat; content: ''; background-image: url('./assets/plant-loader.svg'); animation: plant-loader-reveal .2s ease-out .3s both; }
   .plant-loader { animation: plant-loader-reveal .2s ease-out .3s both; }
 
   .facts { @apply m-0 text-sm; }

@@ -254,9 +254,9 @@ export function SelectWithSearch<TData = unknown>({
             onWheel={handleOptionsWheel}
           >
             {loading && (
-              <div className="flex items-center justify-center py-5 text-sm text-slate-500">
-                <PlantLoader className="mr-2 size-4" />
-                Carregando...
+              <div role="status" className="flex items-center justify-center py-4">
+                <PlantLoader className="size-9" />
+                <span className="sr-only">Carregando…</span>
               </div>
             )}
 
