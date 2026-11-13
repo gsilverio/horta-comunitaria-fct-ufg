@@ -69,7 +69,7 @@ Depois da horta de validação, o mesmo comando cria **"Horta panorâmica (dados
 - As fases dependem das datas de plantio (relativas ao dia da execução) e dos prazos visuais da espécie. Espécies sem prazos recebem valores de referência, com motivo no histórico; prazos já configurados são mantidos.
 - Irrigações manuais recentes nos três setores.
 
-A horta de validação passou a incluir também colaboradores adicionais, custos previstos e realizados, duas secagens (uma concluída, uma em andamento) e medições manuais de umidade do solo e temperatura em três pontos de coleta. Instituição, insumos e variáveis ambientais são cadastros globais: o comando reaproveita os existentes pelo nome/código.
+A horta de validação passou a incluir também colaboradores adicionais, custos previstos e realizados, duas secagens (uma concluída, uma em andamento) e medições manuais de umidade do solo e temperatura em três pontos de coleta. Para que todas as funcionalidades atuais apareçam no mesmo roteiro, ela traz ainda: uma cultivar própria da horta ("Crespa da horta", com prazos visuais) com lote e ciclo no canteiro C06; correções com motivo (irrigação, custo, plantio, avaliação, observação, atividade e ocorrência); registros invalidados (irrigação lançada por engano, custo e colheita duplicados, observação no ciclo errado, atividade repetida e leitura ambiental duvidosa); um lote de sementes descartado e um colaborador inativado; e sete ilustrações geradas anexadas como fotografias (canteiro, plantio, colheita, ciclo, ocorrência, atividade e secagem), identificadas como imagens fictícias. Instituição, insumos e variáveis ambientais são cadastros globais: o comando reaproveita os existentes pelo nome/código.
 
 ## Contas Adm de teste (`--seed-test-admins`)
 
