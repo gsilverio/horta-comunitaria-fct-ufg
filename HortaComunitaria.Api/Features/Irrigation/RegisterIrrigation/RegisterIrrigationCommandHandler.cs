@@ -1,7 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using HortaComunitaria.Api.Common.Results;
+using HortaComunitaria.Api.Domain.Costs;
 using HortaComunitaria.Api.Domain.History;
+using HortaComunitaria.Api.Features.Costs.Shared;
 using HortaComunitaria.Api.Domain.Irrigation;
 using HortaComunitaria.Api.Features.Irrigation.Shared;
 using HortaComunitaria.Api.Infrastructure.Identity;
@@ -28,7 +30,8 @@ internal sealed record RegisterIrrigationRequest(
     string? VolumeMethod,
     [property: JsonRequired] IrrigationStatus Status,
     Guid? ResponsibleParticipantId,
-    string? Notes);
+    string? Notes,
+    decimal? WaterPricePerCubicMeterBrl = null);
 
 internal sealed record RegisterIrrigationResponse(bool Created, IrrigationDetailResponse Detail);
 
@@ -55,7 +58,9 @@ internal sealed class RegisterIrrigationCommandHandler(AppDbContext db, CurrentA
             request.VolumeLiters, request.FlowRateLitersPerMinute, request.VolumeSource, request.VolumeMethod, request.Status, request.Notes);
         if (!values.IsSuccess) return Reject(values.Error);
         var normalized = values.Value;
-        var payload = JsonSerializer.Serialize(new
+        if (request.WaterPricePerCubicMeterBrl <= 0 || RecordRules.Number(request.WaterPricePerCubicMeterBrl, "waterPricePerCubicMeterBrl", 4) is not null)
+            return Reject(Error.Validation("waterPricePerCubicMeterBrl", "Informe um valor positivo por m³, com até 4 casas decimais."));
+        var payloadNode = JsonSerializer.SerializeToNode(new
         {
             request.SectorId,
             BedIds = request.BedIds.Order().ToArray(),
@@ -69,7 +74,10 @@ internal sealed class RegisterIrrigationCommandHandler(AppDbContext db, CurrentA
             normalized.Status,
             request.ResponsibleParticipantId,
             normalized.Notes
-        }, PayloadOptions);
+        }, PayloadOptions)!.AsObject();
+        // O preço só entra na chave de repetição quando informado, preservando os registros anteriores.
+        if (request.WaterPricePerCubicMeterBrl is { } informedPrice) payloadNode["waterPricePerCubicMeterBrl"] = informedPrice;
+        var payload = payloadNode.ToJsonString(PayloadOptions);
         process.Step("CheckingOperation", "Verificando se a operação {OperationId} já foi registrada", request.OperationId);
         var existing = await FindOperationAsync(gardenId, request.OperationId, cancellationToken);
         if (existing is not null) return process.Complete(await ReplayAsync(existing, payload, process, cancellationToken));
@@ -89,6 +97,14 @@ internal sealed class RegisterIrrigationCommandHandler(AppDbContext db, CurrentA
         var snapshot = IrrigationSnapshots.Capture(irrigation);
         db.Irrigations.Add(irrigation);
         db.AuditEntries.Add(AuditEntry.CreateInclusion(irrigation, snapshot).Value);
+        var waterCost = WaterCost(gardenId, irrigation, normalized, request.WaterPricePerCubicMeterBrl);
+        if (waterCost is not null)
+        {
+            db.FinancialEntries.Add(waterCost);
+            db.AuditEntries.Add(AuditSnapshots.Create(gardenId, "FinancialEntry", waterCost.Id, waterCost.RecordedByUserId, waterCost.RecordedAt, null,
+                AuditSnapshots.Capture(FinancialEntryProjection.Map(waterCost)), "Lançamento automático do custo da água da irrigação."));
+            process.Step("RegisteringWaterCost", "Lançando custo da água {FinancialEntryId} da irrigação {IrrigationId}", waterCost.Id, irrigation.Id);
+        }
         process.Step("Persisting", "Persistindo irrigação {IrrigationId} e histórico na mesma transação", irrigation.Id);
         try
         {
@@ -108,9 +124,27 @@ internal sealed class RegisterIrrigationCommandHandler(AppDbContext db, CurrentA
         process.Step("LoadingResult", "Consultando irrigação {IrrigationId} após confirmação da gravação", irrigation.Id);
         var detail = await IrrigationDetailProjection.LoadAsync(db, gardenId, irrigation.Id, cancellationToken)
             ?? throw new InvalidOperationException("Irrigação confirmada não foi localizada.");
-        process.Event("IrrigationRegistered", "Created", "Irrigação {IrrigationId} registrada com histórico e {BedCount} canteiros",
-            irrigation.Id, request.BedIds.Length);
+        process.Event("IrrigationRegistered", "Created", "Irrigação {IrrigationId} registrada com histórico, {BedCount} canteiros e custo da água {WaterCostRegistered}",
+            irrigation.Id, request.BedIds.Length, waterCost is not null);
         return process.Complete(Result<RegisterIrrigationResponse>.Success(new(true, detail)));
+    }
+
+    /// <summary>
+    /// Custo realizado da água (categoria "Água") quando o preço do m³ e o volume são conhecidos. Volume desconhecido
+    /// ou valor arredondado a zero não gera lançamento; correções posteriores da irrigação não alteram o custo, que
+    /// é revisado na tela de Custos.
+    /// </summary>
+    private static FinancialEntry? WaterCost(Guid gardenId, IrrigationRecord irrigation, IrrigationValues values, decimal? pricePerCubicMeter)
+    {
+        if (pricePerCubicMeter is not { } price || values.VolumeLiters is not { } liters) return null;
+        var amount = decimal.Round(liters / 1000m * price, 2, MidpointRounding.AwayFromZero);
+        if (amount <= 0) return null;
+        var date = LocalPeriod.LocalDate(values.StartedAt);
+        var description = $"Água da irrigação de {date:dd/MM/yyyy}: {liters.ToString("0.###", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))} L a R$ {price.ToString("0.00##", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))}/m³ (lançamento automático).";
+        var entry = FinancialEntryValues.Create(date, description, "Água", amount, FinancialNature.Actual, null, null);
+        if (!entry.IsSuccess) throw new InvalidOperationException(entry.Error.Message);
+        var created = FinancialEntry.Create(gardenId, Guid.CreateVersion7(), entry.Value, irrigation.RecordedByUserId, irrigation.RecordedAt, AuditSnapshots.Capture(entry.Value));
+        return created.IsSuccess ? created.Value : throw new InvalidOperationException(created.Error.Message);
     }
 
     private Task<IrrigationRecord?> FindOperationAsync(Guid gardenId, Guid operationId, CancellationToken cancellationToken) =>

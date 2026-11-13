@@ -55,7 +55,8 @@ function CycleRow({ garden, bed, cycle, crop, on, canWrite, backToBed }: { garde
   const name = crop?.cultivarName ? `${cycle.speciesName} · ${crop.cultivarName}` : cycle.speciesName
   return <li className="bed-crop" data-ready={ready || undefined}>
     <CropPhoto name={cycle.speciesName} image={image} speciesPhoto />
-    <div className="min-w-0 flex-1">
+    <div className="bed-crop-body">
+    <div className="min-w-0">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <h3>{name}</h3>
         <span className={`badge ${closed ? 'invalid' : ready ? 'ready' : ''}`}>{status}</span>
@@ -68,14 +69,15 @@ function CycleRow({ garden, bed, cycle, crop, on, canWrite, backToBed }: { garde
       </p>
       {timeline?.progress !== undefined && timeline.harvestDays !== undefined && timeline.harvestOn && <div className="bed-crop-progress">
         <meter aria-label="Progresso até a colheita prevista" min={0} max={timeline.harvestDays} value={timeline.progress} />
-        <span>{timeline.harvestIn !== undefined && timeline.harvestIn > 0 ? `Colheita prevista em ${pluralDays(timeline.harvestIn)} · ${formatDate(timeline.harvestOn)}` : `Prazo de colheita atingido em ${formatDate(timeline.harvestOn)}`}</span>
+        <span><span>{timeline.harvestIn !== undefined && timeline.harvestIn > 0 ? `Colheita prevista em ${pluralDays(timeline.harvestIn)}` : 'Prazo de colheita atingido'}</span><span>{formatDate(timeline.harvestOn)}</span></span>
       </div>}
       {crop && crop.visualHarvestDays === null && crop.firstPlantedOn && <p className="hint my-1">Sem prazo de colheita configurado para a espécie.</p>}
       {!!cycle.plantings.items.length && <p className="bed-crop-plantings"><span>Plantios:</span>{cycle.plantings.items.map(planting => <a key={planting.id} href={linkTo(garden, 'cultivo/plantios', planting.id, withReturn({}, backToBed))}>{formatNumber(planting.plantedQuantity)} plantas · {formatDate(planting.plantedOn)}{planting.kind === 'Replacement' ? ' · reposição' : ''}</a>)}
         {cycle.plantings.hasNextPage && <a href={linkTo(garden, 'cultivo/plantios', '', withReturn({ cycleId: cycle.id, bedId: bed.id, from: '0001-01-01', to: '9998-12-31' }, backToBed))}>ver todos ({cycle.plantings.totalCount})</a>}</p>}
+    </div>
       <div className="bed-crop-actions">
-        {canWrite && cycle.status === 'InProgress' && <a className="action-link secondary" href={linkTo(garden, 'horta/canteiros', bed.id, new URLSearchParams({ cycleId: cycle.id }), 'plantar')}>{cycle.plantings.totalCount ? 'Registrar outro plantio' : 'Registrar plantio'}</a>}
-        <a href={linkTo(garden, 'cultivo/ciclos', cycle.id, withReturn({}, backToBed))}>Detalhes do cultivo</a>
+        {canWrite && cycle.status === 'InProgress' && <a className="action-link" href={linkTo(garden, 'horta/canteiros', bed.id, new URLSearchParams({ cycleId: cycle.id }), 'plantar')}>{cycle.plantings.totalCount ? 'Registrar outro plantio' : 'Registrar plantio'}</a>}
+        <a className="action-link secondary" href={linkTo(garden, 'cultivo/ciclos', cycle.id, withReturn({}, backToBed))}>Detalhes do cultivo</a>
       </div>
     </div>
   </li>

@@ -67,11 +67,14 @@
     select::picker-icon { @apply ml-auto text-horta-muted transition-transform duration-150; content: ''; width: 1rem; height: 1rem; background: currentColor; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat; }
     select:open::picker-icon { rotate: 180deg; }
     select:open { @apply border-horta-forest; }
-    ::picker(select) { @apply mt-1 max-h-80 overflow-y-auto rounded-lg border border-horta-line bg-white p-1 text-sm shadow-[0_12px_32px_-12px_rgb(28_73_57/0.35)]; }
-    option { @apply flex min-h-10 cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 transition-colors; }
+    ::picker(select) { @apply mt-1.5 max-h-80 min-w-48 overflow-y-auto rounded-lg border border-horta-line bg-white p-1 text-sm text-horta-ink opacity-100 shadow-[0_1px_2px_rgb(28_73_57/0.08),0_14px_32px_-14px_rgb(28_73_57/0.4)]; scrollbar-gutter: stable; transition: opacity .12s, translate .12s, display .12s allow-discrete, overlay .12s allow-discrete; }
+    ::picker(select):popover-open { @starting-style { opacity: 0; translate: 0 -4px; } }
+    option { @apply flex min-h-9 cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-1.5 leading-5 text-horta-ink transition-colors; }
     option:hover:not(:disabled), option:focus-visible { @apply bg-horta-canvas outline-none; }
     option:checked { @apply bg-horta-soft font-semibold text-horta-forest; }
-    option::checkmark { @apply order-1 ml-auto text-horta-forest; content: '✓'; }
+    option::checkmark { @apply order-1 ml-auto size-4 shrink-0; content: ''; background: currentColor; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / contain no-repeat; }
+    optgroup { @apply mt-1 border-t border-horta-line pt-1 first:mt-0 first:border-0 first:pt-0; }
+    optgroup legend { @apply px-2.5 py-1 text-[11px] font-semibold tracking-wide text-horta-muted uppercase; }
     option:disabled { @apply cursor-default opacity-60; }
     selectedcontent { @apply truncate; }
   }
@@ -88,10 +91,11 @@
   .skip-link:focus { @apply not-sr-only fixed top-3 left-3 z-50 rounded-md bg-white p-3 shadow; }
   .workspace-layout { @apply grid min-h-dvh lg:grid-cols-[224px_minmax(0,1fr)]; }
   .workspace-sidebar { @apply sticky top-0 hidden h-dvh flex-col overflow-y-auto border-r border-horta-line bg-[#f9faf6] lg:flex; }
-  .sidebar-brand { @apply flex min-h-14 items-center border-b border-horta-line px-4; }
+  .sidebar-brand { @apply flex h-14 shrink-0 items-center border-b border-horta-line px-4; }
   .workspace-sidebar .primary-navigation { @apply px-2 py-3; }
   .workspace-content { @apply flex min-w-0 flex-col bg-white; }
-  .workspace-header { @apply flex min-h-14 min-w-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-horta-line bg-[#f9faf6] px-3 py-1.5 sm:flex-nowrap sm:px-5; }
+  /* Mesma altura (h-14) da marca no menu lateral, para as bordas inferiores ficarem alinhadas. */
+  .workspace-header { @apply flex h-14 min-w-0 shrink-0 items-center gap-3 border-b border-horta-line bg-[#f9faf6] px-3 sm:px-5; }
   /* Select com rótulo interno: a borda fica no conjunto e o rótulo continua associado ao controle. */
   .select-inline { @apply relative flex min-h-11 w-full min-w-0 flex-row items-center gap-0 rounded-md border border-[#c9d4cc] bg-white text-sm transition-colors hover:border-[#9fb0a5]; }
   .select-inline:focus-within { @apply border-horta-forest outline-2 outline-offset-0 outline-horta-focus/70; }
@@ -115,6 +119,51 @@
   .nav-link[aria-current=page] { @apply bg-horta-soft font-semibold text-horta-forest; box-shadow: inset 3px 0 0 var(--color-horta-forest); }
   .nav-link[aria-current=page] .ui-icon, .nav-link[data-open=true] .ui-icon { @apply text-horta-forest; }
   .nav-link[data-open=true] { @apply font-semibold text-horta-forest; }
+  /* Listagem Metronic (padrão das listagens): barra de ações, aba de atualização, cabeçalho sombreado, linhas zebradas e pílulas de situação. */
+  .garden-grid-head { @apply h-11 bg-horta-canvas; }
+  .garden-grid-head > th { @apply border-horta-line text-[13px] font-semibold text-horta-ink; }
+  .garden-grid-row { @apply h-12; }
+  /* Grade completa nas listagens: bordas de início e fim, entre colunas e entre linhas. */
+  [data-slot=data-grid-table] :is(th, td) { @apply border-horta-line; }
+  [data-slot=data-grid-table] tr > :first-child { @apply border-s; }
+  [data-slot=data-grid-table] tr > :last-child { @apply border-e; }
+  [data-slot=data-grid-table] thead tr > th { @apply border-t; }
+  [data-slot=data-grid-table] tbody tr:not(:last-child) > td { @apply border-b; }
+  .garden-grid-row > td { @apply border-horta-line text-sm; }
+  .garden-grid-tab-bar { @apply flex items-center border-y border-horta-line bg-[#f9faf6]; }
+  .garden-grid-tab-bar .garden-grid-refresh { @apply size-11 rounded-none border-e border-horta-line text-horta-forest hover:bg-horta-soft; }
+  .garden-status-pill { @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs leading-5 font-semibold whitespace-nowrap; }
+  .garden-status-pill.is-active { @apply border-[#cfe0bf] bg-horta-soft text-horta-forest; }
+  .garden-status-pill.is-inactive { @apply border-[#ebc9c3] bg-[#f7e9e6] text-[#91463e]; }
+  .garden-status-dot { @apply size-1.5 rounded-full bg-current; }
+  /* Troca de horta no topo do menu lateral: controle claro e compacto, com select nativo transparente por cima (GardenSwitcher.tsx). */
+  .nav-garden { @apply mb-3 px-1; }
+  .garden-switcher { @apply relative flex h-11 w-full min-w-0 items-center gap-2.5 rounded-lg border border-horta-line bg-white pr-3 pl-1.5 transition-colors hover:border-[#b9c7bc] hover:bg-[#fbfcf9]; }
+  .garden-switcher:focus-within { @apply border-horta-forest outline-2 outline-offset-1 outline-horta-focus/70; }
+  .garden-switcher[data-disabled] { @apply bg-horta-canvas opacity-70 hover:border-horta-line; }
+  .garden-switcher-icon { @apply flex size-8 shrink-0 items-center justify-center rounded-md bg-horta-soft text-horta-forest; }
+  .garden-switcher-icon .ui-icon { @apply size-4; }
+  .garden-switcher-label { @apply block text-[10px] leading-3 font-semibold tracking-wider text-horta-muted uppercase; }
+  .garden-switcher-name { @apply block truncate text-sm leading-5 font-semibold text-horta-ink; }
+  .garden-switcher-chevron { @apply size-4 shrink-0 text-horta-muted; }
+  .garden-switcher-select { @apply absolute inset-0 m-0 h-full min-h-0 w-full cursor-pointer appearance-none border-0 p-0 opacity-0; }
+  .garden-switcher-select:disabled { @apply cursor-not-allowed; }
+  /* Conta no cabeçalho: avatar, nome e perfil num gatilho compacto; o menu repete a identificação com e-mail. */
+  .account-trigger { @apply flex h-11 min-h-0 shrink-0 items-center gap-2.5 rounded-lg border border-transparent bg-transparent py-0 pr-2 pl-1 text-horta-ink shadow-none transition-colors hover:border-horta-line hover:bg-white data-[state=open]:border-horta-line data-[state=open]:bg-white; }
+  .account-avatar { @apply flex shrink-0 items-center justify-center rounded-full bg-horta-forest font-semibold tracking-wide text-white; }
+  .account-profile { @apply mt-1 inline-flex rounded-full bg-horta-soft px-2 py-px text-[11px] leading-4 font-semibold text-horta-forest; }
+  .account-item { @apply flex min-h-10 items-center gap-2.5 text-sm no-underline; }
+  .account-item svg { @apply size-4 text-horta-muted; }
+  .account-item.text-horta-danger svg { @apply text-horta-danger; }
+  /* Listas suspensas (select nativo personalizável, Radix Select e menus): uma única superfície e um único item. */
+  .menu-surface { @apply rounded-lg border border-horta-line bg-white p-1 text-sm text-horta-ink shadow-[0_1px_2px_rgb(28_73_57/0.08),0_14px_32px_-14px_rgb(28_73_57/0.4)]; }
+  .menu-item { @apply flex min-h-9 cursor-pointer items-center rounded-md px-2.5 py-1.5 text-sm leading-5 text-horta-ink no-underline outline-none transition-colors select-none hover:bg-horta-canvas focus:bg-horta-canvas data-[highlighted]:bg-horta-canvas data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[state=checked]:bg-horta-soft data-[state=checked]:font-semibold data-[state=checked]:text-horta-forest; }
+  /* O seletor de horta usa a mesma lista: o select cobre o controle, mas só a lista aparece. */
+  @supports (appearance: base-select) {
+    .garden-switcher-select { appearance: base-select; @apply bg-transparent text-transparent opacity-100 shadow-none outline-none hover:border-0; }
+    .garden-switcher-select::picker-icon { @apply hidden; }
+    .garden-switcher-select::picker(select) { width: anchor-size(width); min-width: 0; }
+  }
   .nav-pages { @apply m-0 mb-1 ml-5 list-none border-l border-horta-line p-0 pl-2; }
   /* Páginas da área aberta: a altura máxima vem do espaço livre do menu (Navigation.tsx); acima disso, rolam internamente. */
   .primary-navigation .nav-pages { @apply overflow-y-auto overscroll-contain pr-1; scrollbar-gutter: stable; }
@@ -203,13 +252,12 @@
   /*
    * Carregamento padrão: <p role="status"> sem classe dentro de <main> ganha a muda que cresce (src/assets/plant-loader.svg).
    * Fora desse padrão, acrescentar a classe .plant-status ao parágrafo ou usar o componente PlantLoader.
-   * O ícone surge após um breve atraso para não piscar em respostas rápidas.
+   * O ícone surge quase de imediato (80 ms), já com a muda brotada, para ser percebido mesmo em trocas rápidas de página.
    */
-  main p[role=status]:not([class]) { @apply py-2; }
-  /* Só a muda aparece; o texto fica com tamanho zero, fora da tela, mas continua no role="status" para leitores de tela. */
-  main p[role=status]:not([class]), .plant-status { @apply flex items-center text-[0px] leading-none; }
-  main p[role=status]:not([class])::before, .plant-status::before { @apply size-9 shrink-0 bg-contain bg-center bg-no-repeat; content: ''; background-image: url('./assets/plant-loader.svg'); animation: plant-loader-reveal .2s ease-out .3s both; }
-  .plant-loader { animation: plant-loader-reveal .2s ease-out .3s both; }
+  /* Só a muda aparece, centralizada na área que carrega; o texto fica com tamanho zero, mas continua no role="status" para leitores de tela. */
+  main p[role=status]:not([class]), .plant-status { @apply flex min-h-32 w-full items-center justify-center py-6 text-[0px] leading-none; }
+  main p[role=status]:not([class])::before, .plant-status::before { @apply size-12 shrink-0 bg-contain bg-center bg-no-repeat; content: ''; background-image: url('./assets/plant-loader.svg'); animation: plant-loader-reveal .12s ease-out .08s both; }
+  .plant-loader { animation: plant-loader-reveal .12s ease-out .08s both; }
 
   .facts { @apply m-0 text-sm; }
   .facts > div { @apply min-w-0; }
@@ -225,6 +273,26 @@
   .record-tab-panel[data-state=inactive] { @apply hidden; }
   .maintenance-section { @apply max-w-2xl; }
   .maintenance-section h2 { @apply text-horta-danger; }
+  /* Registros do ciclo: atalhos, três grupos lado a lado e encerramento recolhido. */
+  .cycle-records { @apply grid gap-5; }
+  .cycle-record-actions { @apply flex flex-wrap gap-2; }
+  .cycle-record-actions .action-link { @apply min-h-10 px-3 py-2 text-[13px]; }
+  .cycle-record-groups { @apply grid gap-4 lg:grid-cols-3; }
+  .cycle-record-group { @apply min-w-0 rounded-lg border border-horta-line; }
+  .cycle-record-group > header { @apply flex items-center justify-between gap-2 border-b border-horta-line bg-[#f7f9f3] px-4 py-2.5; }
+  .cycle-record-group h3 { @apply m-0 text-sm font-semibold; }
+  .cycle-record-group h3 span { @apply font-normal text-horta-muted; }
+  .cycle-record-group > header a { @apply text-xs font-semibold text-horta-forest; }
+  .cycle-record-group ul { @apply m-0 list-none divide-y divide-horta-line p-0; }
+  .cycle-record-group li a { @apply grid gap-0.5 px-4 py-2.5 no-underline transition-colors hover:bg-[#f6f9f1]; }
+  .cycle-record-group li strong { @apply text-[13px] font-semibold text-horta-ink; }
+  .cycle-record-group li .badge { @apply justify-self-start; }
+  .cycle-record-group li span:not(.badge) { @apply line-clamp-2 text-xs text-horta-muted; }
+  .cycle-record-group .pagination { @apply m-0 border-t border-horta-line px-4 py-2; }
+  .cycle-record-empty { @apply m-0 px-4 py-6 text-center text-[13px] text-horta-muted; }
+  .cycle-close { @apply rounded-lg border border-horta-line px-4 text-sm; }
+  .cycle-close > summary { @apply flex min-h-11 cursor-pointer items-center font-semibold text-horta-danger; }
+  .cycle-close[open] { @apply pb-4; }
   .organization-disclosure { @apply my-4 border-y border-horta-line text-sm; }
   .organization-disclosure[open] { @apply pb-4; }
   .organization-disclosure > summary { @apply font-semibold; }
@@ -246,9 +314,26 @@
   .form-section { @apply grid min-w-0 gap-x-8 gap-y-3 border-t border-horta-line pt-4 @3xl:grid-cols-[12rem_minmax(0,1fr)]; }
   .form-section-heading { @apply flex min-w-0 flex-col gap-0.5; }
   .form-section-heading strong { @apply text-sm font-semibold text-horta-forest; }
+  .form-section-title { @apply flex items-center gap-1; }
+  /* Ajuda contextual: ícone discreto ao lado do título; o texto abre num diálogo. */
+  .help-button { @apply inline-flex size-7 min-h-7 shrink-0 items-center justify-center rounded-full border-0 bg-transparent p-0 text-horta-muted shadow-none hover:!bg-horta-soft hover:text-horta-forest; }
+  .help-button svg { @apply size-4; }
+  .help-content { @apply grid gap-2 text-sm leading-relaxed text-horta-ink; }
+  .help-content p, .help-content ul { @apply m-0; }
+  .help-content ul { @apply grid list-disc gap-1 pl-5; }
   .form-section-heading span { @apply text-xs leading-relaxed text-horta-muted; }
   .form-section-fields { @apply grid min-w-0 gap-4 sm:grid-cols-2; }
   .form-section-fields > label:has(textarea) { @apply col-span-full; }
+  .form-section-fields > .field-wide { @apply sm:col-span-2; }
+  /* Seções com dois ou três campos preenchem a linha inteira, sem um espaço vazio ao fim. */
+  .form-section-fields:has(> label:nth-child(2):last-child) { @apply sm:grid-cols-2; }
+  .form-section-fields:has(> label:nth-child(3):last-child) { @apply sm:grid-cols-3; }
+  /* Quatro campos: grade 2 × 2, sem campo isolado numa terceira coluna. */
+  .form-section-fields:has(> label:nth-child(4):last-child) { @apply sm:grid-cols-2 @5xl:grid-cols-2; }
+  /* Unidade dentro do campo, à direita; o texto digitado não passa por baixo dela. */
+  .input-with-unit { @apply relative block; }
+  .input-with-unit > input { @apply pr-12 tabular-nums; }
+  .input-unit { @apply pointer-events-none absolute inset-y-0 right-0 flex items-center border-l border-horta-line px-3 text-xs font-medium text-horta-muted; }
   .form-repeat { @apply border-t border-horta-line pt-4; }
   .form-repeat > h3 { @apply mt-0 text-horta-forest; }
   .field-label { @apply font-medium text-horta-ink; }
@@ -279,21 +364,6 @@
   .page-trail-home { @apply mr-0.5 size-4 shrink-0 text-horta-forest; }
   .page-trail-separator { @apply size-3.5 shrink-0 text-[#a9b6ad]; }
   .organization-path { @apply mb-4 flex list-none flex-wrap items-center gap-x-4 gap-y-1 border-b border-horta-line p-0 pb-3 text-sm text-horta-muted; }
-  .organization-collection { @apply min-w-0; }
-  .organization-collection-heading { @apply flex flex-wrap items-center justify-between gap-3 border-b border-horta-line pb-2; }
-  .organization-rows { @apply m-0 list-none divide-y divide-horta-line border-b border-horta-line p-0; }
-  .organization-rows > li { @apply relative flex flex-col justify-between gap-2 px-2 py-3 transition-colors hover:bg-[#f6f8f2] sm:flex-row sm:items-center sm:gap-6; }
-  .organization-rows h3 { @apply m-0 inline-flex flex-wrap items-center gap-2 text-sm font-semibold break-words; }
-  .organization-rows h3 a { @apply underline-offset-4 hover:underline; }
-  .organization-rows h3 a::after { @apply absolute inset-0; content: ''; }
-  .organization-rows h3 a:focus-visible { @apply outline-none; }
-  .organization-rows > li:has(h3 a:focus-visible) { @apply outline-3 -outline-offset-3 outline-horta-focus; }
-  .organization-rows p { @apply mt-0.5 mb-0 max-w-3xl text-[13px] break-words text-horta-muted; }
-  .organization-row-actions { @apply relative z-10 flex min-w-0 shrink-0 flex-wrap items-center gap-x-4 gap-y-1 sm:justify-end; }
-  .organization-row-action { @apply inline-flex min-h-11 items-center gap-1.5 text-sm font-medium no-underline hover:underline; }
-  .organization-row-action .ui-icon { @apply size-3.5; }
-  .organization-secondary-links { @apply mt-3 flex flex-wrap gap-x-5; }
-  .organization-secondary-links a { @apply inline-flex min-h-11 items-center text-sm underline underline-offset-4; }
 
   .next-step { @apply my-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-l-3 border-[#7c9c63] bg-horta-soft/40 px-4 py-3; }
   .next-step h3, .next-step p { @apply m-0 basis-full; }
@@ -308,6 +378,72 @@
   .setup-beds li { @apply flex flex-wrap items-center justify-between gap-2 py-2 text-sm; }
   .setup-beds span { @apply text-xs text-horta-muted; }
   .bed-setup { @apply pt-1; }
+  /* Listagens de organização (hortas, setores, canteiros): cabeçalho com contagem e filtro segmentado,
+     linhas com ícone do tipo, etiquetas de informação, linha inteira clicável e uma ação rápida opcional. */
+  .org-collection { @apply min-w-0 overflow-hidden rounded-lg border border-horta-line bg-white; }
+  .org-collection-heading { @apply flex flex-wrap items-center justify-between gap-3 border-b border-horta-line bg-[#f7f9f3] px-4 py-2.5; }
+  .org-collection-heading h2 { @apply m-0 flex items-center gap-2 text-sm font-semibold; }
+  .org-count { @apply inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-[11px] font-semibold text-horta-muted ring-1 ring-horta-line; }
+  .org-collection-tools { @apply flex flex-wrap items-center gap-3; }
+  .org-collection-link { @apply inline-flex min-h-9 items-center text-[13px] font-semibold text-horta-forest no-underline hover:underline; }
+  .org-collection-status { @apply m-0 px-4 py-4; }
+  .org-create-compact { @apply min-h-9 px-3 py-1.5 text-[13px]; }
+  .org-rows { @apply m-0 list-none divide-y divide-horta-line p-0; }
+  .org-row { @apply relative flex min-h-16 items-center gap-3 px-4 py-3 transition-colors hover:bg-[#f6f9f1]; }
+  .org-row:has(h3 a:focus-visible) { @apply outline-3 -outline-offset-3 outline-horta-focus; }
+  .org-row-icon { @apply flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#eef3ea] text-horta-forest; }
+  .org-row-icon svg { @apply size-4; }
+  .org-row-main { @apply min-w-0 flex-1; }
+  .org-row-title { @apply flex flex-wrap items-center gap-2; }
+  .org-row h3 { @apply m-0 text-sm font-semibold break-words; }
+  .org-row h3 a { @apply text-horta-ink no-underline; }
+  .org-row h3 a::after { @apply absolute inset-0; content: ''; }
+  .org-row h3 a:focus-visible { @apply outline-none; }
+  .org-row-meta { @apply m-0 mt-1 flex flex-wrap items-center gap-1.5 text-xs text-horta-muted; }
+  .org-row-meta > span:not(.org-row-description) { @apply rounded-full bg-[#f1f4ed] px-2 py-0.5; }
+  .org-row-description { @apply basis-full truncate; }
+  .org-row-actions { @apply relative z-10 flex shrink-0 items-center gap-2; }
+  .org-row-quick { @apply inline-flex min-h-9 items-center gap-1.5 rounded-md border border-horta-line bg-white px-2.5 text-xs font-semibold text-horta-forest no-underline hover:border-horta-forest/60 hover:bg-[#f6f9f1]; }
+  .org-row-quick svg { @apply size-3.5; }
+  .org-row-chevron { @apply pointer-events-none size-4 text-horta-muted; }
+  .org-pagination { @apply border-t border-horta-line px-4; }
+  @media (width < 40rem) { .org-row { @apply flex-wrap; } .org-row-actions { @apply w-full justify-end pl-12; } .org-row-chevron { @apply hidden; } }
+  /* Botões segmentados (filtros curtos com opções sempre visíveis). */
+  .segmented { @apply inline-flex rounded-md border border-horta-line bg-white p-0.5; }
+  .segmented button { @apply min-h-8 rounded border-0 bg-transparent px-3 py-1 text-xs font-semibold text-horta-muted shadow-none hover:!bg-[#f1f4ed]; }
+  .segmented button[aria-pressed=true] { @apply !bg-horta-forest text-white; }
+  /* Irrigação: consumo e registros empilhados em largura total; indicadores compactos. */
+  .irrigation-overview { @apply grid gap-5; }
+  .consumption-panel .stat-value { @apply text-2xl leading-tight; }
+  .consumption-panel .stat-hint { @apply text-xs; }
+  /* Envio de fotografia: bloco com título, área de arquivo à esquerda e dados à direita. */
+  .evidence-upload { @apply overflow-hidden rounded-lg border border-horta-line bg-white; }
+  .evidence-upload-title { @apply m-0 border-b border-horta-line bg-[#f7f9f3] px-4 py-2.5 text-sm font-semibold; }
+  .evidence-upload-body { @apply grid gap-4 p-4 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] sm:gap-6; }
+  /* Área e setor do canteiro: situação atual, mudança recolhível e histórico em duas colunas. */
+  .bed-context { @apply grid gap-5 pt-1; }
+  .bed-context-current { @apply grid gap-3 sm:grid-cols-2; }
+  .bed-context-current > div { @apply grid gap-0.5 rounded-lg border border-horta-line bg-[#f7f9f3] px-4 py-3; }
+  .bed-context-current > div[data-pending] { @apply border-[#e8d3a6] bg-[#fdf6e7]; }
+  .bed-context-current span { @apply text-xs text-horta-muted; }
+  .bed-context-current strong { @apply text-lg font-semibold text-horta-forest; }
+  .bed-context-current > div[data-pending] strong { @apply text-[#7b551d]; }
+  .bed-context-current small { @apply text-xs text-horta-muted; }
+  .bed-context-change, .bed-context-query { @apply rounded-lg border border-horta-line px-4 text-sm; }
+  .bed-context-change > summary, .bed-context-query > summary { @apply flex min-h-11 cursor-pointer items-center font-semibold text-horta-forest; }
+  .bed-context-change[open], .bed-context-query[open] { @apply grid gap-4 pb-4; }
+  .bed-context-change .hint { @apply m-0; }
+  .bed-context-forms { @apply grid gap-4 border-t border-horta-line pt-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]; }
+  .bed-context-forms h3 { @apply mt-0 mb-2 text-sm font-semibold; }
+  .bed-context-history { @apply grid gap-4 md:grid-cols-2; }
+  .bed-context-history > section { @apply min-w-0 rounded-lg border border-horta-line; }
+  .bed-context-history h3 { @apply m-0 border-b border-horta-line bg-[#f7f9f3] px-4 py-2.5 text-sm font-semibold; }
+  .bed-context-history ul { @apply m-0 list-none divide-y divide-horta-line p-0; }
+  .bed-context-history li { @apply flex items-center justify-between gap-3 px-4 py-2.5 text-[13px]; }
+  .bed-context-history li span { @apply text-horta-muted; }
+  .bed-context-history li strong { @apply font-semibold text-horta-ink; }
+  .bed-context-history .pagination { @apply m-0 border-t border-horta-line px-4 py-2; }
+  .bed-context-empty { @apply m-0 px-4 py-5 text-center text-[13px] text-horta-muted; }
   .setup-form { @apply border-t-2 border-horta-line pt-3; }
   .setup-form h3 { @apply mt-0; }
   .bed-picker { @apply my-4 border-t border-horta-line pt-3; }
@@ -346,6 +482,9 @@
   .journey-value { @apply text-lg leading-7 font-semibold text-horta-forest; }
   .journey-detail { @apply text-xs text-horta-muted; }
   .journey-detail[data-pending=true] { @apply font-medium text-[#7a5316]; }
+  /* Atalho bloqueado até o terreno existir: mesmo layout do link, sem interação. */
+  .journey-locked { @apply flex h-full min-h-14 cursor-not-allowed flex-col justify-center bg-[#fafbf8] px-3 py-2.5; }
+  .journey-locked .journey-value { @apply text-horta-muted/70; }
   .dashboard-group { @apply my-6; }
   .dashboard-group > h2 { @apply mb-0 border-b border-horta-line pb-2; }
   .dashboard-grid { @apply grid xl:grid-cols-2; }
@@ -391,11 +530,7 @@
   .results-heading { @apply border-b border-horta-line px-4 py-3 sm:px-5; }
   .results-heading h2 { @apply text-[15px]; }
   .record-results > li { @apply px-4 sm:px-5; }
-  .record-results > li:last-child, .organization-rows > li:last-child { @apply border-b-0; }
-  .organization-collection-heading { @apply border-b border-horta-line px-4 py-3 sm:px-5; }
-  .organization-collection-heading h2 { @apply text-[15px]; }
-  .organization-rows { @apply border-b-0; }
-  .organization-rows > li { @apply px-4 sm:px-5; }
+  .record-results > li:last-child { @apply border-b-0; }
   .record { @apply px-4 sm:px-5; }
   .record:last-child { @apply border-b-0; }
   .panel > .empty { @apply py-10; }
@@ -435,7 +570,7 @@
   .editor-actions:last-child { @apply -mb-4 sm:-mb-6; }
 
   .journey { @apply overflow-hidden rounded-lg border border-horta-line shadow-[0_1px_2px_rgb(28_73_57/0.05)]; }
-  .journey a { @apply min-h-18 px-4 py-3; }
+  .journey a, .journey-locked { @apply min-h-18 px-4 py-3; }
   .journey-value { @apply text-xl; }
   .dashboard-group { @apply my-5; }
   .dashboard-group > h2 { @apply mb-2 border-0 pb-0; }
@@ -465,7 +600,7 @@
   .eyebrow { @apply mb-0.5 tracking-wide uppercase text-[11px] font-semibold; }
 
   /* Barra lateral */
-  .sidebar-brand { @apply min-h-14 px-5; }
+  .sidebar-brand { @apply px-5; }
   .workspace-sidebar .primary-navigation { @apply px-3 py-4; }
   .nav-group { @apply mb-4; }
   .nav-link { @apply min-h-10 font-medium max-lg:min-h-11; }
@@ -510,7 +645,7 @@
   .feedback, .notice { @apply rounded-md; }
 
   /* Linhas de lista */
-  .record-results > li, .organization-rows > li { @apply min-h-14; }
+  .record-results > li { @apply min-h-14; }
   .record-results > li > a { @apply text-[14px]; }
 
   /* Abas do registro */
@@ -528,6 +663,9 @@
 /* Cadastro integrado ao editor: mantém a identidade própria do modo construção. */
 @layer components {
   .interactive-cultivation { @apply min-w-0 text-horta-ink; }
+  /* Ações do canteiro no topo da estação de cultivo, em colunas iguais. */
+  .bed-menu-actions { @apply mb-4 grid grid-cols-2 gap-2 border-b border-[#c8d3b6] pb-4; }
+  .bed-menu-actions button { @apply min-h-10 px-3 py-2 text-[13px]; }
   .interactive-cultivation .editor-panel { @apply m-0 max-w-none rounded-none border-0 bg-transparent p-0 shadow-none; }
   .interactive-cultivation .editor-panel h1 { @apply mt-1 text-xl; }
   .interactive-cultivation .editor-actions { @apply mx-0 mt-4 flex-wrap bg-[#f3f5e9]/95 px-0 py-3; }
@@ -636,7 +774,7 @@
   .interactive-side { @apply min-w-0 p-4 sm:p-5; }
   .interactive-panel-heading { @apply mb-4 flex flex-wrap items-start justify-between gap-3; }
   .interactive-panel-heading h2 { @apply mt-1 mb-0 text-lg; }
-  .interactive-canvas { @apply h-[60dvh] min-h-[420px] lg:h-[calc(100dvh-300px)] lg:min-h-[520px] touch-none overflow-hidden border-x border-horta-line bg-[#f8faf5]; cursor: crosshair; }
+  .interactive-canvas { @apply h-[60dvh] min-h-[420px] lg:h-[calc(100dvh-240px)] lg:min-h-[600px] touch-none overflow-hidden border-x border-horta-line bg-[#f8faf5]; cursor: crosshair; }
   .interactive-canvas.tool-select { cursor: default; }
   .interactive-canvas.tool-pan { cursor: grab; }
   .interactive-canvas.panning { cursor: grab; }
@@ -661,7 +799,7 @@
   .interactive-selection-marquee { fill: rgba(72, 123, 158, .12); stroke: #477b9e; stroke-width: 1.5; stroke-dasharray: 6 4; }
   .interactive-mandala-preview-shape { fill: rgba(192, 138, 75, .08); stroke: #c08a4b; stroke-width: 1.5; stroke-dasharray: 5 4; opacity: .95; }
   .interactive-modal-backdrop { @apply fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[#21352a]/40 px-4 py-8; }
-  .interactive-mandala-modal { @apply w-full max-w-3xl bg-white p-5 shadow-xl sm:p-6; }
+  .interactive-mandala-modal { @apply w-full max-w-3xl rounded-lg border border-horta-line bg-white p-5 text-horta-ink shadow-xl sm:p-6; }
   .interactive-properties-popover { @apply fixed z-40 w-[min(320px,calc(100vw-24px))] max-h-[calc(100vh-24px)] overflow-y-auto rounded-xl border border-[#cddbc8] bg-white/95 shadow-2xl backdrop-blur-sm; }
   .interactive-properties-header { @apply sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-horta-line bg-gradient-to-br from-[#f4f8ef]/95 to-white/95 px-4 py-4; }
   .interactive-properties-header h2 { @apply mt-1 mb-1 text-lg text-horta-forest; }
@@ -715,8 +853,9 @@
 
   /* Editor do mapa: cabeçalho, barra do mapa e painel de construção */
   .interactive-header { @apply mb-3 flex flex-wrap items-start justify-between gap-x-6 gap-y-3; }
-  .interactive-save-status { @apply inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-medium; }
-  .interactive-save-status::before { content: ""; @apply size-2 rounded-full bg-current; }
+  /* Badge compacto ao lado do título (mesma linha), sem quebrar o texto. */
+  .interactive-save-status { @apply inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-[11px] leading-none font-semibold whitespace-nowrap; }
+  .interactive-save-status::before { content: ""; @apply size-1.5 shrink-0 rounded-full bg-current; }
   .interactive-save-status.ok { @apply border-[#cfe0bf] bg-[#f1f7ea] text-horta-forest; }
   .interactive-save-status.warning { @apply border-[#e8d3a6] bg-[#fdf6e7] text-[#7b551d]; }
   .interactive-save-status.pending, .interactive-save-status.muted { @apply border-horta-line bg-white text-horta-muted; }
@@ -735,13 +874,63 @@
   .interactive-canvas-notices { @apply pointer-events-none absolute inset-x-0 top-3 z-10 flex flex-col items-center gap-2 px-3; }
   .interactive-canvas-notice { @apply pointer-events-auto m-0 flex max-w-xl items-center gap-2 rounded-lg border border-[#e8d3a6] bg-[#fffaf0]/95 py-1 pr-1 pl-3 text-xs text-[#5e4419] shadow-md; }
   .interactive-canvas-notice.error { @apply border-[#e7b3a8] bg-[#fdf1ee]/95 py-2 pr-3 text-[#8d3430]; }
-  .interactive-tool-tile { @apply flex min-h-12 w-full items-center gap-2.5 rounded-md border border-horta-line bg-white px-2.5 py-1.5 text-left font-normal text-horta-ink shadow-none hover:!border-horta-forest hover:!bg-[#f4f8ef] disabled:hover:!border-horta-line disabled:hover:!bg-white; }
-  .interactive-tool-tile strong { @apply block truncate text-[13px] font-semibold; }
-  .interactive-tool-tile small { @apply block truncate text-[11px] text-horta-muted; }
-  .interactive-tool-tile-icon { @apply flex size-7 shrink-0 items-center justify-center rounded-md bg-[#eef3ea] text-horta-forest; }
-  .interactive-tool-tile-icon svg { @apply size-4; }
-  .interactive-tool-tile.active { @apply !border-horta-forest !bg-[#e6efdc] ring-1 ring-horta-forest; }
-  .interactive-tool-tile.active .interactive-tool-tile-icon { @apply bg-horta-forest text-white; }
+
+  /* Bloqueio de setores/canteiros enquanto a horta não tem terreno. */
+  .terrain-gate { @apply mx-auto flex max-w-xl flex-col items-center gap-3 px-2 py-10 text-center; }
+  .terrain-gate h1 { @apply m-0 text-xl; }
+  .terrain-gate > p { @apply m-0 max-w-md text-sm text-horta-muted; }
+  .terrain-gate-icon { @apply flex size-12 items-center justify-center rounded-full bg-horta-soft text-horta-forest; }
+  .terrain-gate-icon svg { @apply size-6; }
+  .terrain-gate-steps { @apply my-1 flex list-none flex-wrap items-center justify-center gap-2 p-0 text-xs font-semibold text-horta-muted; }
+  .terrain-gate-steps li { @apply inline-flex items-center gap-1.5 rounded-full border border-horta-line px-3 py-1; }
+  .terrain-gate-steps li svg { @apply size-3; }
+  .terrain-gate-steps li[aria-current=step] { @apply border-horta-forest bg-horta-forest text-white; }
+  .terrain-gate-steps li[aria-current=step] span { @apply flex size-4 items-center justify-center rounded-full bg-white text-[10px] text-horta-forest; }
+  .nav-page[data-locked] { @apply text-horta-muted/80; }
+  .nav-page-lock { @apply ml-auto size-3.5 shrink-0 text-horta-muted/80; }
+  /* Painel de construção do mapa: stepper, sessões de desenho, ações em lista e rodapé fixo. */
+  .construction-stepper { @apply relative m-0 grid list-none grid-cols-3 gap-1 p-0; }
+  .construction-stepper li { @apply relative min-w-0; }
+  .construction-stepper li:not(:last-child)::after { content: ''; @apply pointer-events-none absolute top-[18px] right-[-2px] left-[calc(50%+16px)] h-px bg-horta-line; }
+  .construction-stepper li.complete:not(:last-child)::after { @apply bg-horta-forest/40; }
+  .construction-stepper button { @apply flex min-h-11 w-full flex-col items-center gap-1 rounded-md border-0 bg-transparent px-1 py-1 text-center font-normal text-horta-ink shadow-none hover:!bg-[#eef3ea] disabled:cursor-not-allowed disabled:opacity-100; }
+  .construction-stepper button:disabled strong, .construction-stepper button:disabled small { @apply text-[#97a49b]; }
+  .construction-stepper strong { @apply block truncate text-[13px] font-semibold; }
+  .construction-stepper small { @apply block truncate text-[11px] leading-tight text-horta-muted; }
+  .construction-stepper [aria-current=step] strong { @apply text-horta-forest; }
+  .construction-step-marker { @apply relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full border border-horta-line bg-white text-xs font-semibold text-horta-muted; }
+  .construction-step-marker.active { @apply border-horta-forest bg-horta-forest text-white ring-4 ring-horta-soft; }
+  .construction-step-marker.complete { @apply border-horta-soft bg-horta-soft text-horta-forest; }
+  .construction-section { @apply border-t border-horta-line px-4 py-3; }
+  .construction-section > h3 { @apply mt-0 mb-2 text-[11px] font-semibold tracking-wide text-horta-muted uppercase; }
+  .construction-option { @apply flex min-h-12 w-full items-center gap-3 rounded-md border border-horta-line bg-white px-3 py-2 text-left font-normal text-horta-ink shadow-none transition-colors hover:!border-horta-forest/60 hover:!bg-[#f6f9f1] disabled:cursor-not-allowed disabled:hover:!border-horta-line disabled:hover:!bg-white; }
+  .construction-option.compact { @apply gap-2 px-2.5; }
+  .construction-option[aria-pressed=true] { @apply !border-horta-forest !bg-[#e9f1df] ring-1 ring-horta-forest; }
+  .construction-option-icon { @apply flex size-8 shrink-0 items-center justify-center rounded-md bg-[#eef3ea] text-horta-forest; }
+  .construction-option.compact .construction-option-icon { @apply size-7; }
+  .construction-option-icon svg { @apply size-4; }
+  .construction-option[aria-pressed=true] .construction-option-icon { @apply bg-horta-forest text-white; }
+  .construction-option-title { @apply flex items-center gap-2 text-[13px] leading-snug font-semibold; }
+  .construction-option-description { @apply mt-0.5 block text-[11px] leading-snug text-horta-muted; }
+  .construction-option-badge { @apply rounded-full bg-horta-soft px-1.5 py-px text-[10px] font-semibold text-horta-forest; }
+  .construction-option kbd { @apply rounded border border-horta-line bg-[#f7f9f3] px-1.5 font-mono text-[10px] text-horta-muted; }
+  .construction-session-badge { @apply inline-flex items-center gap-1.5 rounded-full bg-[#fbf1e3] px-2 py-0.5 text-[11px] font-semibold text-[#8a4f12]; }
+  .construction-session-badge > span { @apply size-1.5 rounded-full bg-horta-focus motion-safe:animate-pulse; }
+  .construction-instructions { @apply mt-3 mb-0 grid list-decimal gap-1.5 pl-4 text-xs leading-relaxed text-horta-muted marker:text-horta-forest; }
+  .construction-footer { @apply grid gap-2 border-t border-horta-line bg-[#f7f9f3] px-4 py-3; }
+  .construction-footer-row { @apply flex items-center justify-between gap-2; }
+  /* Ações do rodapé em colunas iguais; Cancelar usa o contorno de perigo. */
+  .construction-footer-actions { @apply grid grid-cols-2 gap-2; }
+  /* Mesma altura, fonte e espaçamento para todas as ações do rodapé (exceto o voltar, que é fantasma). */
+  .construction-footer button:not(.construction-back) { @apply min-h-10 px-3 py-2 text-[13px] font-semibold; }
+  .construction-back { @apply inline-flex min-h-10 items-center gap-1 rounded-md border border-horta-forest bg-horta-forest px-3 py-2 text-[13px] font-semibold text-white shadow-none hover:!bg-horta-forest-hover; }
+  /* Fluxo de construção e cultivo: ações em verde-escuro; só Cancelar mantém o contorno vermelho. */
+  .construction-footer button.secondary, .bed-menu-actions button { @apply border-horta-forest bg-horta-forest text-white; }
+  .construction-footer button.secondary:hover:not(:disabled), .bed-menu-actions button:hover:not(:disabled) { @apply bg-horta-forest-hover; }
+  .construction-footer-hint { @apply m-0 text-[11px] leading-snug text-horta-muted; }
+  .construction-summary { @apply flex items-start gap-3 rounded-md border border-horta-line bg-[#f7f9f3] px-3 py-2.5; }
+  .construction-summary-icon { @apply flex size-7 shrink-0 items-center justify-center rounded-full bg-horta-soft text-horta-forest; }
+  .construction-summary-icon svg { @apply size-4; }
 }
 
 /* Panorâmica como viewport de jogo: cena em área inteira, HUD sobreposto e painel de detalhes escuro. */
@@ -793,6 +982,8 @@
   .garden-scene-ready-sprite { filter: drop-shadow(0 0 2px #fff3a6) drop-shadow(0 0 5px #ffd84a); }
   .garden-scene-ready-sparkles path { transform-box: fill-box; transform-origin: center; animation: garden-ready-twinkle 1.8s ease-in-out infinite; }
   @media (prefers-reduced-motion: reduce) { .garden-scene-ready-glow, .garden-scene-ready-sparkles path { animation: none; } }
+  /* Pausa as animações decorativas durante pan/foco, fora da tela ou com a aba oculta (custo de repintura do SVG). */
+  .garden-scene-wrapper[data-motion-paused="true"] .garden-scene * { animation-play-state: paused !important; }
   .garden-scene-sector-tag { @apply rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-[#b8d98c]; }
   .garden-scene-crop { @apply border-b border-white/10 py-3 last:border-b-0; }
   .garden-scene-phase { @apply mt-3 mb-1 flex flex-wrap items-baseline justify-between gap-x-2 text-xs; }
@@ -835,7 +1026,6 @@
  */
 @layer components {
   .workspace-content main > .main-inner { @apply rounded-2xl border border-horta-line bg-white p-4 shadow-[0_1px_2px_rgb(28_73_57/0.06),0_14px_36px_-20px_rgb(28_73_57/0.3)] sm:p-6 lg:px-8 lg:py-7; }
-  .workspace-wide .workspace-content main > .main-inner { @apply rounded-none border-0 bg-transparent p-0 shadow-none; }
   @media (width < 40rem) { .workspace-content main > .main-inner { @apply -mx-4 rounded-none border-x-0; } }
 
   .main-inner .page-context { @apply mb-5; }
@@ -843,19 +1033,26 @@
 
   /* Cards internos → seções. */
   .main-inner .panel { @apply mb-0 rounded-none border-0 border-t border-horta-line bg-transparent p-0 py-6 shadow-none; }
-  .main-inner .panel:first-child, .main-inner .record-tab-panel > .panel:first-child, .main-inner .page-heading + .panel { @apply border-t-0 pt-1; }
+  /* O caminho (page-context) e o cabeçalho já separam o conteúdo: o painel seguinte não repete a linha. */
+  .main-inner .panel:first-child, .main-inner .record-tab-panel > .panel:first-child, .main-inner .page-heading + .panel, .main-inner .page-context + .panel, .main-inner .page-context + * > .panel:first-child { @apply border-t-0 pt-1; }
   .main-inner .panel.flush { @apply overflow-visible p-0 py-0; }
   .main-inner .panel-header { @apply bg-transparent px-0 pt-0; }
   .main-inner .panel-body { @apply px-0; }
   .main-inner .panel.flush .pagination { @apply px-0; }
   .main-inner .panel > .empty { @apply rounded-lg bg-horta-canvas/60; }
-  .main-inner .results-heading, .main-inner .organization-collection-heading { @apply px-0; }
-  .main-inner .organization-rows > li { @apply -mx-2 rounded-md px-2 sm:-mx-3 sm:px-3; }
+  .main-inner .results-heading { @apply px-0; }
   .main-inner .filter-panel { @apply rounded-lg border-0 bg-horta-canvas/70 shadow-none; }
   .main-inner .journey, .main-inner .dashboard-card { @apply shadow-none; }
-  .main-inner .editor-panel { @apply max-w-5xl p-0; }
+  /* Formulários dentro do cartão da página usam a largura inteira, como as listagens. */
+  .main-inner .editor-panel, .main-inner .form-panel { @apply max-w-none p-0; }
   .main-inner .editor-actions { @apply mx-0 rounded-none bg-white/95 px-0; }
   .main-inner .editor-actions:last-child { @apply mb-0; }
+  /* Estação de cultivo: rodapé fixo opaco, de borda a borda da área rolável, com ações em colunas iguais. */
+  .main-inner .interactive-cultivation .editor-actions { @apply -mx-4 -mb-4 mt-5 grid grid-cols-2 gap-2 border-t border-[#c8d3b6] bg-[#f3f5e9] px-4 py-3 backdrop-blur-none; }
+  .main-inner .interactive-cultivation .editor-actions .form-actions-status { @apply col-span-2 text-xs; }
+  .main-inner .interactive-cultivation .editor-actions .form-actions-status:empty { @apply hidden; }
+  .main-inner .interactive-cultivation .editor-actions button { @apply min-h-10 w-full px-3 py-2 text-[13px] font-semibold; }
+  .main-inner .interactive-cultivation .editor-actions button.secondary { @apply border-horta-forest bg-horta-forest text-white hover:!bg-horta-forest-hover; }
   .main-inner .record-tabs-list { @apply mb-5; }
 
   /* Seção com título e ação à direita. */
@@ -874,15 +1071,54 @@
   .bed-crop-meta { @apply mt-1 mb-2 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-horta-muted; }
   .bed-crop-meta strong { @apply font-semibold text-horta-forest; }
   .bed-crop-meta > * + *::before { @apply mr-3 text-horta-line; content: '·'; }
-  .bed-crop-progress { @apply mb-2 flex max-w-xl flex-col gap-1 text-xs text-horta-muted; }
-  .bed-crop-progress meter { @apply h-2 w-full; }
+  .bed-crop-body { @apply grid min-w-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-8; }
+  .bed-crop-progress { @apply mb-3 flex flex-col gap-1.5 text-xs text-horta-muted; }
+  .bed-crop-progress > span { @apply flex justify-between gap-3; }
+  .bed-crop-progress meter { @apply h-1.5 w-full; }
   .bed-crop-progress meter::-webkit-meter-bar { background: #edf1e8; border: 0; border-radius: 9999px; }
   .bed-crop-progress meter::-webkit-meter-optimum-value { background: #48765a; border-radius: 9999px; }
   .bed-crop[data-ready] .bed-crop-progress meter::-webkit-meter-optimum-value { background: #c9a227; }
-  .bed-crop-plantings { @apply mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]; }
-  .bed-crop-plantings > span { @apply text-horta-muted; }
-  .bed-crop-plantings a { @apply underline underline-offset-4; }
-  .bed-crop-actions { @apply mt-2 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium; }
-  .bed-crop-actions > a:not(.action-link) { @apply inline-flex min-h-11 items-center underline underline-offset-4; }
+  .bed-crop-plantings { @apply m-0 flex flex-wrap items-center gap-1.5 text-xs; }
+  .bed-crop-plantings > span { @apply mr-1 text-horta-muted; }
+  .bed-crop-plantings a { @apply rounded-full border border-horta-line bg-[#f7f9f3] px-2.5 py-1 text-horta-ink no-underline hover:border-horta-forest/60; }
+  .bed-crop-actions { @apply flex flex-wrap content-start gap-2 lg:w-48 lg:flex-col; }
+  .bed-crop-actions .action-link { @apply min-h-10 px-3 py-2 text-[13px]; }
   @media (width < 40rem) { .bed-crop > span:first-child { @apply !size-12; } }
+}
+
+@layer components {
+  /*
+   * Formulário em seções abertas (irrigação e atividade, em teste): sem cartões. Cada assunto tem o título em cima,
+   * marcado por um traço verde, e os campos logo abaixo; seções separadas por espaço e uma divisória fina.
+   * Usa toda a largura disponível: em telas largas, os campos se distribuem em até três colunas.
+   */
+  .form-stack { @apply grid min-w-0 gap-0; }
+  .form-stack .form-section { @apply block border-0 border-t border-horta-line py-6 first:border-t-0 first:pt-2; }
+  .form-stack .form-section-heading { @apply mb-4 flex-row flex-wrap items-baseline gap-x-3 gap-y-0.5; }
+  .form-stack .form-section-title { @apply col-auto m-0 flex items-center gap-1.5 border-0 p-0; }
+  .form-stack .form-section-title::before { @apply h-4 w-1 shrink-0 rounded-full bg-[#7c9c63]; content: ''; }
+  .form-stack .form-section-heading strong { @apply text-[15px] font-semibold tracking-[-0.01em] text-horta-forest; }
+  .form-stack .form-section-heading > span:not(.form-section-title) { @apply basis-full pl-2.5 text-[13px]; }
+  .form-stack .form-section-fields { @apply gap-x-4 gap-y-4 @5xl:grid-cols-3; }
+  /* Com um campo de linha inteira (método, observações), os demais ficam em pares, sem coluna vazia ao lado. */
+  .form-stack .form-section-fields:has(> .col-span-full) { @apply sm:grid-cols-2 @5xl:grid-cols-3; }
+  /* Em telas largas, um campo de texto curto marcado como linha inteira (ex.: método do volume) cabe na mesma linha dos outros dois. */
+  .form-stack .form-section-fields:has(> label:nth-child(3):last-child) > .col-span-full:not(:has(textarea)) { @apply @5xl:col-span-1; }
+  .form-stack .form-section-fields:has(> label:nth-child(3):last-child):not(:has(> .col-span-full, > label:has(textarea))) { @apply sm:grid-cols-3; }
+  .form-stack .form-section-fields > label:has(textarea) { @apply col-span-full; }
+  /* Três campos curtos seguidos de um texto longo: os três dividem a linha e o texto ocupa a seguinte. */
+  .form-stack .form-section-fields:has(> label:nth-child(4):last-child:has(textarea)) { @apply sm:grid-cols-3; }
+  /* Quatro campos curtos (setor, situação, início, fim) ocupam uma única linha em telas largas. */
+  .form-stack .form-section-fields:has(> label:nth-child(4):last-child):not(:has(textarea, > .col-span-full)) { @apply @5xl:grid-cols-4; }
+  /* Itens repetidos (participações, insumos, instituições): seção com título próprio e itens recuados por uma linha à esquerda. */
+  .form-stack .form-repeat { @apply grid gap-3 border-t border-horta-line py-6; }
+  .form-stack .form-repeat > h3 { @apply m-0 flex items-center gap-1.5 text-[15px] font-semibold text-horta-forest; }
+  .form-stack .form-repeat > h3::before { @apply h-4 w-1 shrink-0 rounded-full bg-[#7c9c63]; content: ''; }
+  .form-stack .form-repeat > .hint { @apply -mt-2 mb-1 pl-2.5; }
+  .form-stack .form-repeat > .form-section { @apply border-0 border-l-2 border-horta-line py-1 pl-4; }
+  .form-stack .form-repeat > .form-section .form-section-title::before { @apply hidden; }
+  .form-stack .form-repeat > .form-section .form-section-heading { @apply mb-3; }
+  .form-stack .form-repeat > .form-section .form-section-heading strong { @apply text-sm text-horta-ink; }
+  .form-stack .form-repeat > button.secondary { @apply mt-1 justify-self-start; }
+  .form-stack .form-section-fields > .danger-outline { @apply col-span-full justify-self-end; }
 }

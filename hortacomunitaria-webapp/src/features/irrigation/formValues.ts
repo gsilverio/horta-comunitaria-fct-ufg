@@ -17,15 +17,20 @@ export interface Draft {
   sectorId: string; bedIds: string[]; startedAt: string; endedAt: string
   activeDurationMinutes: string; volumeLiters: string; flowRateLitersPerMinute: string
   volumeSource: VolumeSource; volumeMethod: string; status: Status; responsibleParticipantId: string; notes: string
+  waterPrice: string
 }
-export const emptyDraft = (): Draft => ({ sectorId: '', bedIds: [], startedAt: `${today()}T08:00`, endedAt: '',
-  activeDurationMinutes: '', volumeLiters: '', flowRateLitersPerMinute: '', volumeSource: 'Measured', volumeMethod: '', status: 'Completed', responsibleParticipantId: '', notes: '' })
+export const emptyDraft = (waterPrice = ''): Draft => ({ sectorId: '', bedIds: [], startedAt: `${today()}T08:00`, endedAt: '',
+  activeDurationMinutes: '', volumeLiters: '', flowRateLitersPerMinute: '', volumeSource: 'Measured', volumeMethod: '', status: 'Completed', responsibleParticipantId: '', notes: '', waterPrice })
+// Preferência de preenchimento por horta (não é registro): o último preço do m³ informado neste navegador.
+const waterPriceKey = (garden: string) => `horta-water-price:${garden}`
+export function rememberedWaterPrice(garden: string) { try { return window.localStorage.getItem(waterPriceKey(garden)) ?? '' } catch { return '' } }
+export function rememberWaterPrice(garden: string, value: string) { try { if (value.trim()) window.localStorage.setItem(waterPriceKey(garden), value.trim()) } catch { /* preferência opcional */ } }
 export function editDraft(detail: IrrigationDetail): Draft {
   return { ...detail, startedAt: localInstant(detail.startedAt), endedAt: detail.endedAt ? localInstant(detail.endedAt) : '',
     activeDurationMinutes: detail.activeDurationMinutes === null ? '' : String(detail.activeDurationMinutes).replace('.', ','),
     volumeLiters: detail.volumeLiters === null ? '' : String(detail.volumeLiters).replace('.', ','),
     flowRateLitersPerMinute: detail.flowRateLitersPerMinute === null ? '' : String(detail.flowRateLitersPerMinute).replace('.', ','),
-    volumeSource: detail.volumeSource ?? 'Measured', volumeMethod: detail.volumeMethod ?? '', responsibleParticipantId: detail.responsibleParticipantId ?? '', notes: detail.notes ?? '' }
+    volumeSource: detail.volumeSource ?? 'Measured', volumeMethod: detail.volumeMethod ?? '', responsibleParticipantId: detail.responsibleParticipantId ?? '', notes: detail.notes ?? '', waterPrice: '' }
 }
 export class FormFailure extends Error {
   fields: Record<string, string[]>
@@ -54,8 +59,15 @@ export function toValues(draft: Draft, original?: IrrigationDetail): IrrigationV
   if (activeDurationMinutes !== null && endedAt && startedAt && !errors.endedAt &&
     activeDurationMinutes > (Number(Temporal.Instant.from(endedAt).epochMilliseconds) - Number(Temporal.Instant.from(startedAt).epochMilliseconds)) / 60000) errors.activeDurationMinutes = ['A duração ativa não pode superar o intervalo informado.']
   if (volumeLiters !== null && !draft.volumeMethod.trim()) errors.volumeMethod = ['Informe o método de obtenção do volume.']
+  const priceInput = original ? '' : draft.waterPrice.trim()
+  let waterPricePerCubicMeterBrl: number | null = null
+  if (priceInput) {
+    if (!/^\d{1,9}([.,]\d{1,4})?$/.test(priceInput) || Number(priceInput.replace(',', '.')) <= 0) errors.waterPrice = ['Use um valor positivo em reais, com até 4 casas decimais.']
+    else waterPricePerCubicMeterBrl = Number(priceInput.replace(',', '.'))
+  }
   if (Object.keys(errors).length) throw new FormFailure(errors)
   return { sectorId: draft.sectorId, bedIds: draft.bedIds, startedAt, endedAt, volumeLiters, activeDurationMinutes, flowRateLitersPerMinute,
     volumeSource: volumeLiters === null ? null : draft.volumeSource, volumeMethod: volumeLiters === null ? null : draft.volumeMethod.trim(),
-    status: draft.status, responsibleParticipantId: draft.responsibleParticipantId || null, notes: draft.notes.trim() || null }
+    status: draft.status, responsibleParticipantId: draft.responsibleParticipantId || null, notes: draft.notes.trim() || null,
+    ...(original ? {} : { waterPricePerCubicMeterBrl }) }
 }

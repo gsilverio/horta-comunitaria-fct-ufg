@@ -135,6 +135,7 @@ using HortaComunitaria.Api.Features.Gardens.UpdateIrrigationSector;
 using HortaComunitaria.Api.Features.Gardens.CreateIrrigationSector;
 using HortaComunitaria.Api.Features.Gardens.ListGardenHistory;
 using HortaComunitaria.Api.Features.Gardens.InactivateGarden;
+using HortaComunitaria.Api.Features.Gardens.DeleteGarden;
 using HortaComunitaria.Api.Features.Gardens.GetGarden;
 using HortaComunitaria.Api.Features.Gardens.UpdateGarden;
 using HortaComunitaria.Api.Features.Gardens.CreateGarden;
@@ -171,6 +172,7 @@ internal static class ApplicationExtensions
         services.AddScoped<UpdateGardenCommandHandler>();
         services.AddScoped<GetGardenQueryHandler>();
         services.AddScoped<InactivateGardenCommandHandler>();
+        services.AddScoped<DeleteGardenCommandHandler>();
         services.AddScoped<ListGardenHistoryQueryHandler>();
         services.AddScoped<CreateIrrigationSectorCommandHandler>();
         services.AddScoped<UpdateIrrigationSectorCommandHandler>();
@@ -180,6 +182,7 @@ internal static class ApplicationExtensions
         services.AddScoped<CreateBedCommandHandler>();
         services.AddScoped<HortaComunitaria.Api.Features.Gardens.SaveLayout.SaveLayoutCommandHandler>();
         services.AddScoped<HortaComunitaria.Api.Features.Demonstration.SeedValidationScenario.SeedValidationScenarioCommandHandler>();
+        services.AddScoped<HortaComunitaria.Api.Features.Demonstration.SeedPanoramaScenario.SeedPanoramaScenarioCommandHandler>();
         services.AddScoped<HortaComunitaria.Api.Features.Gardens.GetLayout.GetLayoutQueryHandler>();
         services.AddScoped<UpdateBedCommandHandler>();
         services.AddScoped<GetBedQueryHandler>();

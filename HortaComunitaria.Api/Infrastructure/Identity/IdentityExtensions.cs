@@ -82,6 +82,7 @@ internal static class IdentityExtensions
         services.AddScoped<AuthTokenService>();
         services.AddScoped<CurrentAuthor>();
         services.AddScoped<AdministratorBootstrap>();
+        services.AddScoped<TestAdministratorsSeed>();
         return services;
     }
 

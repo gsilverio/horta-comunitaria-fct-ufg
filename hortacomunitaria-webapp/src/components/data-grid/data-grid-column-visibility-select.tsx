@@ -120,7 +120,7 @@ function DataGridColumnVisibility<TData extends object>({
               rounded-sm
               text-slate-400
               transition-colors
-              hover:bg-[#e3e3e3]
+              hover:bg-horta-canvas
               hover:text-slate-700
             "
             onMouseDown={(event) => event.preventDefault()}
@@ -166,7 +166,7 @@ function DataGridColumnVisibility<TData extends object>({
                   pe-2
                   ps-8
                   text-sm
-                  hover:bg-[#e3e3e3]
+                  hover:bg-horta-canvas
                 "
                 onSelect={(event) => {
                   event.preventDefault();
@@ -200,7 +200,7 @@ function DataGridColumnVisibility<TData extends object>({
               rounded-sm
               text-slate-400
               transition-colors
-              hover:bg-[#e3e3e3]
+              hover:bg-horta-canvas
               hover:text-slate-700
             "
             onMouseDown={(event) => event.preventDefault()}
@@ -224,8 +224,8 @@ function DataGridColumnVisibility<TData extends object>({
               text-sm
               font-medium
               text-horta-forest
-              hover:bg-[#e3e3e3]
-              focus:bg-[#e3e3e3]
+              hover:bg-horta-canvas
+              focus:bg-horta-canvas
             "
             onSelect={(event) => {
               event.preventDefault();

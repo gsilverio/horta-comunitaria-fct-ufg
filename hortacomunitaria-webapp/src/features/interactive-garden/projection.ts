@@ -17,7 +17,8 @@ export interface GardenProjection {
   warnings: string[]
 }
 
-const PROJECTION_VERSION = 3
+// 4: o quadro deixou de derivar do tamanho cadastrado; descarta rascunhos locais na escala antiga.
+const PROJECTION_VERSION = 4
 
 function projectionKey(organization?: InteractiveOrganization) {
   if (!organization) return 'catalog:unavailable'
@@ -139,24 +140,23 @@ function projectedBeds(input: InteractiveOrganization, width: number, height: nu
 }
 
 /**
- * Cria o envelope visual da horta sem confundir área cadastrada com uma geometria física.
- * A forma quadrada é uma projeção reversível; largura, comprimento e contorno da horta
- * ainda não existem no contrato do CRUD.
+ * Cria o quadro de desenho da horta. A área cadastrada é apenas informativa: o quadro
+ * sempre usa as unidades livres de desenho, sem derivar largura ou altura dessa área.
  */
 function createCatalogProjection(garden: GardenWorkspace, organization?: InteractiveOrganization): GardenProjection {
   const totalAreaM2 = registeredGardenAreaM2(garden)
+  const board = createDemoGarden()
+  const projected = organization ? projectedBeds(organization, board.width, board.height) : { elements: [], sectors: [] }
+  const base = { width: board.width, height: board.height, projectionVersion: PROJECTION_VERSION, projectionKey: projectionKey(organization), elements: projected.elements, sectors: projected.sectors }
   if (!totalAreaM2) {
-    const fallback = createDemoGarden()
     return {
-      garden: { ...fallback, ...(organization ? projectedBeds(organization, fallback.width, fallback.height) : { elements: [] }), areaSource: 'fallback', projectionVersion: PROJECTION_VERSION, projectionKey: projectionKey(organization) },
+      garden: { ...base, areaSource: 'fallback' },
       totalAreaM2: undefined,
-      warnings: ['Medidas reais são opcionais. O quadro usa 20 × 20 unidades livres de desenho.'],
+      warnings: [],
     }
   }
 
-  const side = Math.sqrt(totalAreaM2)
-  const projected = organization ? projectedBeds(organization, side, side) : { elements: [], sectors: [] }
-  const warnings = ['O envelope quadrado preserva a área cadastrada, mas não representa o contorno físico da horta.']
+  const warnings: string[] = []
   if (organization?.beds.some((bed) => bed.isActive && (!bed.configuration?.lengthMeters || !bed.configuration?.widthMeters))) {
     warnings.push('Alguns canteiros usam dimensão quadrada estimada a partir da área cultivável.')
   }
@@ -167,7 +167,7 @@ function createCatalogProjection(garden: GardenWorkspace, organization?: Interac
   if (organization?.beds.some((bed) => bed.isActive && !bed.sectorAssignment)) {
     warnings.push('Há canteiros sem setor associado; eles aparecem no agrupamento “Sem setor associado”.')
   }
-  return { garden: { width: side, height: side, areaM2: totalAreaM2, areaSource: 'registered', projectionVersion: PROJECTION_VERSION, projectionKey: projectionKey(organization), elements: projected.elements, sectors: projected.sectors }, totalAreaM2, warnings }
+  return { garden: { ...base, areaM2: totalAreaM2, areaSource: 'registered' }, totalAreaM2, warnings }
 }
 
 /** A geometria confirmada prevalece sobre envelopes estimados dos cadastros. */
@@ -175,5 +175,26 @@ export function createGardenProjection(garden: GardenWorkspace, organization?: I
   const projection = createCatalogProjection(garden, organization)
   const saved = organization?.savedLayout
   if (!saved?.layout) return projection
-  return { ...projection, warnings: [], garden: { ...projection.garden, ...saved.layout, boundary: saved.layout.boundary ?? undefined, projectionKey: 'saved-layout:' + garden.id + ':' + saved.version } }
+  // Nomes vêm do cadastro: o mapa guarda a geometria, e renomear em outra tela não pode deixar o desenho desatualizado.
+  // A chave inclui o cadastro para descartar rascunhos locais feitos sobre nomes, áreas ou vínculos antigos.
+  return { ...projection, warnings: [], garden: { ...projection.garden, ...saved.layout, elements: withCatalogNames(saved.layout.elements, organization), boundary: saved.layout.boundary ?? undefined, projectionKey: 'saved-layout:' + garden.id + ':' + saved.version + ':' + projectionKey(organization) } }
+}
+
+function withCatalogNames(elements: DemoElement[], organization?: InteractiveOrganization): DemoElement[] {
+  if (!organization) return elements
+  const sectors = new Map(organization.sectors.map((sector) => [sector.id, sector.name]))
+  const beds = new Map(organization.beds.map((bed) => [bed.id, bed]))
+  const catalogName = (element: DemoElement) => element.entityId === undefined ? undefined
+    : element.role === 'sector' ? sectors.get(element.entityId) : element.role === 'bed' ? beds.get(element.entityId)?.name : undefined
+  const visualSectorNames = new Map<string, string>()
+  for (const element of elements) {
+    const name = element.role === 'sector' ? catalogName(element) : undefined
+    if (name !== undefined) visualSectorNames.set(element.id, name)
+  }
+  return elements.map((element) => {
+    const name = catalogName(element)
+    const sectorName = element.role === 'bed' && element.sectorId ? visualSectorNames.get(element.sectorId) : undefined
+    return name === undefined && sectorName === undefined ? element
+      : { ...element, ...(name !== undefined ? { name } : {}), ...(sectorName !== undefined ? { sectorName } : {}) }
+  })
 }

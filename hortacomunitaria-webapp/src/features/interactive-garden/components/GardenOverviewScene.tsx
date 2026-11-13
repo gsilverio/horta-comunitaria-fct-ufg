@@ -528,6 +528,20 @@ export function GardenOverviewScene({ gardenId, garden, crops, sceneDate, headin
   const interaction = useRef<SceneInteraction | undefined>(undefined)
   const suppressClick = useRef(false)
   const [dragging, setDragging] = useState(false)
+  const pendingPan = useRef<Camera | undefined>(undefined)
+  const panFrame = useRef<number | undefined>(undefined)
+  useEffect(() => () => { if (panFrame.current !== undefined) cancelAnimationFrame(panFrame.current) }, [])
+  // Animações decorativas param fora da tela ou com a aba oculta: cada quadro repinta o SVG inteiro.
+  const [offscreen, setOffscreen] = useState(false)
+  const [tabHidden, setTabHidden] = useState(() => typeof document !== 'undefined' && document.hidden)
+  useEffect(() => {
+    const wrapper = wrapperRef.current
+    const syncVisibility = () => setTabHidden(document.hidden)
+    document.addEventListener('visibilitychange', syncVisibility)
+    const observer = wrapper && 'IntersectionObserver' in window ? new IntersectionObserver(([entry]) => setOffscreen(!entry.isIntersecting)) : undefined
+    if (wrapper) observer?.observe(wrapper)
+    return () => { document.removeEventListener('visibilitychange', syncVisibility); observer?.disconnect() }
+  }, [])
   // A projeção chega depois do primeiro render em alguns fluxos. Enquanto o
   // estado ainda aponta para o envelope anterior, usa o novo enquadramento
   // diretamente; assim a câmera não fica presa no fallback inicial.
@@ -618,7 +632,14 @@ export function GardenOverviewScene({ gardenId, garden, crops, sceneDate, headin
     const deltaX = point.x - current.pointerX
     const deltaY = point.y - current.pointerY
     current.moved ||= Math.hypot(deltaX, deltaY) > 4
-    if (current.moved) setCamera(panCamera(current.camera, deltaX, deltaY))
+    if (!current.moved) return
+    // Um render por quadro: o mouse emite vários pointermove por quadro e cada render repinta máscaras e filtros.
+    pendingPan.current = panCamera(current.camera, deltaX, deltaY)
+    panFrame.current ??= requestAnimationFrame(() => {
+      panFrame.current = undefined
+      if (pendingPan.current) setCamera(pendingPan.current)
+      pendingPan.current = undefined
+    })
   }
 
   const sceneCenter = { x: VIEWBOX.width / 2, y: VIEWBOX.height / 2 }
@@ -653,7 +674,7 @@ export function GardenOverviewScene({ gardenId, garden, crops, sceneDate, headin
     ...sceneElements.filter(element => showSectors || element.role !== 'sector').map(element => ({ id: element.id, role: element.role, name: element.name, center: elementCenter(element) })),
     ...(showSectors ? sceneSectors.map(sector => ({ id: `sector-${sector.id}`, role: 'sector' as const, name: sector.name, center: { x: sector.x + sector.width / 2, y: sector.y + sector.height / 2 } })) : []),
   ] : []
-  return <div ref={wrapperRef} className="garden-scene-wrapper relative" data-fullscreen={fullscreen}><div className="garden-scene" aria-label="Visão panorâmica interativa da implantação da horta">
+  return <div ref={wrapperRef} className="garden-scene-wrapper relative" data-fullscreen={fullscreen} data-motion-paused={offscreen || tabHidden || dragging || focusing}><div className="garden-scene" aria-label="Visão panorâmica interativa da implantação da horta">
     <svg viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`} preserveAspectRatio="xMidYMid meet" role="application" tabIndex={0} aria-label="Mapa panorâmico interativo da horta" aria-describedby="garden-scene-keys" onKeyDown={onSceneKeyDown} ref={attachCanvas} data-dragging={dragging} data-camera-moving={focusing} onClickCapture={(event) => { if (suppressClick.current) { event.preventDefault(); event.stopPropagation(); suppressClick.current = false } }} onClick={(event) => { if (!(event.target instanceof Element && event.target.closest('[role="button"]'))) selectElement(undefined) }} onLostPointerCapture={endPointerInteraction} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endPointerInteraction} onPointerCancel={endPointerInteraction}>
       <defs>
         <radialGradient id="garden-scene-backdrop" cx="50%" cy="46%" r="75%"><stop offset="0" stopColor="#2c4637" /><stop offset=".55" stopColor="#1a2d23" /><stop offset="1" stopColor="#0f1c16" /></radialGradient>

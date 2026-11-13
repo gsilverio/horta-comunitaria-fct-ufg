@@ -163,7 +163,7 @@ $atividade = Post-Horta "$prefixo/activities" @{
 $resolucao = Post-Horta "$prefixo/occurrences/$($ocorrencia.id)/resolution" @{
   resolvedAt = '2026-10-08T09:00:00-03:00'; resolution = 'Inspeção concluída'; expectedVersion = 1; reason = 'Encerrar acompanhamento'
 }
-# Custos: natureza informada explicitamente, sem custo gerado por insumo.
+# Custos: natureza informada explicitamente, sem custo gerado por insumo. Exceção: a irrigação com preço do m³ lança o custo da água.
 $previsto = Post-Horta "$prefixo/financial-entries" @{
   operationId = [guid]::NewGuid(); entryDate = '2026-10-08'; description = 'Previsão'; category = 'Manutenção'; amountBrl = 90; nature = 'Planned'
 }

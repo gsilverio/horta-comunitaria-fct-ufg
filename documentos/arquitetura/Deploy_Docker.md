@@ -60,6 +60,31 @@ A reunião de validação pediu uma simulação com dados fictícios: cadastro d
 
 Os registros são autorados pelo primeiro Adm ativo e gravados pelos handlers reais, com as mesmas validações e o mesmo histórico da interface. Se a horta `DEMO-VALIDACAO` já existir, o comando não grava nada. Cada etapa confirma sua própria transação; uma falha no meio deixa a horta parcial, e a repetição passa a ser ignorada. Nesse caso, num banco só de demonstração, recrie o volume (`down -v`) e repita a primeira subida. Participantes, escola e insumos têm nomes marcados como fictícios.
 
+## Horta panorâmica (`--seed-demo`, desde 13/11/2026)
+
+Depois da horta de validação, o mesmo comando cria **"Horta panorâmica (dados fictícios)"** (código `DEMO-PANORAMA`), pensada para mostrar o mapa e o panorama como devem funcionar na versão 1.0.0:
+
+- Três setores: canteiros retos (inclusive um girado e um largo), uma mandala com centro de referência e dois anéis de canteiros curvos (4 + 6) e um setor de contorno livre com canteiros circulares; caixa d'água e composteira como referências.
+- 20 canteiros e 21 cultivos de 16 espécies do catálogo Embrapa em fases distintas: aguardando plantio, início, crescimento, colheita prevista, colheita registrada e fase conjunta (reposição). Um canteiro fica livre.
+- As fases dependem das datas de plantio (relativas ao dia da execução) e dos prazos visuais da espécie. Espécies sem prazos recebem valores de referência, com motivo no histórico; prazos já configurados são mantidos.
+- Irrigações manuais recentes nos três setores.
+
+A horta de validação passou a incluir também colaboradores adicionais, custos previstos e realizados, duas secagens (uma concluída, uma em andamento) e medições manuais de umidade do solo e temperatura em três pontos de coleta. Instituição, insumos e variáveis ambientais são cadastros globais: o comando reaproveita os existentes pelo nome/código.
+
+## Contas Adm de teste (`--seed-test-admins`)
+
+Cria contas Adm para quem vai testar o ambiente demonstrativo. Contas e senha ficam só no ambiente do comando (nada é versionado); contas já existentes são mantidas. A troca de senha é exigida no primeiro acesso.
+
+```powershell
+$senha = Read-Host 'Senha inicial (12+ caracteres, sem o nome)'
+docker compose -f deploy/compose.yaml run --rm -e "TestAdmins__Accounts=pessoa1@exemplo|Pessoa 1;pessoa2@exemplo|Pessoa 2" -e "TestAdmins__Password=$senha" api --seed-test-admins
+Remove-Variable senha
+```
+
+## Exclusão de horta
+
+Pela aba Manutenção da horta, o Adm pode excluir definitivamente uma horta **sem registros de campo** (sem ciclos, lotes, irrigações, atividades, ocorrências, custos, secagens, medições ou fotos). Setores, canteiros, participantes, pontos de coleta e o mapa saem junto. Hortas com registros continuam apenas inativáveis. Para reiniciar um banco **só de demonstração**, a limpeza de hortas com registros é feita no banco, com backup prévio (`pg_dump`), preservando usuários e catálogos.
+
 ## Publicação pelo túnel
 
 O túnel `gestao-colaboradores` (compose em `gerenciamento-coloboradores`, configuração fora do Git em `deploy/cloudflared/config.yml`) recebeu a regra:

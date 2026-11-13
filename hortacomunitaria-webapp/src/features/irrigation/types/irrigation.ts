@@ -20,6 +20,8 @@ export interface IrrigationValues {
   endedAt: string | null;
   activeDurationMinutes: number | null;
   volumeLiters: number | null;
+  /** Somente no registro: preço do m³ (R$) para o servidor lançar o custo da água. */
+  waterPricePerCubicMeterBrl?: number | null;
   flowRateLitersPerMinute: number | null;
   volumeSource: VolumeSource | null;
   volumeMethod: string | null;

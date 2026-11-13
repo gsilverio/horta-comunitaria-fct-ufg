@@ -1,6 +1,6 @@
 import type { AppRoute } from '../../../routes/routes'
 import { linkTo } from '../../../routes/routes'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react'
 
 import { registerNavigationGuard } from '../../../services/navigationGuard'
@@ -8,19 +8,18 @@ import { confirmAction } from '../../../services/confirmation'
 import { useGardenState } from '../../../hooks/useGardenState'
 import { useRemote } from '../../../hooks/useRemote'
 import { Failure } from '../../../components/Feedback'
+import { PageHeader } from '../../../components/PageHeader'
 import { today } from '../../irrigation/formValues'
 import { alignElement, clampElement, clampZoom, cloneElements, conflictIds, DEFAULT_MANDALA_CONFIG, elementArea, elementBounds, elementsOverlap, validBoundary, boundaryContainsElement, baseScale, generateMandalaElements, normalizeAngle, sameElements, screenToWorld, snap, snapRightAngle, updateMandalaPlacement, validateMandalaConfig, worldToScreen } from '../geometry'
 import { useCanvasWheel, wheelZoomFactor } from '../hooks/useCanvasWheel'
 import { useLayoutSave } from '../hooks/useLayoutSave'
 import { InteractiveBedMenu } from './InteractiveBedMenu'
-import { DrawingMenu } from '../components/DrawingMenu'
-import { PanelSection, ToolTile } from '../components/EditorToolGroup'
+import { ConstructionPanel, ConstructionSection, MethodOption } from '../components/ConstructionPanel'
+import type { DrawingSession, GardenSetupStage, SetupStep } from '../components/ConstructionPanel'
 import { CanvasToolbar } from '../components/CanvasToolbar'
-import { Circle, Frame, PenTool, Pencil, Rainbow, RectangleHorizontal, Save, Square, SquareDashed, Sun, Trash2, X } from 'lucide-react'
+import { Check, ChevronLeft, ChevronRight, Circle, Frame, PenTool, Pencil, Rainbow, RectangleHorizontal, Save, Square, SquareDashed, Sun, Trash2, X } from 'lucide-react'
 import { TerrainPresets } from '../components/TerrainPresets'
 import type { TerrainPreset } from '../components/TerrainPresets'
-import { GardenSetupSteps } from '../components/GardenSetupSteps'
-import type { GardenSetupStage } from '../components/GardenSetupSteps'
 import type { MandalaConfig } from '../geometry'
 import type { DemoElement, DemoGarden, ElementShape, Pan } from '../types'
 import { readInteractiveDraft, writeInteractiveDraft } from '../layoutStorage'
@@ -330,7 +329,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
   const [selectedId, setSelectedId] = useState(startingElements[0]?.id ?? '')
   const [selectedIds, setSelectedIds] = useState<string[]>(startingElements[0] ? [startingElements[0].id] : [])
   const [hoveredId, setHoveredId] = useState<string>()
-  const [tool, setTool] = useState<Tool>(() => !startingBoundary ? 'terrain' : startingElements.some((element) => element.role === 'sector') ? 'select' : 'sector')
+  const [tool, setTool] = useState<Tool>(() => !startingBoundary ? 'terrain' : 'select')
   const [editorStage, setEditorStage] = useState<EditorStage>(() => !startingBoundary ? 'terrain' : startingElements.some((element) => element.role === 'sector') ? 'beds' : 'sectors')
   const [workflowNotice, setWorkflowNotice] = useState<string>()
   const [viewport, setViewport] = useState<Viewport>(EMPTY_VIEWPORT)
@@ -354,6 +353,9 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
   const canvasRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
   const propertiesCloseRef = useRef<HTMLButtonElement>(null)
+  // Altura real do painel de propriedades: varia com o tipo do objeto (ex.: canteiro curvilíneo da mandala).
+  const propertiesRef = useRef<HTMLElement>(null)
+  const [propertiesHeight, setPropertiesHeight] = useState(0)
   const elementsRef = useRef(elements)
   const nextId = useRef(2)
 
@@ -365,9 +367,12 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
   const toolRef = useRef(tool)
   const stageRef = useRef({ canEditSectors: false, canPlaceBeds: false })
 
+  // Durante o arraste o rascunho não é serializado a cada movimento; grava ao soltar.
+  const interacting = interaction !== undefined
   useEffect(() => {
+    if (interacting) return
     writeInteractiveDraft(route.garden, { ...initial, projectionKey: draftBaseKey, boundary, elements: cloneElements(elements) })
-  }, [boundary, draftBaseKey, elements, initial, route.garden])
+  }, [boundary, draftBaseKey, elements, initial, interacting, route.garden])
 
   const geometryDirty = !sameElements(elements, startingElements)
   const draftDirty = Object.entries(fieldDraft).some(([key, value]) => {
@@ -400,7 +405,8 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
     const topLeft = worldToScreen({ x: bounds.minX, y: bounds.minY }, viewport, initial, zoom, pan)
     const bottomRight = worldToScreen({ x: bounds.maxX, y: bounds.maxY }, viewport, initial, zoom, pan)
     const panelWidth = 320
-    const panelHeight = Math.min(560, Math.max(280, window.innerHeight - 32))
+    // Usa a altura medida do conteúdo; o painel nunca passa da janela e rola por dentro quando não cabe.
+    const panelHeight = Math.min(propertiesHeight || 560, window.innerHeight - 24)
     const preferredLeft = bottomRight.x + 12
     const fallbackLeft = topLeft.x - panelWidth - 12
     const leftInCanvas = preferredLeft + panelWidth <= viewport.width - 12 ? preferredLeft : fallbackLeft
@@ -410,13 +416,27 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
       top: Math.max(12, Math.min(window.innerHeight - panelHeight - 12, canvasPosition.top + topInCanvas)),
     }
   })()
+  const propertiesStyle = { ...propertiesPosition, maxHeight: `calc(100dvh - ${propertiesPosition.top + 12}px)` }
+
+  useLayoutEffect(() => {
+    const element = propertiesRef.current
+    if (!propertiesOpen || !element) return
+    // Mede a altura natural (scrollHeight), não a limitada pelo max-height, para reposicionar sem oscilar.
+    const measure = () => setPropertiesHeight((current) => current === element.scrollHeight ? current : element.scrollHeight)
+    measure()
+    const observer = new ResizeObserver(measure)
+    for (const child of Array.from(element.children)) observer.observe(child)
+    window.addEventListener('resize', measure)
+    return () => { observer.disconnect(); window.removeEventListener('resize', measure) }
+  }, [propertiesOpen, selected?.id])
 
   useEffect(() => {
     const element = canvasRef.current
     if (!element) return
     const updateCanvasPosition = () => {
       const rect = element.getBoundingClientRect()
-      setCanvasPosition({ left: rect.left, top: rect.top })
+      // Qualquer rolagem da página dispara este listener; só renderiza quando a posição muda.
+      setCanvasPosition((current) => current.left === rect.left && current.top === rect.top ? current : { left: rect.left, top: rect.top })
     }
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0]
@@ -504,6 +524,28 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
     applyHistorySnapshot(history[historyIndex + 1], historyIndex + 1)
   }, [applyHistorySnapshot, history, historyIndex])
 
+  // Durante o desenho de contorno (terreno ou setor), desfazer/refazer atuam sobre os pontos marcados.
+  // O refazer só vale enquanto o rascunho é exatamente o resultado do último desfazer (mesma referência).
+  const [draftRedo, setDraftRedo] = useState<{ after: { x: number; y: number }[]; removed: { x: number; y: number }[] }>()
+  const outliningTool = tool === 'terrain' || tool === 'sector-outline'
+  const undoDraftPoint = useCallback(() => {
+    if (boundaryDraft.length === 0) return
+    const after = boundaryDraft.slice(0, -1)
+    const removed = [...(draftRedo?.after === boundaryDraft ? draftRedo.removed : []), boundaryDraft[boundaryDraft.length - 1]]
+    setBoundaryDraft(after); setDraftRedo({ after, removed }); setFieldDraft({})
+  }, [boundaryDraft, draftRedo])
+  const canRedoDraft = Boolean(draftRedo && draftRedo.after === boundaryDraft && draftRedo.removed.length > 0)
+  const redoDraftPoint = useCallback(() => {
+    if (!draftRedo || draftRedo.after !== boundaryDraft || draftRedo.removed.length === 0) return
+    const after = [...boundaryDraft, draftRedo.removed[draftRedo.removed.length - 1]]
+    const removed = draftRedo.removed.slice(0, -1)
+    setBoundaryDraft(after); setDraftRedo(removed.length ? { after, removed } : undefined); setFieldDraft({})
+  }, [boundaryDraft, draftRedo])
+  const undoAction = outliningTool ? undoDraftPoint : undo
+  const redoAction = outliningTool ? redoDraftPoint : redo
+  const canUndoAction = outliningTool ? boundaryDraft.length > 0 : historyIndex > 0
+  const canRedoAction = outliningTool ? canRedoDraft : historyIndex < history.length - 1
+
   const reset = useCallback(() => {
     setExtent({ width: resetBaseline.width, height: resetBaseline.height })
     setBoundary(startingBoundary)
@@ -516,7 +558,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
     setFieldDraft({})
     setSelectedId(snapshot[0]?.id ?? '')
     setSelectedIds(snapshot[0] ? [snapshot[0].id] : [])
-    setTool(!startingBoundary ? 'terrain' : snapshot.some((element) => element.role === 'sector') ? 'select' : 'sector')
+    setTool(!startingBoundary ? 'terrain' : 'select')
     setEditorStage(!startingBoundary ? 'terrain' : snapshot.some((element) => element.role === 'sector') ? 'beds' : 'sectors')
     setWorkflowNotice(undefined)
     setZoom(1)
@@ -541,7 +583,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
     setSelectedIds(next[0] ? [next[0].id] : [])
     if (boundary && !next.some((element) => element.role === 'sector')) {
       setEditorStage('sectors')
-      setTool('sector')
+      setTool('select')
     }
   }, [boundary, pushHistory, selectedId, selectedIds])
 
@@ -556,11 +598,11 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
         setSpacePressed(true)
       } else if (modifier && event.key.toLowerCase() === 'z') {
         event.preventDefault()
-        if (event.shiftKey) redo()
-        else undo()
+        if (event.shiftKey) redoAction()
+        else undoAction()
       } else if (modifier && event.key.toLowerCase() === 'y') {
         event.preventDefault()
-        redo()
+        redoAction()
       } else if (event.key === 'Delete' && !editing) {
         event.preventDefault()
         void removeSelected()
@@ -587,7 +629,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
     }
-  }, [mandalaOpen, propertiesOpen, bedMenuId, redo, removeSelected, undo, saving.busy, saving.uncertain])
+  }, [mandalaOpen, propertiesOpen, bedMenuId, redoAction, removeSelected, undoAction, saving.busy, saving.uncertain])
 
   const scale = viewport.width > 0 ? baseScale(viewport.width, viewport.height, initial) * zoom : 0
   const terrain = viewport.width > 0 ? worldToScreen({ x: 0, y: 0 }, viewport, initial, zoom, pan) : { x: 0, y: 0 }
@@ -612,7 +654,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
   const addElement = (shape: ElementShape) => {
     if (!canPlaceBeds) {
       setEditorStage('sectors')
-      setTool('sector')
+      setTool('select')
       setWorkflowNotice('Defina pelo menos um setor dentro da área da horta antes de adicionar canteiros.')
       return
     }
@@ -637,7 +679,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
   const addCurvedElement = () => {
     if (!canPlaceBeds) {
       setEditorStage('sectors')
-      setTool('sector')
+      setTool('select')
       setWorkflowNotice('Defina pelo menos um setor dentro da área da horta antes de adicionar canteiros.')
       return
     }
@@ -682,7 +724,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
   const openMandala = () => {
     if (!canPlaceBeds) {
       setEditorStage('sectors')
-      setTool('sector')
+      setTool('select')
       setWorkflowNotice('Defina pelo menos um setor dentro da área da horta antes de gerar uma mandala.')
       return
     }
@@ -763,7 +805,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
     if (!boundaryContainsElement(boundary, sector)) { setWorkflowNotice('Todos os limites do setor precisam ficar dentro do terreno.'); return }
     const next = existing ? elementsRef.current.map((element) => element.id === existing.id ? sector : element) : [...elementsRef.current, sector]
     if (!layoutFitsSectors(next)) { setWorkflowNotice('A edição precisa manter os canteiros associados a um setor.'); return }
-    pushHistory(next); setBoundaryDraft([]); setEditingSectorId(undefined); setTool('select'); setEditorStage('beds'); setSelectedId(sector.id); setSelectedIds([sector.id]); setWorkflowNotice('Setor delimitado conforme o contorno livre. Agora adicione os canteiros.')
+    pushHistory(next); setBoundaryDraft([]); setEditingSectorId(undefined); setTool('select'); setSelectedId(sector.id); setSelectedIds([sector.id]); setWorkflowNotice(editingSectorId ? 'Contorno do setor atualizado.' : 'Setor criado. Crie outro ou avance para Canteiros.')
   }
 
   const terrainHasSectors = sectorElements.length > 0
@@ -786,7 +828,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
     if (elements.some((element) => !boundaryContainsElement(boundaryDraft, element))) { setWorkflowNotice('O contorno precisa envolver os objetos existentes.'); return }
     setBoundary(boundaryDraft)
     setExtent({ width: Math.max(...boundaryDraft.map((point) => point.x)), height: Math.max(...boundaryDraft.map((point) => point.y)) })
-    setDraftClosed(false); setBoundaryDraft([]); setFieldDraft({}); setEditorStage('sectors'); setZoom(1); setPan({ x: 0, y: 0 }); setTool('sector')
+    setDraftClosed(false); setBoundaryDraft([]); setFieldDraft({}); setEditorStage('sectors'); setZoom(1); setPan({ x: 0, y: 0 }); setTool('select')
     setWorkflowNotice('Terreno fechado. Agora delimite os setores no mapa.')
   }
 
@@ -844,7 +886,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
       if (!boundary) { setTool('terrain'); setEditorStage('terrain'); setWorkflowNotice('Delimite e conclua o terreno antes de desenhar setores.'); return }
       if (tool !== 'sector' && !canPlaceBeds) {
         setEditorStage('sectors')
-        setTool('sector')
+        setTool('select')
         setWorkflowNotice('Defina pelo menos um setor dentro da área da horta antes de desenhar canteiros.')
         return
       }
@@ -1059,8 +1101,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
         setSelectedId(createdElement.id)
         setSelectedIds([createdElement.id])
         if (interaction.role === 'sector') {
-          setEditorStage('beds')
-          setWorkflowNotice('Setor criado. Agora escolha um canteiro e desenhe dentro da área delimitada.')
+          setWorkflowNotice('Setor criado. Crie outro ou avance para Canteiros.')
         }
         if (interaction.role === 'bed') setWorkflowNotice(undefined)
       } else if (interaction.role === 'bed') {
@@ -1292,87 +1333,122 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
     : tool === 'pan' ? 'Arraste para mover a vista · a roda do mouse aproxima ou afasta'
     : 'Clique para selecionar · Shift soma à seleção · arraste para mover · Espaço + arraste move a vista'
   const stageInfo: Record<EditorStage, { title: string; description: string }> = {
-    terrain: { title: boundary ? 'Contorno do terreno' : 'Delimite o terreno', description: 'Escolha um formato pronto ou marque os vértices no mapa. As medidas reais são opcionais: a grade usa unidades de desenho.' },
-    sectors: { title: 'Setores', description: tool === 'sector-outline' ? 'Marque o contorno do setor no mapa e conclua.' : 'Divida o terreno em áreas de cultivo. Todo canteiro precisa ficar dentro de um setor.' },
-    beds: { title: 'Canteiros', description: 'Desenhe no mapa ou insira uma forma pronta no setor escolhido. Clique num canteiro para configurar cultivo e plantio.' },
+    terrain: { title: 'Terreno', description: 'O contorno delimita a área da horta. Setores e canteiros precisam ficar dentro dele.' },
+    sectors: { title: 'Setores', description: 'Divida o terreno em áreas de cultivo. Todo canteiro pertence a um setor.' },
+    beds: { title: 'Canteiros', description: 'Adicione canteiros dentro dos setores. Clique num canteiro para configurar cultivo e plantio.' },
   }
+  const cancelTerrainEdit = () => { setBoundaryDraft([]); setDraftClosed(false); setFieldDraft({}); setTool('select'); setEditorStage('terrain') }
+  const cancelSectorOutline = () => { setBoundaryDraft([]); setEditingSectorId(undefined); setTool('select') }
+  const armTool = (next: 'sector' | 'rectangle' | 'circle') => { setEditorStage(next === 'sector' ? 'sectors' : 'beds'); setTool(tool === next ? 'select' : next); setWorkflowNotice(undefined) }
+  const pointsLabel = (count: number, noun: [string, string]) => `${count} ${count === 1 ? noun[0] : noun[1]}`
 
-  const terrainTools = <>
-    {tool === 'terrain' ? <PanelSection title="Contorno em edição">
-      <p className="mt-0 mb-2 text-xs text-horta-muted" role="status">{boundaryDraft.length} {boundaryDraft.length === 1 ? 'vértice' : 'vértices'}{boundaryDraft.length >= 3 ? ' · pronto para concluir' : ' · marque pelo menos 3'}</p>
-      <div className="grid grid-cols-2 gap-2">
-        <button type="button" className="secondary !min-h-10 !text-xs" disabled={boundaryDraft.length === 0} onClick={() => { setBoundaryDraft((points) => points.slice(0, -1)); setFieldDraft({}) }}>Desfazer ponto</button>
-        <button type="button" className="secondary !min-h-10 !text-xs" disabled={boundaryDraft.length === 0} onClick={() => { setBoundaryDraft([]); setDraftClosed(false); setFieldDraft({}) }}>Recomeçar</button>
+  // Desenho em andamento: o painel mostra só as instruções e as ações para concluir ou cancelar.
+  const drawingSession: DrawingSession | undefined = tool === 'terrain' ? {
+    eyebrow: boundary ? 'Editando terreno' : 'Desenhando terreno',
+    title: boundary ? 'Ajuste o contorno do terreno' : 'Delimite o terreno',
+    progress: `${pointsLabel(boundaryDraft.length, ['vértice', 'vértices'])}${boundaryDraft.length >= 3 ? ' · pronto para concluir' : ' · marque pelo menos 3'}`,
+    extra: !boundary ? <div className="mt-3"><p className="mt-0 mb-2 text-[11px] font-semibold tracking-wide text-horta-muted uppercase">Comece por um formato</p><TerrainPresets compact select={chooseTerrainPreset} /><p className="mt-3 mb-0 text-[11px] font-semibold tracking-wide text-horta-muted uppercase">Ou desenhe livremente</p></div> : undefined,
+    instructions: draftClosed && boundaryDraft.length > 2
+      ? ['Arraste os vértices ou as arestas para ajustar.', 'Clique numa aresta para adicionar um vértice; botão direito remove.', 'Use Concluir terreno para aplicar.']
+      : ['Clique no mapa para marcar cada vértice.', 'Clique no primeiro ponto para fechar o contorno.', 'Use Concluir terreno para aplicar.'],
+    actions: <>
+      <div className="construction-footer-actions">
+        <button type="button" className="secondary" disabled={boundaryDraft.length === 0} onClick={undoDraftPoint}>Desfazer ponto</button>
+        <button type="button" className="secondary" disabled={boundaryDraft.length === 0} onClick={() => { setBoundaryDraft([]); setDraftClosed(false); setFieldDraft({}) }}>Recomeçar</button>
       </div>
-      <button type="button" className="primary mt-2 w-full" disabled={!validBoundary(boundaryDraft)} onClick={() => finishTerrain()}>Concluir terreno</button>
-      {boundary && <button type="button" className="text-button mt-1 w-full" onClick={() => { setBoundaryDraft([]); setFieldDraft({}); setTool('select'); setEditorStage('sectors') }}>Cancelar edição do terreno</button>}
-    </PanelSection> : <PanelSection title="Contorno">
-      <ToolTile label={boundary ? 'Editar contorno' : 'Desenhar contorno'} hint="Mover, adicionar ou remover nós" icon={<PenTool />} onClick={startTerrainEdit} />
-    </PanelSection>}
-    {tool === 'terrain' && <PanelSection title="Formatos prontos"><TerrainPresets compact select={chooseTerrainPreset} /></PanelSection>}
-    {boundary && <PanelSection title="Remover" tone="danger"><button type="button" className="danger-outline w-full !text-xs" disabled={terrainHasSectors} aria-describedby="terrain-remove-help" onClick={removeTerrain}>Remover terreno</button><p id="terrain-remove-help" className="mt-2 mb-0 text-[11px] text-horta-muted">{terrainHasSectors ? 'Remova os setores para liberar a remoção do terreno.' : 'Remove apenas o contorno deste editor.'}</p></PanelSection>}
-  </>
+      <div className={boundary ? 'construction-footer-actions' : 'grid'}>
+        {boundary && <button type="button" className="danger-outline" aria-label="Cancelar edição do terreno" onClick={cancelTerrainEdit}>Cancelar</button>}
+        <button type="button" className="primary" disabled={!validBoundary(boundaryDraft)} onClick={() => finishTerrain()}>Concluir terreno</button>
+      </div>
+    </>,
+  } : tool === 'sector-outline' ? {
+    eyebrow: editingSectorId ? 'Editando setor' : 'Novo setor',
+    title: editingSectorId ? 'Ajuste o contorno do setor' : 'Desenhe o contorno do setor',
+    progress: pointsLabel(boundaryDraft.length, ['nó marcado', 'nós marcados']),
+    instructions: ['Clique dentro do terreno para marcar cada nó.', 'Botão direito remove um nó; clique no primeiro para fechar.', 'Use Concluir setor para aplicar.'],
+    actions: <>
+      <div className="construction-footer-actions">
+        <button type="button" className="danger-outline" aria-label="Cancelar setor" onClick={cancelSectorOutline}>Cancelar</button>
+        <button type="button" className="primary" disabled={!validBoundary(boundaryDraft)} onClick={finishSectorOutline}>Concluir setor</button>
+      </div>
+    </>,
+  } : tool === 'sector' || tool === 'rectangle' || tool === 'circle' ? {
+    eyebrow: tool === 'sector' ? 'Novo setor' : 'Novo canteiro',
+    title: tool === 'sector' ? 'Arraste para criar o setor' : tool === 'rectangle' ? 'Arraste para criar o canteiro retangular' : 'Arraste para criar o canteiro circular',
+    instructions: tool === 'sector'
+      ? ['Pressione no mapa, dentro do terreno, e arraste até o canto oposto.', 'Ao soltar, o setor é criado e o cursor volta a selecionar.']
+      : [tool === 'rectangle' ? 'Pressione dentro de um setor e arraste até o canto oposto.' : 'Pressione no centro, dentro de um setor, e arraste para fora.', 'Ao soltar, o canteiro é criado e o cursor volta a selecionar.'],
+    actions: <button type="button" className="danger-outline w-full" onClick={() => setTool('select')}>Cancelar (Esc)</button>,
+  } : undefined
+
+  const terrainTools = boundary ? <>
+    <div className="px-4 pb-3">
+      <div className="construction-summary"><span className="construction-summary-icon"><Check aria-hidden="true" /></span><div className="min-w-0"><strong className="block text-sm">Terreno definido</strong><span className="text-xs text-horta-muted">{pointsLabel(boundary.length, ['vértice', 'vértices'])}</span></div></div>
+    </div>
+    <ConstructionSection title="Ajustar">
+      <MethodOption label="Editar terreno" description="Mover, adicionar ou remover vértices do contorno" icon={<PenTool />} onClick={startTerrainEdit} />
+    </ConstructionSection>
+    <ConstructionSection title="Remover" tone="danger">
+      <button type="button" className="danger-outline w-full !text-xs" disabled={terrainHasSectors} aria-describedby="terrain-remove-help" onClick={removeTerrain}>Remover terreno</button>
+      <p id="terrain-remove-help" className="mt-2 mb-0 text-[11px] text-horta-muted">{terrainHasSectors ? 'Remova os setores para liberar a remoção do terreno.' : 'Remove apenas o contorno deste editor.'}</p>
+    </ConstructionSection>
+  </> : null
 
   const sectorTools = <>
-    {tool === 'sector-outline' && <PanelSection title={editingSectorId ? 'Editando contorno do setor' : 'Novo setor por contorno'}>
-      <p className="mt-0 mb-2 text-xs text-horta-muted" role="status">{boundaryDraft.length} {boundaryDraft.length === 1 ? 'nó marcado' : 'nós marcados'}</p>
-      <button type="button" className="primary w-full" disabled={!validBoundary(boundaryDraft)} onClick={finishSectorOutline}>Concluir setor</button>
-      <button type="button" className="text-button mt-1 w-full" onClick={() => { setBoundaryDraft([]); setEditingSectorId(undefined); setTool('select') }}>Cancelar setor</button>
-    </PanelSection>}
-    <PanelSection title="Criar setor">
+    <ConstructionSection title="Adicionar setor">
       <div className="grid gap-1.5">
-        <ToolTile label="Retângulo" hint="Arraste no mapa" shortcut="S" icon={<SquareDashed />} pressed={tool === 'sector'} disabled={!canEditSectors} onClick={() => { setEditorStage('sectors'); setTool(tool === 'sector' ? 'select' : 'sector') }} />
-        <ToolTile label="Contorno livre" hint="Marque os nós no mapa" icon={<PenTool />} disabled={!canEditSectors} onClick={() => beginSectorOutline()} />
-        <ToolTile label="Igual ao terreno" ariaLabel="Setor com contorno do terreno" hint="Usa o contorno inteiro" icon={<Frame />} disabled={!canEditSectors} onClick={() => beginSectorOutline(undefined, true)} />
+        <MethodOption label="Terreno inteiro" ariaLabel="Setor com contorno do terreno" description="Um único setor com o mesmo contorno do terreno" icon={<Frame />} badge={sectorElements.length === 0 ? 'Mais simples' : undefined} disabled={!canEditSectors} onClick={() => beginSectorOutline(undefined, true)} />
+        <MethodOption label="Retângulo" ariaLabel="Desenhar setor" description="Arraste no mapa" shortcut="S" icon={<SquareDashed />} pressed={tool === 'sector'} disabled={!canEditSectors} onClick={() => armTool('sector')} />
+        <MethodOption label="Contorno livre" ariaLabel="Setor livre" description="Marque os nós no mapa" icon={<PenTool />} disabled={!canEditSectors} onClick={() => beginSectorOutline()} />
       </div>
-      {!boundary && <p className="mt-2 mb-0 text-[11px] text-horta-muted">Conclua o terreno para começar.</p>}
-    </PanelSection>
-    <PanelSection title={`Setores no mapa (${sectorElements.length})`}>
-      {sectorElements.length === 0 ? <p className="m-0 text-xs text-horta-muted">Nenhum setor ainda.</p> : <ul className="m-0 grid list-none gap-1 p-0">
+    </ConstructionSection>
+    <ConstructionSection title={`Setores no mapa (${sectorElements.length})`}>
+      {sectorElements.length === 0 ? <p className="m-0 text-xs text-horta-muted">Nenhum setor ainda. Escolha uma das formas acima.</p> : <ul className="m-0 grid list-none gap-1 p-0">
         {sectorElements.map((sector) => {
           const active = selectedSector?.id === sector.id
           const count = elements.filter((element) => element.role === 'bed' && element.sectorId === sector.id).length
           return <li key={sector.id} className={`flex items-center gap-1 rounded-md border pr-1 ${active ? 'border-horta-forest bg-[#eef4e8]' : 'border-horta-line bg-white'}`}>
-            <button type="button" className="min-h-10 min-w-0 flex-1 truncate rounded-md border-0 bg-transparent px-2 text-left text-sm font-medium text-horta-ink shadow-none hover:!bg-transparent" aria-pressed={active} disabled={drawingOutline} onClick={() => chooseSector(sector.id)}>{sector.name}<span className="ml-1 text-xs font-normal text-horta-muted">· {count} {count === 1 ? 'canteiro' : 'canteiros'}</span></button>
-            <button type="button" className="interactive-icon-button" title={`Editar ${sector.name}`} aria-label={`Editar ${sector.name}`} disabled={drawingOutline} onClick={() => editSector(sector)}><Pencil aria-hidden="true" /></button>
-            <button type="button" className="interactive-icon-button danger" title={`Excluir ${sector.name}`} aria-label={`Excluir ${sector.name}`} disabled={drawingOutline} onClick={() => void removeSelected(sector.id)}><Trash2 aria-hidden="true" /></button>
+            <button type="button" className="min-h-10 min-w-0 flex-1 truncate rounded-md border-0 bg-transparent px-2 text-left text-sm font-medium text-horta-ink shadow-none hover:!bg-transparent" aria-pressed={active} onClick={() => chooseSector(sector.id)}>{sector.name}<span className="ml-1 text-xs font-normal text-horta-muted">· {pointsLabel(count, ['canteiro', 'canteiros'])}</span></button>
+            <button type="button" className="interactive-icon-button" title={`Editar ${sector.name}`} aria-label={`Editar ${sector.name}`} onClick={() => editSector(sector)}><Pencil aria-hidden="true" /></button>
+            <button type="button" className="interactive-icon-button danger" title={`Excluir ${sector.name}`} aria-label={`Excluir ${sector.name}`} onClick={() => void removeSelected(sector.id)}><Trash2 aria-hidden="true" /></button>
           </li>
         })}
       </ul>}
-    </PanelSection>
-    {sectorElements.length > 0 && !drawingOutline && <PanelSection title="Próxima etapa"><button type="button" className="secondary w-full" onClick={selectBedsStage}>Adicionar canteiros →</button></PanelSection>}
+    </ConstructionSection>
   </>
 
   const bedTools = <>
-    <PanelSection title="Setor de destino">
-      <select aria-label="Setor de destino das formas prontas" value={selectedSector?.id ?? sectorElements[0]?.id ?? ''} disabled={drawingOutline || sectorElements.length === 0} onChange={(event) => chooseSector(event.target.value)}>{sectorElements.map((sector) => <option key={sector.id} value={sector.id}>{sector.name}</option>)}</select>
-      <p className="mt-1.5 mb-0 text-[11px] text-horta-muted">Formas prontas e mandalas entram neste setor.</p>
-    </PanelSection>
-    <PanelSection title="Desenhar no mapa">
-      <div className="grid grid-cols-2 gap-1.5">
-        <ToolTile label="Retângulo" hint="Arrastar" shortcut="R" icon={<Square />} pressed={tool === 'rectangle'} disabled={!canPlaceBeds} onClick={() => { setEditorStage('beds'); setTool(tool === 'rectangle' ? 'select' : 'rectangle') }} />
-        <ToolTile label="Círculo" hint="Arrastar" shortcut="C" icon={<Circle />} pressed={tool === 'circle'} disabled={!canPlaceBeds} onClick={() => { setEditorStage('beds'); setTool(tool === 'circle' ? 'select' : 'circle') }} />
-      </div>
-    </PanelSection>
-    <PanelSection title="Inserir forma pronta">
-      <div className="grid grid-cols-2 gap-1.5">
-        <ToolTile label="Retângulo" ariaLabel="+ Retângulo" hint="2 × 1 u" icon={<RectangleHorizontal />} disabled={!canPlaceBeds} onClick={() => addElement('rectangle')} />
-        <ToolTile label="Círculo" ariaLabel="+ Círculo" hint="No centro" icon={<Circle />} disabled={!canPlaceBeds} onClick={() => addElement('circle')} />
-        <ToolTile label="Curvilíneo" ariaLabel="+ Canteiro curvilíneo" hint="Arco de 72°" icon={<Rainbow />} disabled={!canPlaceBeds} onClick={addCurvedElement} />
-        <ToolTile label="Mandala" ariaLabel="Gerar mandala" hint="Configurar" icon={<Sun />} disabled={!canPlaceBeds} onClick={openMandala} />
-      </div>
-    </PanelSection>
-    <PanelSection title="Seleção">
-      {selectedBed ? <div className="grid gap-1.5">
-        <p className="m-0 truncate text-sm font-semibold text-horta-forest">{selectedBed.name}</p>
+    {selectedBed ? <ConstructionSection title="Selecionado">
+      <div className="grid gap-1.5">
+        <p className="m-0 truncate text-sm font-semibold text-horta-forest">{selectedBed.name}<span className="ml-1 text-xs font-normal text-horta-muted">· {selectedBed.sectorName ?? 'sem setor'}</span></p>
         <button type="button" className="primary w-full" onClick={() => { setPropertiesOpen(false); setBedMenuId(selectedBed.id) }}>Cultivo e plantio</button>
         <div className="grid grid-cols-2 gap-1.5"><button type="button" className="secondary !min-h-10 !text-xs" onClick={() => setPropertiesOpen(true)}>Editar forma</button><button type="button" className="danger-outline !min-h-10 !text-xs" onClick={() => void removeSelected()}>Remover</button></div>
-      </div> : selectedElements.length > 1 ? <div className="grid gap-1.5">
+      </div>
+    </ConstructionSection> : selectedElements.length > 1 ? <ConstructionSection title="Selecionados">
+      <div className="grid gap-1.5">
         <p className="m-0 text-sm"><strong>{selectedElements.length}</strong> objetos selecionados</p>
         <p className="m-0 text-[11px] text-horta-muted">Arraste para mover juntos ou use o arco para girar o grupo.</p>
         <button type="button" className="danger-outline !min-h-10 !text-xs" onClick={() => void removeSelected()}>Remover selecionados</button>
-      </div> : <p className="m-0 text-xs text-horta-muted">Clique num canteiro para configurar cultivo e plantio. Shift soma à seleção; arraste numa área vazia para selecionar vários.</p>}
-    </PanelSection>
+      </div>
+    </ConstructionSection> : null}
+    <ConstructionSection title="Setor de destino">
+      <select aria-label="Setor de destino das formas prontas" value={selectedSector?.id ?? sectorElements[0]?.id ?? ''} disabled={sectorElements.length === 0} onChange={(event) => chooseSector(event.target.value)}>{sectorElements.map((sector) => <option key={sector.id} value={sector.id}>{sector.name}</option>)}</select>
+      <p className="mt-1.5 mb-0 text-[11px] text-horta-muted">Formas inseridas e mandalas entram neste setor. Ao desenhar, vale o setor onde você arrastar.</p>
+    </ConstructionSection>
+    <ConstructionSection title="Inserir no setor">
+      <div className="grid grid-cols-2 gap-1.5">
+        <MethodOption compact label="Retângulo" ariaLabel="+ Retângulo" description="2 × 1 u" icon={<RectangleHorizontal />} disabled={!canPlaceBeds} onClick={() => addElement('rectangle')} />
+        <MethodOption compact label="Círculo" ariaLabel="+ Círculo" description="No centro" icon={<Circle />} disabled={!canPlaceBeds} onClick={() => addElement('circle')} />
+        <MethodOption compact label="Curvilíneo" ariaLabel="+ Canteiro curvilíneo" description="Arco de 72°" icon={<Rainbow />} disabled={!canPlaceBeds} onClick={addCurvedElement} />
+        <MethodOption compact label="Mandala" ariaLabel="Gerar mandala" description="Configurar" icon={<Sun />} disabled={!canPlaceBeds} onClick={openMandala} />
+      </div>
+    </ConstructionSection>
+    <ConstructionSection title="Desenhar arrastando">
+      <div className="grid grid-cols-2 gap-1.5">
+        <MethodOption compact label="Retângulo" ariaLabel="Retângulo" description="Tecla R" shortcut="R" icon={<Square />} pressed={tool === 'rectangle'} disabled={!canPlaceBeds} onClick={() => armTool('rectangle')} />
+        <MethodOption compact label="Círculo" ariaLabel="Círculo" description="Tecla C" shortcut="C" icon={<Circle />} pressed={tool === 'circle'} disabled={!canPlaceBeds} onClick={() => armTool('circle')} />
+      </div>
+    </ConstructionSection>
   </>
 
   const drawingTools = editorStage === 'terrain' ? terrainTools : editorStage === 'sectors' ? sectorTools : bedTools
@@ -1385,34 +1461,49 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
     : hasChanges ? { tone: 'warning', text: 'Alterações não salvas' }
     : saving.savedAt ? { tone: 'ok', text: 'Configuração salva · versão ' + saving.version }
     : { tone: 'muted', text: 'Ainda não salvo' }
-  const stepsNav = <GardenSetupSteps stage={editorStage} hasTerrain={Boolean(boundary)} sectorCount={sectorElements.length} bedCount={bedCount} canEditSectors={canEditSectors} canPlaceBeds={canPlaceBeds}
-    selectTerrain={startTerrainEdit} selectSectors={selectSectorsStage} selectBeds={selectBedsStage} />
+  const setupSteps: SetupStep[] = [
+    { id: 'terrain', title: 'Terreno', status: boundary ? 'Definido' : 'A definir', complete: Boolean(boundary), enabled: true },
+    { id: 'sectors', title: 'Setores', status: sectorElements.length ? pointsLabel(sectorElements.length, ['setor', 'setores']) : boundary ? 'Nenhum' : 'Bloqueado', complete: sectorElements.length > 0, enabled: Boolean(boundary), lockedReason: 'Conclua o terreno primeiro' },
+    { id: 'beds', title: 'Canteiros', status: bedCount ? pointsLabel(bedCount, ['canteiro', 'canteiros']) : sectorElements.length ? 'Nenhum' : 'Bloqueado', complete: bedCount > 0, enabled: Boolean(boundary) && sectorElements.length > 0, lockedReason: 'Crie pelo menos um setor' },
+  ]
+  const selectStage = (stage: EditorStage) => {
+    // Trocar de etapa não inicia desenho; sem terreno, a etapa Terreno já começa marcando vértices.
+    if (stage === 'terrain' && !boundary) { startTerrainEdit(); return }
+    if (stage === 'terrain') { setEditorStage('terrain'); setTool('select'); setWorkflowNotice(undefined) }
+    else if (stage === 'sectors') selectSectorsStage()
+    else selectBedsStage()
+  }
+  const nextStep = editorStage === 'terrain' ? { label: 'Setores', enabled: Boolean(boundary), go: selectSectorsStage, blocked: 'Conclua o terreno para continuar.' }
+    : editorStage === 'sectors' ? { label: 'Canteiros', enabled: sectorElements.length > 0, go: selectBedsStage, blocked: 'Crie pelo menos um setor para continuar.' }
+    : undefined
+  const previousStep = editorStage === 'sectors' ? { label: 'Terreno', go: () => selectStage('terrain') } : editorStage === 'beds' ? { label: 'Setores', go: selectSectorsStage } : undefined
+  const panelFooter = <>
+    {nextStep && !nextStep.enabled && <p className="construction-footer-hint" role="status">{nextStep.blocked}</p>}
+    <div className="construction-footer-row">
+      {previousStep ? <button type="button" className="construction-back" onClick={previousStep.go}><ChevronLeft aria-hidden="true" className="size-4" />{previousStep.label}</button> : <span />}
+      {nextStep && <button type="button" className="primary inline-flex items-center gap-1" aria-label={`Próxima: ${nextStep.label}`} disabled={!nextStep.enabled} onClick={nextStep.go}>{nextStep.label}<ChevronRight aria-hidden="true" className="size-4" /></button>}
+    </div>
+    {/* Salvar só no fim do fluxo (etapa Canteiros): publica o mapa na panorâmica e cadastra setores e canteiros novos. */}
+    {!nextStep && <p className="construction-footer-hint">Ao terminar os canteiros, salve para publicar o mapa na visão panorâmica.</p>}
+    {!nextStep && <button type="button" className="primary inline-flex w-full items-center justify-center gap-2" disabled={saveDisabled} onClick={() => void saveConfiguration()}><Save aria-hidden="true" className="size-4" />{saving.busy ? 'Salvando configuração…' : saving.uncertain ? 'Tentar salvar novamente' : 'Salvar configuração'}</button>}
+  </>
 
   return <div className="interactive-garden">
-    <header className="interactive-header">
-      <div className="min-w-0">
-        <h1 className="m-0 text-xl font-semibold text-horta-forest">Mapa interativo da horta</h1>
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-horta-muted">
-          <span>{sectorElements.length} {sectorElements.length === 1 ? 'setor' : 'setores'} · {bedCount} {bedCount === 1 ? 'canteiro' : 'canteiros'}</span>
-          <span aria-hidden="true">·</span>
-          <span>{initial.areaSource === 'registered' ? `${formatMeters(initial.areaM2 ?? initial.width * initial.height)} m² cadastrados; a grade não tem escala real` : 'Grade em unidades de desenho, sem escala real'}</span>
-          {!organization && <><span aria-hidden="true">·</span><span className="text-[#8d3430]">Cadastros indisponíveis; não é possível salvar</span></>}
-          <details className="interactive-help-popover"><summary>Como funciona</summary><div><p>1. Delimite o terreno. 2. Divida em setores. 3. Posicione os canteiros dentro dos setores.</p><p>O rascunho fica só neste navegador até você usar <strong>Salvar configuração</strong>; então o mapa aparece na visão panorâmica e os canteiros novos são cadastrados.</p><p>Atalhos: V selecionar · H mover vista · S setor · R/C canteiro · F ajustar · Ctrl+Z desfazer · Delete remove · Esc cancela.</p></div></details>
-        </div>
-      </div>
-      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-        <span className={`interactive-save-status w-full sm:w-auto ${canManage ? saveStatus.tone : ''}`} role="status">{canManage ? saveStatus.text : 'Somente o perfil Adm salva alterações do mapa.'}</span>
-        <a className="secondary action-link flex-1 sm:flex-none" href={linkTo(route.garden, 'visao-geral')}>Ver visão panorâmica</a>
-        {saving.error?.status === 409 && <button type="button" className="secondary" onClick={() => void confirmAction({ title: 'Recarregar configuração salva?', message: 'Seu rascunho será descartado para carregar a configuração atual do mapa.', confirmLabel: 'Descartar e recarregar', tone: 'danger' }).then(confirmed => { if (confirmed) { window.sessionStorage.removeItem('horta-interativa-layout:v3:' + route.garden); window.location.reload() } })}>Recarregar configuração salva</button>}
-        <button type="button" className="primary inline-flex flex-1 items-center justify-center gap-2 sm:flex-none" disabled={saveDisabled} onClick={() => void saveConfiguration()}><Save aria-hidden="true" className="size-4" />{saving.busy ? 'Salvando configuração…' : saving.uncertain ? 'Tentar salvar novamente' : 'Salvar configuração'}</button>
-      </div>
-    </header>
+    {/* Cabeçalho padrão das páginas; salvar fica no fim do fluxo, no painel de construção. */}
+    <PageHeader title="Mapa interativo da horta"
+      status={<span className={`interactive-save-status ${canManage ? saveStatus.tone : 'muted'}`} role="status" title={canManage ? undefined : 'Somente o perfil Adm salva alterações do mapa.'}>{canManage ? saveStatus.text : 'Somente leitura'}{!canManage && <span className="sr-only">: somente o perfil Adm salva alterações do mapa</span>}</span>}
+      description={<span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span>{sectorElements.length} {sectorElements.length === 1 ? 'setor' : 'setores'} · {bedCount} {bedCount === 1 ? 'canteiro' : 'canteiros'}</span>
+        {!organization && <><span aria-hidden="true">·</span><span className="text-horta-danger">Cadastros indisponíveis; não é possível salvar</span></>}
+        <details className="interactive-help-popover"><summary>Como funciona</summary><div><p>1. Delimite o terreno. 2. Divida em setores. 3. Posicione os canteiros dentro dos setores.</p><p>O rascunho fica só neste navegador até você usar <strong>Salvar configuração</strong>; então o mapa aparece na visão panorâmica e os canteiros novos são cadastrados.</p><p>Atalhos: V selecionar · H mover vista · S setor · R/C canteiro · F ajustar · Ctrl+Z desfazer · Delete remove · Esc cancela.</p></div></details>
+      </span>}
+      actions={<><a className="secondary action-link" href={linkTo(route.garden, 'visao-geral')}>Ver visão panorâmica</a>{saving.error?.status === 409 && <button type="button" className="secondary" onClick={() => void confirmAction({ title: 'Recarregar configuração salva?', message: 'Seu rascunho será descartado para carregar a configuração atual do mapa.', confirmLabel: 'Descartar e recarregar', tone: 'danger' }).then(confirmed => { if (confirmed) { window.sessionStorage.removeItem('horta-interativa-layout:v3:' + route.garden); window.location.reload() } })}>Recarregar configuração salva</button>}</>} />
     {projectionWarnings.filter((warning) => !warning.includes("quadro") && !warning.includes("envelope quadrado")).map((warning) => <p className="notice" role="status" key={warning}>{warning}</p>)}
     {saving.error && <Failure error={saving.error} />}
     {saving.uncertain && <p className="notice" role="status">A confirmação não chegou. Tente salvar novamente para resolver a mesma tentativa antes de editar.</p>}
 
     {mandalaOpen && <div className="interactive-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setMandalaOpen(false) }}>
-      <section className="interactive-mandala-modal panel" role="dialog" aria-modal="true" aria-labelledby="mandala-title">
+      <section className="interactive-mandala-modal" role="dialog" aria-modal="true" aria-labelledby="mandala-title">
         <div className="interactive-panel-heading"><div><span className="eyebrow">Preset geométrico local</span><h2 id="mandala-title">Gerar mandala</h2></div><button type="button" className="secondary" onClick={() => setMandalaOpen(false)}>Fechar</button></div>
         <p className="hint">A prévia usa o formato de canteiro escolhido. O padrão é uma mandala com três canteiros curvilíneos; o formato retangular fica disponível como configuração própria. Ao aplicar, cada peça poderá ser movida, girada ou removida.</p>
         <form onSubmit={(event) => { event.preventDefault(); setMandalaShowValidation(true); applyMandala() }}>
@@ -1438,7 +1529,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
       </section>
     </div>}
 
-    {propertiesOpen && selected && <section className="interactive-properties-popover" style={propertiesPosition} role="dialog" aria-labelledby="properties-title" onPointerDown={(event) => event.stopPropagation()}>
+    {propertiesOpen && selected && <section ref={propertiesRef} className="interactive-properties-popover" style={propertiesStyle} role="dialog" aria-labelledby="properties-title" onPointerDown={(event) => event.stopPropagation()}>
         <header className="interactive-properties-header">
           <div><span className="eyebrow">Edição do objeto</span><h2 id="properties-title">{selected.name}</h2><p>As alterações ficam no rascunho local e respeitam os limites do terreno.</p></div>
           <button ref={propertiesCloseRef} type="button" className="interactive-properties-close" onClick={() => setPropertiesOpen(false)} aria-label="Fechar propriedades">×</button>
@@ -1485,7 +1576,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
         <div className="drawing-grid order-1 flex min-w-0 flex-col lg:col-start-1 lg:row-start-1">
         <CanvasToolbar tool={tool === 'select' ? 'select' : tool === 'pan' ? 'pan' : 'other'} selectTool={setTool} zoom={zoom}
           zoomIn={() => zoomAt(zoom + 0.15, { x: viewport.width / 2, y: viewport.height / 2 })} zoomOut={() => zoomAt(zoom - 0.15, { x: viewport.width / 2, y: viewport.height / 2 })} fit={fit}
-          canUndo={historyIndex > 0} canRedo={historyIndex < history.length - 1} undo={undo} redo={redo} canReset={dirty} reset={reset}
+          canUndo={canUndoAction} canRedo={canRedoAction} undo={undoAction} redo={redoAction} canReset={dirty} reset={reset}
           options={{ grid: showGrid, snap: snapEnabled, rotationSnap: rotationSnapEnabled, alignment: alignmentEnabled }}
           changeOption={(option, value) => { if (option === 'grid') setShowGrid(value); else if (option === 'snap') setSnapEnabled(value); else if (option === 'rotationSnap') setRotationSnapEnabled(value); else setAlignmentEnabled(value) }}
           disabled={Boolean(bedMenuElement) || saving.busy || saving.uncertain} />
@@ -1539,7 +1630,7 @@ function InteractiveGardenEditor({ route, initial: projection, projectionWarning
         </div>
         <div className="interactive-canvas-footer"><span aria-live="polite">{toolHint}</span><span className="interactive-scale" aria-label="Escala do desenho"><span>0 u</span><span className="interactive-scale-line" style={{ width: Math.max(48, scale * 5) }} /><span>5 u</span></span></div>
         </div>
-        {bedMenuElement?.role === 'bed' ? <InteractiveBedMenu key={bedMenuElement.id} garden={route.garden} element={bedMenuElement} editing={setBedFormOpen} needsMapSave={dirty || unsaved} saving={saving.busy} uncertain={saving.uncertain} saveError={saving.error} saveBlocked={!organization || saving.error?.status === 409 || drawingOutline && boundaryDraft.length > 0} saveMap={saveConfiguration} close={() => setBedMenuId(undefined)} editShape={() => { setSelectedId(bedMenuElement.id); setSelectedIds([bedMenuElement.id]); setBedMenuId(undefined); setPropertiesOpen(true) }} /> : <DrawingMenu steps={<div inert={saving.busy || saving.uncertain}>{stepsNav}</div>} title={stageInfo[editorStage].title} description={stageInfo[editorStage].description}>{drawingTools}</DrawingMenu>}
+        {bedMenuElement?.role === 'bed' ? <InteractiveBedMenu key={bedMenuElement.id} garden={route.garden} element={bedMenuElement} editing={setBedFormOpen} needsMapSave={dirty || unsaved} saving={saving.busy} uncertain={saving.uncertain} saveError={saving.error} saveBlocked={!organization || saving.error?.status === 409 || drawingOutline && boundaryDraft.length > 0} saveMap={saveConfiguration} close={() => setBedMenuId(undefined)} editShape={() => { setSelectedId(bedMenuElement.id); setSelectedIds([bedMenuElement.id]); setBedMenuId(undefined); setPropertiesOpen(true) }} /> : <div className="contents" inert={saving.busy || saving.uncertain}><ConstructionPanel stage={editorStage} steps={setupSteps} selectStage={selectStage} session={drawingSession} title={stageInfo[editorStage].title} description={stageInfo[editorStage].description} footer={panelFooter}>{drawingTools}</ConstructionPanel></div>}
         </div>
       </section>
 

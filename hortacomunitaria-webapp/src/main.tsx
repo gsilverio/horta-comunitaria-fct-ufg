@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './styles.css'
 import App from './App.tsx'
 import { ConfirmHost } from './components/ConfirmDialog'
+import { PerformanceMonitor } from './components/PerformanceMonitor'
 import { AuthProvider } from './features/auth/components/AuthProvider'
 
 const root = document.getElementById('root')
@@ -11,5 +12,6 @@ createRoot(root).render(
   <StrictMode>
     <AuthProvider><App /></AuthProvider>
     <ConfirmHost />
+    <PerformanceMonitor />
   </StrictMode>,
 )

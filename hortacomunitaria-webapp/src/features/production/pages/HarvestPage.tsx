@@ -11,7 +11,7 @@ import { HarvestDestinations } from "../components/HarvestDestinations"
 import { useCallback } from "react"
 import { RecordList } from "../../../components/RecordList"
 import { RecordDetail } from "../../../components/RecordDetail"
-import { Field, SelectField } from "../../../components/Fields"
+import { Facts, Field, SelectField } from "../../../components/Fields"
 import { Failure } from "../../../components/Feedback"
 import { useRecord } from "../../../hooks/useRecord"
 import { useRemote } from "../../../hooks/useRemote"
@@ -20,7 +20,7 @@ import { useListFilters } from "../../../hooks/useListFilters"
 
 import type { Harvest } from "../types/Harvest"
 import { harvestApi } from "../services/HarvestApi"
-import { HarvestForm, HarvestReview } from "../components/HarvestForm"
+import { HarvestForm } from "../components/HarvestForm"
 import { enumLabels } from "../../../services/labels"
 export function HarvestPage({ route, saved }: { route: AppRoute; saved: (message: string) => void }) {
 if (route.id === "novo") return <HarvestForm garden={route.garden} saved={record => { saved("Registro salvo. Recarregando dados confirmados."); goToSame(route, record.id, route.search) }} cancel={() => goToSame(route, '', route.search)} />
@@ -49,7 +49,29 @@ const get = useCallback((signal: AbortSignal) => harvestApi.get(route.garden, ro
 const audit = useCallback((page: number, signal: AbortSignal) => harvestApi.history(route.garden, route.id, page, signal), [route.id, route.garden])
 const state = useRecord<Harvest>(route.id, get, audit, (version, reason) => harvestApi.deactivate(route.garden, route.id, version, reason), () => saved("Alteração confirmada."))
 const record = state.detail.data
+const options = useLookups(route.garden, ['cultivationCycle', 'species', 'bed', 'participant'])
 if (route.action === 'editar' && record) return <HarvestForm garden={route.garden} original={record} saved={record => { saved("Registro salvo. Dados e indicadores serão recarregados."); const query = new URLSearchParams(route.search); goToSame(route, record.id, query); state.refresh() }} cancel={() => { const query = new URLSearchParams(route.search); goToSame(route, route.id, query) }} />
-return <RecordDetail attachments={record && <EvidenceSection garden={route.garden} targetType="Harvest" targetId={record.id} active={record.validity === "Valid"} />} state={state} title="Colheita" version={record?.version ?? 0} active={record?.validity === "Valid"} catalog={false} back={() => { const query = new URLSearchParams(route.search); goToSame(route, '', query) }} edit={() => { const query = new URLSearchParams(route.search); goToSame(route, route.id, query, 'editar') }} items={record ? [{ label: "Valores do registro", value: <HarvestReview record={record} /> }, { label: "Incluído em", value: formatInstant(record.recordedAt) }, { label: "Autor do registro (identificador)", value: record.recordedByUserId }, { label: "Massa destinada (kg)", value: record.allocatedMassKg }, { label: "Saldo aproveitável (kg)", value: record.remainingUsableMassKg }] : []}>{record && <><HarvestDestinations garden={route.garden} harvest={record.id} />{record.validity === 'Valid' && <section className="next-step"><h3>Próxima etapa: secagem</h3>{record.usableMassKg === null ? <p>A massa aproveitável ainda não foi medida. Corrija a colheita depois da pesagem para permitir a destinação.</p> : record.remainingUsableMassKg !== null && record.remainingUsableMassKg > 0 ? <><p>Destine somente o saldo aproveitável confirmado. Depois, finalize o lote com a pesagem seca.</p><a className="action-link" href={linkTo(route.garden, 'producao/secagens', 'novo', new URLSearchParams({ harvestId: record.id }))}>Criar lote de secagem desta colheita</a></> : <p>Sem saldo aproveitável disponível para uma nova destinação.</p>}</section>}</>}</RecordDetail>
+const cycle = record && options.data?.cultivationCycle?.find(item => item.id === record.cycleId)
+const speciesName = choiceLabel(options.data?.species, cycle?.speciesId), bedName = choiceLabel(options.data?.bed, cycle?.bedId)
+const mass = (value: number | null, empty: string) => value === null ? empty : `${formatNumber(value)} kg`
+// Resumo no cabeçalho; os dados completos ficam numa grade única, sem identificadores técnicos.
+const description = record && [bedName, formatDate(record.harvestedOn), `${formatNumber(record.freshMassKg)} kg colhidos`].filter(Boolean).join(' · ')
+const facts = record && <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[
+  { label: 'Ciclo', value: <a className="underline" href={linkTo(route.garden, 'cultivo/ciclos', record.cycleId)}>{cycle?.label ?? 'Ciclo de cultivo'}</a> },
+  { label: 'Data da colheita', value: formatDate(record.harvestedOn) },
+  { label: 'Massa fresca', value: mass(record.freshMassKg, 'Não informada') },
+  { label: 'Massa aproveitável', value: mass(record.usableMassKg, 'Não medida') },
+  { label: 'Massa destinada à secagem', value: mass(record.allocatedMassKg, 'Nenhuma') },
+  { label: 'Saldo aproveitável', value: mass(record.remainingUsableMassKg, 'Não calculado') },
+  { label: 'Motivo da perda', value: record.lossReason || 'Não informado' },
+  { label: 'Responsável pelo trabalho', value: record.responsibleParticipantId ? <a className="underline" href={linkTo(route.garden, 'participantes', record.responsibleParticipantId)}>{choiceLabel(options.data?.participant, record.responsibleParticipantId) ?? 'Participante'}</a> : 'Não informado' },
+  { label: 'Incluído em', value: formatInstant(record.recordedAt) },
+]} /></>
+const nextStep = record && record.validity === 'Valid' && <section className="next-step"><h3>Próxima etapa: secagem</h3>{record.usableMassKg === null ? <p>A massa aproveitável ainda não foi medida. Corrija a colheita depois da pesagem para permitir a destinação.</p> : record.remainingUsableMassKg !== null && record.remainingUsableMassKg > 0 ? <><p>Destine somente o saldo aproveitável confirmado. Depois, finalize o lote com a pesagem seca.</p><a className="action-link" href={linkTo(route.garden, 'producao/secagens', 'novo', new URLSearchParams({ harvestId: record.id }))}>Criar lote de secagem</a></> : <p>Sem saldo aproveitável disponível para uma nova destinação.</p>}</section>
+return <RecordDetail state={state} eyebrow="Colheita" title={speciesName ?? 'Colheita'} description={description} version={record?.version ?? 0} active={record?.validity === "Valid"} catalog={false}
+  back={() => { const query = new URLSearchParams(route.search); goToSame(route, '', query) }} edit={() => { const query = new URLSearchParams(route.search); goToSame(route, route.id, query, 'editar') }}
+  sections={record ? [{ id: 'secagem', label: 'Secagem', content: <div className="panel"><div className="cycle-records">{nextStep}<HarvestDestinations garden={route.garden} harvest={record.id} /></div></div> }] : []}
+  items={facts ? [{ label: 'Dados da colheita', value: facts }] : []}
+  attachments={record && <EvidenceSection garden={route.garden} targetType="Harvest" targetId={record.id} active={record.validity === "Valid"} />} />
 }
 

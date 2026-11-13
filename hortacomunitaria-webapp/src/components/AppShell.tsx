@@ -26,11 +26,14 @@ function Brand() {
 export function AppShell({
   route,
   gardenSelect,
+  gardenSwitcher,
   gardenName,
   children,
 }: {
   route: AppRoute;
   gardenSelect?: ReactNode;
+  /** Troca de horta exibida no topo do menu lateral quando há mais de uma horta. */
+  gardenSwitcher?: ReactNode;
   gardenName?: string;
   children: ReactNode;
 }) {
@@ -57,7 +60,7 @@ export function AppShell({
           <div className="sidebar-brand">
             <Brand />
           </div>
-          <Navigation route={route} />
+          <Navigation route={route} gardenSwitcher={gardenSwitcher} />
         </aside>
         <dialog
           ref={menu}
@@ -78,7 +81,7 @@ export function AppShell({
               <Icon name="close" />
             </button>
           </div>
-          <Navigation route={route} onNavigate={() => menu.current?.close()} />
+          <Navigation route={route} gardenSwitcher={gardenSwitcher} onNavigate={() => menu.current?.close()} />
         </dialog>
         <div className="workspace-content">
           <header className="workspace-header">
@@ -92,8 +95,11 @@ export function AppShell({
             >
               <Icon name="menu" />
             </button>
-            <div className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-3 sm:gap-5">
-              {gardenSelect && <div className="min-w-0 flex-1 sm:max-w-72">{gardenSelect}</div>}
+            {/* Contexto da horta à esquerda e conta à direita, na mesma altura da marca do menu lateral. */}
+            <div className="flex min-w-0 flex-1 items-center">
+              {gardenSelect && <div className="min-w-0 flex-1 sm:max-w-80">{gardenSelect}</div>}
+            </div>
+            <div className="flex shrink-0 items-center sm:border-l sm:border-horta-line sm:pl-3">
               <AccountMenu />
             </div>
           </header>

@@ -13,6 +13,8 @@ import { CreateLink, OrganizationHeading, OrganizationTrail } from '../component
 import { useOrganizationList } from '../hooks/useOrganizationList'
 import { GardenDataGrid } from '../components/GardenDataGrid'
 import { SectorCollection } from './SectorCollection'
+import { GardenDeletion } from '../components/GardenDeletion'
+import { useGardenDeletion } from '../hooks/useGardenDeletion'
 
 /** /hortas e /hortas/nova: catálogo e cadastro de hortas. */
 export function GardenPage({ route, saved }: { route: AppRoute; saved: (message: string) => void }) {
@@ -28,8 +30,8 @@ function GardenList({ route }: { route: AppRoute }) {
   const load = useCallback((signal: AbortSignal) => gardenApi.list({ page, pageSize, isActive }, signal), [page, pageSize, isActive])
   const result = useRemote(page + '/' + pageSize + '/' + status + '/' + revision, load)
   return <>
-    <OrganizationHeading title="Hortas" description="Gerencie os dados, a situação e a configuração das suas hortas." action={<CreateLink href={linkTo('', 'hortas', 'nova')}>Nova horta</CreateLink>} />
-    <GardenDataGrid {...result} page={page} pageSize={pageSize} changePage={changePage} changePageSize={changePageSize} retry={retry} filter={<CatalogStatusFilter value={status} change={changeStatus} />} />
+    <OrganizationHeading title="Hortas" description="Gerencie os dados, a situação e a configuração das suas hortas." />
+    <GardenDataGrid {...result} page={page} pageSize={pageSize} changePage={changePage} changePageSize={changePageSize} retry={retry} action={<CreateLink href={linkTo('', 'hortas', 'nova')}>Nova horta</CreateLink>} filter={<CatalogStatusFilter value={status} change={changeStatus} />} />
   </>
 }
 
@@ -39,6 +41,7 @@ export function GardenDataPage({ route, saved }: { route: AppRoute; saved: (mess
   const audit = useCallback((page: number, signal: AbortSignal) => gardenApi.history(route.garden, page, signal), [route.garden])
   const state = useRecord<Garden>(route.garden, get, audit, (version, reason) => gardenApi.deactivate(route.garden, version, reason), () => saved('Horta atualizada.'))
   const record = state.detail.data
+  const deletion = useGardenDeletion(route.garden, record?.name ?? 'Horta', () => { saved('Horta excluída definitivamente.'); goTo('', 'hortas') })
   const openDetail = () => goTo(route.garden, 'horta/dados')
   if (route.action === 'editar' && record) return <>
     <OrganizationTrail current="Editar horta" />
@@ -48,10 +51,11 @@ export function GardenDataPage({ route, saved }: { route: AppRoute; saved: (mess
     <OrganizationTrail current="Dados da horta" />
     <RecordDetail compact requireActiveGarden={false} state={state} title={record?.name ?? 'Horta'} version={record?.version ?? 0} active={record?.isActive === true} catalog
       deactivationInitiallyOpen={route.action === 'inativar'} hideBack eyebrow="Horta"
-      actions={record?.isActive ? <><a className="action-link secondary" href={linkTo(record.id, 'horta/mapa')}>Abrir mapa</a><CreateLink href={linkTo(record.id, 'horta/setores', 'novo')}>Novo setor</CreateLink></> : undefined}
+      actions={record?.isActive ? <a className="action-link secondary" href={linkTo(record.id, 'horta/mapa')}>Abrir mapa</a> : undefined}
       back={() => goTo('', 'hortas')}
+      maintenanceExtra={record && <GardenDeletion {...deletion} remove={() => void deletion.remove(record.version)} />}
       edit={() => goTo(route.garden, 'horta/dados', '', undefined, 'editar')}
       items={record ? [{ label: 'Dados da horta', value: <GardenReview record={record} /> }] : []}
-      sections={record ? [{ id: 'setores', label: 'Setores', content: <SectorCollection route={route} /> }] : []} />
+      sections={record ? [{ id: 'setores', label: 'Setores', content: <SectorCollection route={route} action={record.isActive ? <CreateLink compact href={linkTo(record.id, 'horta/setores', 'novo')}>Novo setor</CreateLink> : undefined} /> }] : []} />
   </>
 }

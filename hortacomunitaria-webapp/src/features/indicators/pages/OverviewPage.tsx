@@ -25,7 +25,7 @@ export function OverviewPage({ route }: { route: AppRoute }) {
   const draft = projection.garden
   return <>
     <h1 className="sr-only">Visão geral de {workspace.name}</h1>
-    <GardenJourney garden={route.garden} sectors={organization.data?.sectors.length} beds={organization.data?.beds} crops={crops.data?.length} hasLayout={organization.data ? Boolean(draft.boundary || draft.elements.length > 0) : undefined} />
+    <GardenJourney garden={route.garden} sectors={organization.data?.sectors.length} beds={organization.data?.beds} crops={crops.data?.length} hasLayout={organization.data ? Boolean(draft.boundary || draft.elements.length > 0) : undefined} hasTerrain={organization.data ? Boolean(draft.boundary) : undefined} />
     <section className="garden-overview" aria-labelledby="garden-overview-title">
       {organization.loading && <p className="hint plant-status" role="status">Carregando setores e canteiros da horta…</p>}
       {organization.error && <Failure error={organization.error} />}

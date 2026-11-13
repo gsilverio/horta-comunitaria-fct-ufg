@@ -1,6 +1,6 @@
 import type { AppRoute } from '../../../routes/routes'
 import { goToSame } from '../../../routes/navigation'
-import { samePage } from '../../../routes/routes'
+import { linkTo, samePage } from '../../../routes/routes'
 import { EvidenceSection } from "../../evidence/pages/EvidenceSection"
 import { RecordRow } from '../../../components/RecordRow'
 import { choiceLabel } from '../../../services/lookups'
@@ -11,7 +11,7 @@ import { PlantingAssessments } from "../components/PlantingAssessments"
 import { useCallback } from "react"
 import { RecordList } from "../../../components/RecordList"
 import { RecordDetail } from "../../../components/RecordDetail"
-import { Field, SelectField } from "../../../components/Fields"
+import { Facts, Field, SelectField } from "../../../components/Fields"
 import { Failure } from "../../../components/Feedback"
 import { useRecord } from "../../../hooks/useRecord"
 import { useRemote } from "../../../hooks/useRemote"
@@ -20,7 +20,7 @@ import { useListFilters } from "../../../hooks/useListFilters"
 
 import type { Planting } from "../types/Planting"
 import { plantingApi } from "../services/PlantingApi"
-import { PlantingForm, PlantingReview } from "../components/PlantingForm"
+import { PlantingForm } from "../components/PlantingForm"
 import { enumLabels } from "../../../services/labels"
 export function PlantingPage({ route, saved }: { route: AppRoute; saved: (message: string) => void }) {
 if (route.id === "novo") return <PlantingForm garden={route.garden} saved={record => { saved("Registro salvo. Recarregando dados confirmados."); goToSame(route, record.id, route.search) }} cancel={() => goToSame(route, '', route.search)} />
@@ -51,7 +51,30 @@ const get = useCallback((signal: AbortSignal) => plantingApi.get(route.garden, r
 const audit = useCallback((page: number, signal: AbortSignal) => plantingApi.history(route.garden, route.id, page, signal), [route.id, route.garden])
 const state = useRecord<Planting>(route.id, get, audit, (version, reason) => plantingApi.deactivate(route.garden, route.id, version, reason), () => saved("Alteração confirmada."))
 const record = state.detail.data
+const options = useLookups(route.garden, ['cultivationCycle', 'species', 'bed', 'participant', 'planting', 'propagationLot'])
 if (route.action === 'editar' && record) return <PlantingForm garden={route.garden} original={record} saved={record => { saved("Registro salvo. Dados e indicadores serão recarregados."); const query = new URLSearchParams(route.search); goToSame(route, record.id, query); state.refresh() }} cancel={() => { const query = new URLSearchParams(route.search); goToSame(route, route.id, query) }} />
-return <RecordDetail attachments={record && <EvidenceSection garden={route.garden} targetType="Planting" targetId={record.id} active={record.validity === "Valid"} />} state={state} title="Plantio" version={record?.version ?? 0} active={record?.validity === "Valid"} catalog={false} back={() => { const query = new URLSearchParams(route.search); goToSame(route, '', query) }} edit={() => { const query = new URLSearchParams(route.search); goToSame(route, route.id, query, 'editar') }} items={record ? [{ label: "Valores do registro", value: <PlantingReview record={record} /> }, { label: "Incluído em", value: formatInstant(record.recordedAt) }, { label: "Autor do registro (identificador)", value: record.recordedByUserId }] : []}>{record && <PlantingAssessments garden={route.garden} record={record} />}</RecordDetail>
+const cycle = record && options.data?.cultivationCycle?.find(item => item.id === record.cycleId)
+const speciesName = choiceLabel(options.data?.species, cycle?.speciesId)
+const bedName = choiceLabel(options.data?.bed, cycle?.bedId)
+const optional = (value: number | null, unit: string) => value === null ? 'Não informado' : `${formatNumber(value)} ${unit}`
+// Resumo no cabeçalho; os dados completos ficam numa grade única, sem identificadores técnicos.
+const description = record && [bedName, formatDate(record.plantedOn), `${formatNumber(record.plantedQuantity)} plantas`].filter(Boolean).join(' · ')
+const facts = record && <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[
+  { label: 'Ciclo', value: <a className="underline" href={linkTo(route.garden, 'cultivo/ciclos', record.cycleId)}>{cycle?.label ?? 'Ciclo de cultivo'}</a> },
+  { label: 'Natureza do plantio', value: enumLabels[record.kind] },
+  ...(record.kind === 'Replacement' ? [{ label: 'Plantio reposto', value: record.replacedPlantingId ? <a className="underline" href={linkTo(route.garden, 'cultivo/plantios', record.replacedPlantingId)}>{options.data?.planting?.find(item => item.id === record.replacedPlantingId)?.label ?? 'Plantio original'}</a> : 'Não informado' }] : []),
+  { label: 'Data do plantio', value: formatDate(record.plantedOn) },
+  { label: 'Quantidade plantada', value: `${formatNumber(record.plantedQuantity)} plantas` },
+  { label: 'Lote de origem', value: record.propagationLotId ? <a className="underline" href={linkTo(route.garden, 'cultivo/origens', record.propagationLotId)}>{choiceLabel(options.data?.propagationLot, record.propagationLotId) ?? 'Lote de origem'}</a> : 'Não informado' },
+  { label: 'Espaçamento entre plantas', value: optional(record.plantSpacingCm, 'cm') },
+  { label: 'Espaçamento entre linhas', value: optional(record.rowSpacingCm, 'cm') },
+  { label: 'Responsável pelo trabalho', value: record.responsibleParticipantId ? <a className="underline" href={linkTo(route.garden, 'participantes', record.responsibleParticipantId)}>{choiceLabel(options.data?.participant, record.responsibleParticipantId) ?? 'Participante'}</a> : 'Não informado' },
+  { label: 'Incluído em', value: formatInstant(record.recordedAt) },
+]} /></>
+return <RecordDetail state={state} eyebrow={record ? (record.kind === 'Replacement' ? 'Reposição' : 'Plantio inicial') : 'Plantio'} title={speciesName ?? 'Plantio'} description={description} version={record?.version ?? 0} active={record?.validity === "Valid"} catalog={false}
+  back={() => { const query = new URLSearchParams(route.search); goToSame(route, '', query) }} edit={() => { const query = new URLSearchParams(route.search); goToSame(route, route.id, query, 'editar') }}
+  sections={record ? [{ id: 'avaliacoes', label: 'Avaliações', content: <div className="panel"><PlantingAssessments garden={route.garden} record={record} /></div> }] : []}
+  items={facts ? [{ label: 'Dados do plantio', value: facts }] : []}
+  attachments={record && <EvidenceSection garden={route.garden} targetType="Planting" targetId={record.id} active={record.validity === "Valid"} />} />
 }
 

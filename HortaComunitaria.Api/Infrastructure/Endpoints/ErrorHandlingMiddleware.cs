@@ -39,11 +39,15 @@ internal sealed class ErrorHandlingMiddleware(RequestDelegate next, ILogger<Erro
         }
         catch (BadHttpRequestException exception) when (!context.Response.HasStarted)
         {
-            using var scope = logger.BeginScope(FailureProperties("Rejected"));
-            logger.LogWarning("Entrada rejeitada durante o binding HTTP; evento {EventName}, resultado {Outcome}, código {ErrorCode}",
-                "RequestBindingRejected", "Rejected", "validation.invalid_request");
+            var (field, reason) = BindingFailure(exception);
+            var properties = FailureProperties("Rejected");
+            properties["ErrorFields"] = field is null ? null : new[] { field };
+            using var scope = logger.BeginScope(properties);
+            // Registra o campo e o tipo de falha do binding; o valor recebido nunca entra no log.
+            logger.LogWarning("Entrada rejeitada durante o binding HTTP; evento {EventName}, resultado {Outcome}, código {ErrorCode}, campo {ErrorField}, motivo {BindingReason}",
+                "RequestBindingRejected", "Rejected", "validation.invalid_request", field ?? "-", reason);
             await WriteProblemAsync(context, problems, exception.StatusCode, "validation.invalid_request",
-                "Entrada incompatível com o contrato.");
+                "Entrada incompatível com o contrato.", field is null ? null : new Dictionary<string, string[]> { [field] = ["Valor em formato incompatível com o campo."] });
         }
         catch (Exception exception)
         {
@@ -66,11 +70,35 @@ internal sealed class ErrorHandlingMiddleware(RequestDelegate next, ILogger<Erro
         return properties;
     }
 
+    /// <summary>Campo (caminho JSON em camelCase) e motivo resumido da falha de binding, sem o valor enviado.</summary>
+    private static (string? Field, string Reason) BindingFailure(BadHttpRequestException exception)
+    {
+        for (Exception? current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is System.Text.Json.JsonException json)
+            {
+                var path = json.Path is { Length: > 0 } p ? p.TrimStart('$').TrimStart('.') : null;
+                var reason = json.Message.Contains("missing required properties", StringComparison.OrdinalIgnoreCase) ? MissingRequired(json.Message)
+                    : json.Message.Contains("could not be converted", StringComparison.OrdinalIgnoreCase) ? "tipo ou formato incompatível"
+                    : "JSON inválido";
+                return (string.IsNullOrEmpty(path) ? null : path, reason);
+            }
+        }
+        return (null, exception.Message.Contains("body", StringComparison.OrdinalIgnoreCase) ? "corpo ausente ou ilegível" : "parâmetro de rota ou consulta inválido");
+    }
+
+    private static string MissingRequired(string message)
+    {
+        var start = message.IndexOf("including:", StringComparison.OrdinalIgnoreCase);
+        return start < 0 ? "propriedade obrigatória ausente" : "propriedade obrigatória ausente: " + message[(start + 10)..].Trim().TrimEnd('.');
+    }
+
     private static async Task WriteProblemAsync(HttpContext context, IProblemDetailsService problems,
-        int status, string code, string title)
+        int status, string code, string title, IDictionary<string, string[]>? errors = null)
     {
         context.Response.StatusCode = status;
         var problem = new ProblemDetails { Status = status, Title = title };
+        if (errors is not null) problem.Extensions["errors"] = errors;
         problem.Extensions["code"] = code;
         problem.Extensions["traceId"] = context.Items["TraceId"] ?? context.TraceIdentifier;
         await problems.WriteAsync(new ProblemDetailsContext { HttpContext = context, ProblemDetails = problem });

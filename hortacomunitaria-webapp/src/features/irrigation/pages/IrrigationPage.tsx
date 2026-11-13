@@ -1,4 +1,5 @@
 import { goTo } from '../../../routes/navigation'
+import { PageHeader } from '../../../components/PageHeader'
 import type { AppRoute } from '../../../routes/routes'
 import { useGardenState } from "../../../hooks/useGardenState"
 import { useCallback, useState } from 'react'
@@ -33,7 +34,8 @@ export function GardenFlow({ garden, modeChanged, route, onSaved }: { garden: Ca
   if (creating) return <IrrigationForm garden={garden.id} saved={saved} cancel={back} />
   if (selected) return <>{notice && <p className="feedback success" role="status">{notice}</p>}<IrrigationDetailPage key={selected} garden={garden.id} id={selected} back={back} changed={refresh} sectors={context.data?.sectors ?? []} participants={context.data?.participants ?? []} /></>
   return <>
-    <div className="page-heading"><div><h1 tabIndex={-1}>Irrigação</h1><p>Registros de campo e consumo conhecido, no mesmo lugar.</p></div><button disabled={!workspace.isActive} onClick={() => { setCreating(true); modeChanged(true); if (route) goTo(garden.id, 'irrigacao', 'novo', route.search) }}>+ Nova irrigação</button></div>
+    <PageHeader title="Irrigação" description="Consumo de água do período e os registros de campo que o compõem."
+      actions={<button disabled={!workspace.isActive} onClick={() => { setCreating(true); modeChanged(true); if (route) goTo(garden.id, 'irrigacao', 'novo', route.search) }}>+ Nova irrigação</button>} />
     {notice && <p className="feedback success" role="status">{notice}</p>}
     <form className="filter-panel" aria-label="Filtros do período" onSubmit={event => { event.preventDefault(); if (!draftFilters.from || !draftFilters.to || draftFilters.from > draftFilters.to) { setFilterError('Informe um período válido, com início até o fim.'); return } setFilterError(''); setFilters({ ...draftFilters }); setPage(1); setSectorPage(1); filterRoute(draftFilters, 1, 1) }}>
       <label htmlFor="filter-from">De<input id="filter-from" type="date" required value={draftFilters.from} onChange={event => setDraftFilters(current => ({ ...current, from: event.target.value }))} /></label>
@@ -41,10 +43,13 @@ export function GardenFlow({ garden, modeChanged, route, onSaved }: { garden: Ca
       <label htmlFor="filter-sector">Setor<select id="filter-sector" value={draftFilters.sectorId} disabled={context.loading} onChange={event => setDraftFilters(current => ({ ...current, sectorId: event.target.value }))}><option value="">Todos os setores</option>{context.data?.sectors.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
       <label htmlFor="filter-validity">Registros<select id="filter-validity" value={draftFilters.validity} onChange={event => setDraftFilters(current => ({ ...current, validity: event.target.value as Validity }))}><option value="Valid">Válidos</option><option value="Invalid">Invalidados</option></select></label><button className="secondary" type="submit">Aplicar filtros</button>
       {filterError && <p className="field-error col-span-full" role="alert">{filterError}</p>}
+      {filters.validity === 'Invalid' && <p className="hint col-span-full m-0">Registros invalidados aparecem na lista, mas não entram no consumo.</p>}
     </form>
     {context.error && <Failure error={context.error} retry={refresh} />}
-    <div className="grid grid-cols-1 gap-x-8 gap-y-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"><div>{list.loading ? <p role="status">Carregando registros…</p> : list.error ? <Failure error={list.error} retry={refresh} /> : list.data && <IrrigationList data={list.data} open={open} changePage={value => { setPage(value); filterRoute(filters, value, sectorPage) }} />}</div>
-      <div>{consumption.loading ? <p role="status">Carregando consumo…</p> : consumption.error ? <Failure error={consumption.error} retry={refresh} /> : consumption.data && <ConsumptionPanel data={consumption.data} changePage={value => { setSectorPage(value); filterRoute(filters, page, value) }} />}</div></div>
-    <p className="hint">O consumo considera apenas registros válidos. O filtro de invalidados altera a lista, sem incluir esses fatos no indicador.</p>
+    {/* Consumo primeiro (resumo do período), depois os registros que o compõem, ambos em largura total. */}
+    <div className="irrigation-overview">
+      {consumption.loading ? <p role="status">Carregando consumo…</p> : consumption.error ? <Failure error={consumption.error} retry={refresh} /> : consumption.data && <ConsumptionPanel data={consumption.data} changePage={value => { setSectorPage(value); filterRoute(filters, page, value) }} />}
+      {list.loading ? <p role="status">Carregando registros…</p> : list.error ? <Failure error={list.error} retry={refresh} /> : list.data && <IrrigationList data={list.data} open={open} changePage={value => { setPage(value); filterRoute(filters, value, sectorPage) }} />}
+    </div>
   </>
 }

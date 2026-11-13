@@ -27,10 +27,10 @@ sectorId: optionalText(draft.sectorId),
 } }
 return <EditorFrame dependenciesReady={!options.loading && !options.error} title={original ? "Corrigir ponto de coleta" : "Novo ponto de coleta"} busy={editor.busy} uncertain={!!editor.attempt || editor.catalogUncertain} catalogUncertain={editor.catalogUncertain} error={editor.error} reason={original ? editor.reason : undefined} changeReason={original ? editor.setReason : undefined} submit={() => void editor.submit(values)} cancel={cancel} conflict={original ? () => void editor.reloadConflict() : undefined} review={editor.review && <Facts items={[{ label: "Versão", value: editor.review.version }, { label: "Valores atuais", value: <SamplingPointReview record={editor.review} /> }]} />} acceptReview={editor.acceptReview}>
 {options.loading && <p role="status">Carregando cadastros de apoio…</p>}{options.error && <Failure error={options.error} retry={options.retry} />}
-<div className="grid min-w-0 gap-5">
+<div className="form-stack">
 <Group title="Ponto de coleta">
-<Field name="description" label="Descrição" required type="textarea" value={draft.description} change={value => change("description", value)} error={editor.error} />
 <Field name="location" label="Localização" type="text" value={draft.location} change={value => change("location", value)} error={editor.error} />
+<Field name="description" label="Descrição" required type="textarea" value={draft.description} change={value => change("description", value)} error={editor.error} />
 </Group>
 <Group title="Vínculos" hint="Opcionais. Um ponto geral não exige setor ou canteiro.">
 <SelectField name="bedId" label="Canteiro" value={draft.bedId} change={value => change("bedId", value)} options={options.data?.bed ?? []} error={editor.error} />

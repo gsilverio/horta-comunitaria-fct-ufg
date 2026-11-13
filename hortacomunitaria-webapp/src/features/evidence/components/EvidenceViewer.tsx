@@ -44,7 +44,6 @@ export function EvidenceViewer({ item, imageUrl, targetHref, canChange, busy, er
             { label: 'Descrição', value: item.description ?? 'Não informado' },
             { label: 'Data da foto', value: item.capturedOn ? formatDate(item.capturedOn) : 'Não informado' },
             { label: 'Enviada em', value: formatInstant(item.recordedAt) },
-            { label: 'Autor do registro (identificador)', value: item.recordedByUserId },
             { label: 'Arquivo', value: `${item.originalFileName} · ${formatSize(item.sizeBytes)}` },
           ]} />
           <div className="flex flex-wrap gap-2">

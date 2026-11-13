@@ -80,7 +80,8 @@ function DataGridColumnHeader<TData extends object, TValue>({
       type="button"
       disabled={isLoading || recordCount === 0}
       className={cn(
-        'group flex h-full w-full min-w-0 items-center justify-center rounded-md',
+        // A base global de <button> é a ação principal (fundo verde); o cabeçalho precisa anulá-la.
+        'group flex h-full min-h-0 w-full min-w-0 items-center justify-center rounded-md border-0 bg-transparent shadow-none',
         'text-horta-ink/80 font-semibold text-[0.8125rem] leading-tight',
         'hover:bg-horta-canvas/60 data-[state=open]:bg-white',
         'px-1 py-0.5',
@@ -100,7 +101,7 @@ function DataGridColumnHeader<TData extends object, TValue>({
   const headerPin = () => (
     <button
       type="button"
-      className="-me-1 size-7 rounded-md hover:bg-horta-canvas/60 flex items-center justify-center"
+      className="-me-1 flex size-7 min-h-0 items-center justify-center rounded-md border-0 bg-transparent p-0 text-horta-ink shadow-none hover:bg-horta-canvas/60"
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -124,7 +125,7 @@ function DataGridColumnHeader<TData extends object, TValue>({
     return (
       <div
         className={cn(
-          'inline-flex h-full w-full min-w-0 items-center justify-center gap-1 text-center text-horta-ink/80 font-normal text-[0.8125rem] leading-tight',
+          'inline-flex h-full w-full min-w-0 items-center justify-center gap-1 text-center text-horta-ink/80 font-semibold text-[0.8125rem] leading-tight',
           className,
         )}
       >
@@ -144,7 +145,7 @@ function DataGridColumnHeader<TData extends object, TValue>({
         {/* FIX: bg + z-index explícito (resolve transparência) */}
         <DropdownMenuPortal>
           <DropdownMenuContent
-            className="w-44 bg-[#e3e3e3] text-horta-ink border shadow-md z-50"
+            className="z-50 w-44"
             align="start"
           >
             {filter && <DropdownMenuLabel>{filter}</DropdownMenuLabel>}

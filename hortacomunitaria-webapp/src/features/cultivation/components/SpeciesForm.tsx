@@ -24,10 +24,12 @@ description: optionalText(draft.description),
 } }
 return <EditorFrame dependenciesReady={!options.loading && !options.error} requireActiveGarden={false} title={original ? "Corrigir espécie" : "Nova espécie"} submitLabel={original ? "Salvar alterações" : "Cadastrar espécie"} description="Informe o nome da planta, por exemplo Alface. Nome científico e descrição são opcionais." busy={editor.busy} uncertain={!!editor.attempt || editor.catalogUncertain} catalogUncertain={editor.catalogUncertain} error={editor.error} reason={original ? editor.reason : undefined} changeReason={original ? editor.setReason : undefined} submit={() => void editor.submit(values)} cancel={cancel} conflict={original ? () => void editor.reloadConflict() : undefined} review={editor.review && <Facts items={[{ label: "Versão", value: editor.review.version }, { label: "Valores atuais", value: <SpeciesReview record={editor.review} /> }]} />} acceptReview={editor.acceptReview}>
 {options.loading && <p role="status">Carregando cadastros de apoio…</p>}{options.error && <Failure error={options.error} retry={options.retry} />}
-<div className="grid min-w-0 gap-5">
+<div className="form-stack">
 <Group title="Identificação">
 <Field name="commonName" label="Nome comum" required type="text" value={draft.commonName} change={value => change("commonName", value)} error={editor.error} />
 <Field name="scientificName" label="Nome científico" type="text" value={draft.scientificName} change={value => change("scientificName", value)} error={editor.error} />
+</Group>
+<Group title="Descrição" hint="Opcional. Características, usos ou cuidados da espécie.">
 <Field name="description" label="Descrição" type="textarea" value={draft.description} change={value => change("description", value)} error={editor.error} />
 </Group></div></EditorFrame>
 }

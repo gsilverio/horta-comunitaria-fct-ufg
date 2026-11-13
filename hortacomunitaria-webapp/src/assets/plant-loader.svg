@@ -1,17 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
   <style>
-    .plant { animation: plant-cycle 2.4s ease-in-out infinite; }
-    .stem { stroke-dasharray: 12; stroke-dashoffset: 12; animation: plant-stem 2.4s ease-out infinite; }
-    .leaf-left { transform-origin: 12px 15px; transform: scale(0); animation: plant-leaf-left 2.4s ease-out infinite; }
-    .leaf-right { transform-origin: 12px 11.5px; transform: scale(0); animation: plant-leaf-right 2.4s ease-out infinite; }
-    @keyframes plant-cycle { 0%, 82% { opacity: 1; } 94%, 100% { opacity: 0; } }
-    @keyframes plant-stem { 0% { stroke-dashoffset: 12; } 35%, 100% { stroke-dashoffset: 0; } }
-    @keyframes plant-leaf-left { 0%, 28% { transform: scale(0); } 50%, 100% { transform: scale(1); } }
-    @keyframes plant-leaf-right { 0%, 42% { transform: scale(0); } 64%, 100% { transform: scale(1); } }
+    /*
+     * A muda já está brotada no primeiro quadro: em carregamentos curtos ela precisa ser vista de imediato.
+     * Ciclo contínuo: cresce, balança e volta a broto, sem nunca sumir; os três pontos do solo pulsam como indicador de espera.
+     */
+    .plant { transform-origin: 12px 20px; animation: plant-sway 1.6s ease-in-out infinite; }
+    .stem { stroke-dasharray: 11; animation: plant-stem 1.6s ease-in-out infinite; }
+    .leaf-left { transform-origin: 12px 15px; animation: plant-leaf-left 1.6s ease-in-out infinite; }
+    .leaf-right { transform-origin: 12px 11.5px; animation: plant-leaf-right 1.6s ease-in-out infinite; }
+    .dot { fill: #7c9c63; animation: plant-dot .9s ease-in-out infinite; }
+    .dot:nth-of-type(2) { animation-delay: .15s; }
+    .dot:nth-of-type(3) { animation-delay: .3s; }
+    @keyframes plant-sway { 0%, 100% { transform: rotate(0deg); } 30% { transform: rotate(-7deg); } 65% { transform: rotate(6deg); } }
+    @keyframes plant-stem { 0%, 100% { stroke-dashoffset: 4.5; } 45%, 60% { stroke-dashoffset: 0; } }
+    @keyframes plant-leaf-left { 0%, 100% { transform: scale(.55); } 40%, 65% { transform: scale(1); } }
+    @keyframes plant-leaf-right { 0%, 100% { transform: scale(.25); } 50%, 70% { transform: scale(1); } }
+    @keyframes plant-dot { 0%, 100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-1.2px); } }
   </style>
-  <path d="M5 21h14" stroke="#9fb0a5" stroke-width="2" stroke-linecap="round"/>
+  <circle class="dot" cx="8" cy="21.5" r="1.3"/>
+  <circle class="dot" cx="12" cy="21.5" r="1.3"/>
+  <circle class="dot" cx="16" cy="21.5" r="1.3"/>
   <g class="plant">
-    <path class="stem" d="M12 21V9" stroke="#1c4939" stroke-width="2" stroke-linecap="round"/>
+    <path class="stem" d="M12 20V9" stroke="#1c4939" stroke-width="2" stroke-linecap="round"/>
     <path class="leaf-left" d="M12 15c-3.6 0-5.8-2.1-5.8-5.3 3.6 0 5.8 2.1 5.8 5.3z" fill="#7c9c63"/>
     <path class="leaf-right" d="M12 11.5c0-3.2 2.2-5.3 5.8-5.3 0 3.2-2.2 5.3-5.8 5.3z" fill="#2c634b"/>
   </g>

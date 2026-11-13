@@ -1,4 +1,5 @@
-import { Failure, Pagination } from '../../../components/Feedback'
+import { Failure } from '../../../components/Feedback'
+import { PageNavigator } from '../../../components/PageNavigator'
 import type { Species } from '../../cultivation/types/Species'
 import { useSpeciesCatalog, useSpeciesImage } from '../hooks/useSpeciesCatalog'
 
@@ -19,17 +20,17 @@ function SpeciesSlot({ species, selected, choose }: { species: Species; selected
   </li>
 }
 
-export function SpeciesPicker({ selected, choose, next }: { selected?: Species; choose: (species: Species) => void; next: () => void }) {
+/** Clicar numa espécie já a escolhe e avança; não há botão de confirmação separado. */
+export function SpeciesPicker({ selected, choose }: { selected?: Species; choose: (species: Species) => void }) {
   const catalog = useSpeciesCatalog()
   return <section aria-label="Seleção de espécies do catálogo">
     <span className="font-mono text-[10px] uppercase tracking-widest text-horta-muted">Catálogo de espécies · base Embrapa</span>
     <h3 className="mt-1 mb-2">Escolha o que plantar</h3>
-    <p className="text-xs text-horta-muted">Selecione uma espécie. A variedade e os dados do plantio vêm na próxima etapa.</p>
+    <p className="text-xs text-horta-muted">Clique numa espécie para seguir. A variedade e os dados do plantio vêm na próxima etapa.</p>
     {catalog.loading && <p role="status">Carregando catálogo…</p>}
     {catalog.error && <Failure error={catalog.error} retry={catalog.retry} />}
     {catalog.data?.items.length === 0 && <p className="notice">Nenhuma espécie ativa no catálogo. Confira a importação do catálogo Embrapa nos cadastros da aplicação.</p>}
-    {catalog.data && <><ul className="m-0 grid list-none grid-cols-3 gap-2 p-0" aria-label="Espécies disponíveis">{catalog.data.items.map(species => <SpeciesSlot key={species.id} species={species} selected={selected?.id === species.id} choose={() => choose(species)} />)}</ul><Pagination data={catalog.data} change={catalog.changePage} label="Páginas do catálogo de espécies" /></>}
+    {catalog.data && <><ul className="m-0 grid list-none grid-cols-3 gap-2 p-0" aria-label="Espécies disponíveis">{catalog.data.items.map(species => <SpeciesSlot key={species.id} species={species} selected={selected?.id === species.id} choose={() => choose(species)} />)}</ul><PageNavigator className="mt-2 border-t border-[#c8d3b6]" data={catalog.data} change={catalog.changePage} label="Páginas do catálogo de espécies" /></>}
     {selected && <div className="mt-4 border-l-4 border-[#78944f] pl-3" role="status"><span className="font-mono text-[10px] uppercase text-horta-muted">Espécie selecionada</span><strong className="block text-sm">{selected.commonName}</strong>{selected.scientificName && <span className="block text-xs italic text-horta-muted">{selected.scientificName}</span>}</div>}
-    <button type="button" className="mt-4 w-full" disabled={!selected} onClick={next}>Continuar com esta espécie</button>
   </section>
 }

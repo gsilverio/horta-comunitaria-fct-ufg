@@ -59,7 +59,8 @@ function DataGridTableBase({ children }: { children: ReactNode }) {
     <table
       data-slot="data-grid-table"
       className={cn(
-        "w-full align-middle caption-bottom text-left rtl:text-right text-horta-ink font-normal text-sm",
+        // Listagens no padrão Metronic: conteúdo das células centralizado.
+        "w-full align-middle caption-bottom text-center text-horta-ink font-normal text-sm",
         !props.tableLayout?.columnsDraggable &&
           "border-separate border-spacing-0",
         props.tableLayout?.width === "fixed" ? "table-fixed" : "table-auto",
@@ -111,7 +112,6 @@ function DataGridTableHeadRow<TData extends object>({
       className={cn(
         "bg-horta-canvas/40",
         props.tableLayout?.headerBorder && "[&>th]:border-b",
-        props.tableLayout?.cellBorder && "[&_>:last-child]:border-e-0",
         props.tableLayout?.stripped && "bg-transparent",
         props.tableLayout?.headerBackground === false && "bg-transparent",
         props.tableClassNames?.headerRow,
@@ -165,7 +165,7 @@ function DataGridTableHeadRowCell<TData extends object>({
         isLastLeftPinned ? "left" : isFirstRightPinned ? "right" : undefined
       }
       className={cn(
-        "relative h-10 text-left rtl:text-right align-middle font-normal text-horta-ink/80 [&:has([role=checkbox])]:pe-0",
+        "relative h-10 text-center align-middle font-normal text-horta-ink/80 [&:has([role=checkbox])]:pe-0",
         headerCellSpacing,
         column.id === "select" && "!px-0",
         props.tableLayout?.cellBorder && "border-e",
@@ -248,7 +248,6 @@ function DataGridTableBodyRowSkeleton({ children }: { children: ReactNode }) {
         !props.tableLayout?.stripped &&
           props.tableLayout?.rowBorder &&
           "border-b border-horta-line [&:not(:last-child)>td]:border-b",
-        props.tableLayout?.cellBorder && "[&_>:last-child]:border-e-0",
         props.tableLayout?.stripped &&
           "odd:bg-horta-canvas/90 hover:bg-transparent odd:hover:bg-horta-canvas",
         (table.options.enableRowSelection || hasSelectionColumn) &&
@@ -343,7 +342,6 @@ function DataGridTableBodyRow<TData extends object>({
         !props.tableLayout?.stripped &&
           props.tableLayout?.rowBorder &&
           "border-b border-horta-line [&:not(:last-child)>td]:border-b",
-        props.tableLayout?.cellBorder && "[&_>:last-child]:border-e-0",
         props.tableLayout?.stripped &&
           "odd:bg-horta-canvas/90 hover:bg-[#e3e3e3] odd:hover:bg-[#e3e3e3]",
         (table.options.enableRowSelection || hasSelectionColumn) &&
@@ -582,7 +580,7 @@ function DataGridTable<TData extends object>() {
           })}
       </DataGridTableHead>
 
-      {(props.tableLayout?.stripped || !props.tableLayout?.rowBorder) && (
+      {!props.tableLayout?.rowBorder && (
         <DataGridTableRowSpacer />
       )}
 

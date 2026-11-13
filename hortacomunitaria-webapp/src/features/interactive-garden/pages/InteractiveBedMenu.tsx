@@ -52,13 +52,14 @@ export function InteractiveBedMenu({ garden, element, needsMapSave, saving, unce
 
   useEffect(() => { editing(stage !== 'home' && stage !== 'complete'); return () => editing(false) }, [stage, editing])
 
-  const continueSpecies = () => {
-    if (!species) return
+  // Escolher a espécie já avança para a próxima etapa (sem botão de confirmação separado).
+  const chooseSpecies = (chosen: Species) => {
+    setSpecies(chosen)
     setNotice('')
     setStage(!ready ? 'register' : 'cycle')
   }
 
-  return <aside className="interactive-cultivation drawing-menu order-1 flex max-h-[85dvh] w-full flex-col min-w-0 self-stretch overflow-hidden border border-[#a5b78b] bg-[#f3f5e9] lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:max-h-[calc(78dvh+160px)] lg:w-[420px] xl:w-[460px]" aria-labelledby="bed-menu-title" onKeyDown={event => { if (event.key === 'Escape' && (stage === 'home' || stage === 'complete') && !saving && !uncertain) { event.preventDefault(); close() } }}>
+  return <aside className="interactive-cultivation drawing-menu order-1 flex max-h-[85dvh] w-full flex-col min-w-0 self-stretch overflow-hidden border border-[#a5b78b] bg-[#f3f5e9] lg:col-start-2 lg:row-start-1 lg:h-0 lg:max-h-none lg:min-h-full lg:w-[420px] xl:w-[460px]" aria-labelledby="bed-menu-title" onKeyDown={event => { if (event.key === 'Escape' && (stage === 'home' || stage === 'complete') && !saving && !uncertain) { event.preventDefault(); close() } }}>
     <header className="flex items-start justify-between gap-4 border-b-2 border-[#9cae78] bg-[#1c4939] p-5 text-[#f5efd3]">
       <div><span className="font-mono text-[10px] tracking-[.2em] text-[#c4d697] uppercase">Estação de cultivo</span><h2 ref={heading} tabIndex={-1} id="bed-menu-title" className="mt-1 mb-1 text-xl text-[#fff8de]">{element.name}</h2><p className="m-0 text-xs text-[#d3dfbb]">{element.sectorName ?? 'Canteiro da horta'} · configure e plante sem sair do mapa</p></div>
       {(stage === 'home' || stage === 'complete') && <button type="button" className="secondary !min-h-8 !px-3 !py-1" disabled={saving || uncertain} onClick={close} aria-label="Fechar menu do canteiro">×</button>}
@@ -69,7 +70,8 @@ export function InteractiveBedMenu({ garden, element, needsMapSave, saving, unce
     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
       {notice && <p className="notice" role="status">{notice}</p>}
       {stage === 'home' && <>
-        <SpeciesPicker selected={species} choose={setSpecies} next={continueSpecies} />
+        <div className="bed-menu-actions"><button type="button" className="secondary" disabled={saving || uncertain} onClick={editShape}>Editar forma e posição</button><button type="button" className="secondary" disabled={saving || uncertain} onClick={close}>Voltar ao mapa</button></div>
+        <SpeciesPicker selected={species} choose={chooseSpecies} />
         {ready && <details className="mt-6 border-t border-[#c8d3b6] pt-3"><summary className="font-semibold">Consultar cultivos e retomar plantios</summary>
           {bedState.loading && <p role="status">Carregando canteiro…</p>}
           {bedState.error && <Failure error={bedState.error} retry={() => setRevision(value => value + 1)} />}
@@ -86,7 +88,6 @@ export function InteractiveBedMenu({ garden, element, needsMapSave, saving, unce
             {crops.data && crops.data.totalPages > 1 && <Pagination data={crops.data} change={setPage} label="Páginas de cultivos no mapa" />}
           </section>
         </details>}
-        <div className="mt-5 flex flex-wrap gap-3 border-t border-[#c8d3b6] pt-4"><button type="button" className="secondary" disabled={saving || uncertain} onClick={editShape}>Editar forma e posição</button><button type="button" className="secondary" disabled={saving || uncertain} onClick={close}>Voltar ao mapa</button></div>
       </>}
       {(stage === 'register' || stage === 'planting') && species && <div className="mb-4 border-b border-[#c8d3b6] pb-3"><span className="font-mono text-[10px] uppercase text-horta-muted">Espécie escolhida</span><strong className="block">{species.commonName}</strong></div>}
       {stage === 'register' && <section><h3 className="mt-0">Confirme o desenho para continuar</h3><p>A espécie já foi escolhida. Salve o mapa para cadastrar este canteiro no setor desenhado e seguir com a área real e o plantio.</p><button type="button" className="w-full" disabled={saving || saveBlocked} onClick={() => { void saveMap().then(saved => { if (saved) setStage('cycle') }) }}>{saving ? 'Salvando mapa…' : uncertain ? 'Confirmar salvamento do mapa' : 'Salvar mapa e continuar'}</button>{saveError && <Failure error={saveError} />}<button type="button" className="secondary mt-3 w-full" disabled={saving || uncertain} onClick={() => setStage('home')}>Voltar às espécies</button></section>}

@@ -6,10 +6,11 @@ const paths: Record<string, string> = {
   cultivo: 'M12 21V11 M12 15C5 15 3 10 4 5c5 0 8 4 8 10z M12 11c0-5 4-8 8-8 1 5-2 8-8 8z',
   producao: 'M3 8l9-5 9 5-9 5z M3 8v10l9 4 9-4V8 M12 13v9 M7 5l10 6',
   atividades: 'M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8 M17 4a4 4 0 010 7 M22 21v-2a4 4 0 00-3-4',
+  participantes: 'M15 19v-1a4 4 0 00-4-4H7a4 4 0 00-4 4v1 M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7 M19 8v6 M16 11h6',
   ocorrencias: 'M12 3L2 21h20z M12 9v5 M12 17v1',
   fotos: 'M4 7h3l2-3h6l2 3h3v13H4z M12 17a4 4 0 100-8 4 4 0 000 8',
   custos: 'M12 2v20 M17 6H9a3 3 0 000 6h6a3 3 0 010 6H6',
-  chevron: 'M9 5l7 7-7 7', menu: 'M4 6h16 M4 12h16 M4 18h16', close: 'M6 6l12 12 M18 6L6 18',
+  chevron: 'M9 5l7 7-7 7', 'chevron-down': 'M6 9l6 6 6-6', menu: 'M4 6h16 M4 12h16 M4 18h16', close: 'M6 6l12 12 M18 6L6 18',
   plus: 'M12 5v14 M5 12h14', filter: 'M3 5h18 M6 12h12 M9 19h6',
   arrow: 'M5 12h14 M13 6l6 6-6 6', records: 'M5 3h14v18H5z M9 7h6 M9 12h6 M9 17h4',
 }

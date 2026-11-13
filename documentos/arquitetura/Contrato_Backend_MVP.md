@@ -35,6 +35,7 @@ Os GET de seleção `/gardens`, `/sectors` e `/participants` preservam seu contr
 - Invalidação/correção de lote de secagem recalcula saldo. `drying.insufficient_balance` indica destinação acima do aproveitável conhecido. GET da colheita mostra `allocatedMassKg` e `remainingUsableMassKg`; saldo desconhecido permanece null.
 - Autoria técnica é resolvida pelo servidor. `responsibleParticipantId` representa quem executou o trabalho e é separado do autor demonstrativo. Nomes e descrições dos formulários não são registrados nos logs.
 - Fato e auditoria são confirmados na mesma transação, incluindo listas de participantes, insumos, instituições e origens de secagem.
+- Custo da água (12/11/2026, a pedido do responsável): `POST /irrigations` aceita `waterPricePerCubicMeterBrl` opcional (R$/m³, positivo, até 4 casas). Com volume conhecido, o servidor lança na mesma transação um custo realizado (`category` "Água", sem canteiro/ciclo), com valor `volumeLiters / 1000 × preço` arredondado a centavos e histórico próprio. Sem volume ou com valor zero, nada é lançado. O preço entra na chave de repetição somente quando informado. Correção ou invalidação da irrigação não altera o custo; ele é revisado em Custos. Custos de sementes e mudas continuam registrados em Custos, com vínculo opcional ao ciclo (`?cycleId=` pré-seleciona o ciclo no formulário).
 
 ## Listas e indicadores
 

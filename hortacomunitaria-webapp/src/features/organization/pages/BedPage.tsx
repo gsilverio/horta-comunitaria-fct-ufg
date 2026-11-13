@@ -56,8 +56,8 @@ function BedList({ route }: { route: AppRoute }) {
   return <><OrganizationTrail current="Todos os canteiros" /><OrganizationHeading eyebrow={garden.name} title="Todos os canteiros" description="Consulte os canteiros da horta, inclusive os cadastros que ainda precisam de área ou setor." />
     {options.error && <Failure error={options.error} retry={options.retry} />}
     <OrganizationCollection title="Canteiros da horta" {...result} retry={retry} changePage={changePage} emptyTitle="Nenhum canteiro nesta seleção" emptyText="Para cadastrar, volte aos setores e escolha onde o canteiro ficará." filter={<CatalogStatusFilter value={status} change={changeStatus} />}>
-      {result.data?.items.map(bed => { const sector = options.data?.irrigationSector?.find(item => item.id === bed.sectorAssignment?.sectorId); return <OrganizationRow key={bed.id} title={bed.name} description={`${bed.sectorAssignment ? sector?.label ?? 'Setor associado' : 'Sem setor na data atual'} · ${bed.configuration ? formatNumber(bed.configuration.cultivableAreaM2) + ' m²' : 'Área pendente'}`} status={!bed.isActive ? 'Inativo' : !bed.configuration || !bed.sectorAssignment ? 'Cadastro pendente' : undefined} statusTone={bed.isActive ? 'warning' : 'invalid'} actions={<BedRowAction garden={route.garden} bed={bed} sectorId={bed.sectorAssignment?.sectorId} writable={garden.isActive} />} href={linkTo(route.garden, 'horta/canteiros', bed.id)} action="Ver canteiro" /> })}
-    </OrganizationCollection><div className="organization-secondary-links"><a href={linkTo(route.garden, 'horta/setores')}>← Voltar aos setores</a></div>
+      {result.data?.items.map(bed => { const sector = options.data?.irrigationSector?.find(item => item.id === bed.sectorAssignment?.sectorId); return <OrganizationRow key={bed.id} title={bed.name} kind="bed" meta={[bed.sectorAssignment ? sector?.label ?? 'Setor associado' : 'Sem setor', bed.configuration ? `${formatNumber(bed.configuration.cultivableAreaM2)} m²` : 'Área pendente']} status={!bed.isActive ? 'Inativo' : !bed.configuration || !bed.sectorAssignment ? 'Cadastro pendente' : undefined} statusTone={bed.isActive ? 'warning' : 'invalid'} actions={<BedRowAction garden={route.garden} bed={bed} sectorId={bed.sectorAssignment?.sectorId} writable={garden.isActive} />} href={linkTo(route.garden, 'horta/canteiros', bed.id)} action="Ver canteiro" /> })}
+    </OrganizationCollection>
   </>
 }
 /** Resumo do canteiro no cabeçalho: setor, área e medidas reais, sem repetir o nome do setor. */
@@ -65,7 +65,8 @@ function bedSummary(bed: Bed, sectorName?: string) {
   const config = bed.configuration
   const parts = [bed.sectorAssignment ? sectorName ?? 'Setor associado' : 'Sem setor associado', config ? `${formatNumber(config.cultivableAreaM2)} m² cultiváveis` : 'Área ainda não informada']
   if (config?.lengthMeters != null && config.widthMeters != null) parts.push(`${formatNumber(config.lengthMeters)} × ${formatNumber(config.widthMeters)} m`)
-  if (bed.code) parts.push(`código ${bed.code}`)
+  // Código gerado (igual ao identificador) não informa nada à pessoa; só mostra códigos definidos no cadastro.
+  if (bed.code && bed.code !== bed.id) parts.push(`código ${bed.code}`)
   return parts.join(' · ')
 }
 function BedDetail({ route, saved }: { route: AppRoute; saved: (message: string) => void }) {

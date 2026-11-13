@@ -7,6 +7,7 @@ import type { Garden } from '../features/organization/types/Garden'
 import type { AppRoute, PageKey } from './routes'
 import { changesManagedRecord, isManagedPage, samePage } from './routes'
 import { ManageAccess, useAuth } from '../features/auth/hooks/useAuth'
+import { TerrainGate } from '../features/organization/components/TerrainGate'
 
 /** Dados que o App fornece às páginas. */
 export interface PageContext {
@@ -58,6 +59,9 @@ const FinancialEntryPage = load(() => import('../features/costs/pages/FinancialE
 const EvidenceGalleryPage = load(() => import('../features/evidence/pages/EvidenceGalleryPage'), 'EvidenceGalleryPage')
 
 const simple = (Page: ComponentType<PageProps>) => ({ route, saved }: PageContext) => <Page route={route} saved={saved} />
+// Setores e canteiros exigem o terreno desenhado no mapa (ver TerrainGate).
+const afterTerrain = (Page: ComponentType<PageProps>, label: 'Setores' | 'Canteiros') => ({ route, saved }: PageContext) =>
+  <TerrainGate key={route.garden} garden={route.garden} page={label}><Page route={route} saved={saved} /></TerrainGate>
 
 /** Componente de cada página da tabela de rotas. */
 const pages: Record<PageKey, (context: PageContext) => ReactNode> = {
@@ -74,8 +78,8 @@ const pages: Record<PageKey, (context: PageContext) => ReactNode> = {
   'visao-geral/participacao': simple(ParticipationPage),
   'visao-geral/custos': simple(BasicCostsPage),
   'horta/mapa': ({ route, garden }) => garden ? <InteractiveGardenPage key={garden.id} route={route} /> : null,
-  'horta/setores': simple(SectorPage),
-  'horta/canteiros': simple(BedPage),
+  'horta/setores': afterTerrain(SectorPage, 'Setores'),
+  'horta/canteiros': afterTerrain(BedPage, 'Canteiros'),
   'horta/dados': simple(GardenDataPage),
   'irrigacao': ({ route, garden, modeChanged, saved }) => garden ? <GardenFlow key={`${garden.id}/${route.id}/${route.search}`} garden={garden} route={route} modeChanged={modeChanged} onSaved={saved} /> : null,
   'ambiente/variaveis': simple(EnvironmentalVariablePage),
@@ -92,7 +96,7 @@ const pages: Record<PageKey, (context: PageContext) => ReactNode> = {
   'producao/secagens': simple(DryingLotPage),
   'fotos': simple(EvidenceGalleryPage),
   'atividades/registros': simple(ActivityPage),
-  'atividades/participantes': simple(ParticipantPage),
+  'participantes': simple(ParticipantPage),
   'atividades/insumos': simple(AgriculturalInputPage),
   'atividades/instituicoes': simple(InstitutionPage),
   'ocorrencias': simple(OccurrencePage),

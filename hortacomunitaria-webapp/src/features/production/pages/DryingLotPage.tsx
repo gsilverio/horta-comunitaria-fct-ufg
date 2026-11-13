@@ -1,13 +1,16 @@
 import type { AppRoute } from '../../../routes/routes'
 import { goToSame } from '../../../routes/navigation'
-import { samePage } from '../../../routes/routes'
+import { linkTo, samePage } from '../../../routes/routes'
+import { choiceLabel } from '../../../services/lookups'
+import { formatDate } from '../../../services/dates'
+import { formatNumber } from '../../irrigation/formValues'
 import { EvidenceSection } from "../../evidence/pages/EvidenceSection"
 import { RecordRow } from '../../../components/RecordRow'
 import { formatInstant } from "../../irrigation/formValues"
 import { useCallback } from "react"
 import { RecordList } from "../../../components/RecordList"
 import { RecordDetail } from "../../../components/RecordDetail"
-import { Field, SelectField } from "../../../components/Fields"
+import { Facts, Field, SelectField } from "../../../components/Fields"
 import { Failure } from "../../../components/Feedback"
 import { useRecord } from "../../../hooks/useRecord"
 import { useRemote } from "../../../hooks/useRemote"
@@ -16,7 +19,7 @@ import { useListFilters } from "../../../hooks/useListFilters"
 
 import type { DryingLot } from "../types/DryingLot"
 import { dryingLotApi } from "../services/DryingLotApi"
-import { DryingLotForm, DryingLotReview } from "../components/DryingLotForm"
+import { DryingLotForm } from "../components/DryingLotForm"
 import { enumLabels } from "../../../services/labels"
 import { DryingActions } from "../components/DryingActions"
 export function DryingLotPage({ route, saved }: { route: AppRoute; saved: (message: string) => void }) {
@@ -45,6 +48,35 @@ const get = useCallback((signal: AbortSignal) => dryingLotApi.get(route.garden, 
 const audit = useCallback((page: number, signal: AbortSignal) => dryingLotApi.history(route.garden, route.id, page, signal), [route.id, route.garden])
 const state = useRecord<DryingLot>(route.id, get, audit, (version, reason) => dryingLotApi.deactivate(route.garden, route.id, version, reason), () => saved("Alteração confirmada."))
 const record = state.detail.data
+const options = useLookups(route.garden, ['harvest', 'participant'])
 if (route.action === 'editar' && record) return <DryingLotForm garden={route.garden} original={record} saved={record => { saved("Registro salvo. Dados e indicadores serão recarregados."); const query = new URLSearchParams(route.search); goToSame(route, record.id, query); state.refresh() }} cancel={() => { const query = new URLSearchParams(route.search); goToSame(route, route.id, query) }} />
-return <RecordDetail attachments={record && <EvidenceSection garden={route.garden} targetType="DryingLot" targetId={record.id} active={record.validity === "Valid"} />} state={state} title="Lote de secagem" version={record?.version ?? 0} active={record?.validity === "Valid"} catalog={false} back={() => { const query = new URLSearchParams(route.search); goToSame(route, '', query) }} edit={() => { const query = new URLSearchParams(route.search); goToSame(route, route.id, query, 'editar') }} items={record ? [{ label: "Valores do registro", value: <DryingLotReview record={record} /> }, { label: "Incluído em", value: formatInstant(record.recordedAt) }, { label: "Autor do registro (identificador)", value: record.recordedByUserId }, { label: "Situação", value: enumLabels[record.status] }] : []}>{record && <><DryingActions garden={route.garden} record={record} changed={state.refresh} /></>}</RecordDetail>
+const lotName = record ? record.code || `Secagem de ${formatDate(record.startedOn)}` : 'Lote de secagem'
+// Resumo no cabeçalho; os dados completos ficam numa grade única, sem identificadores técnicos.
+const description = record && [enumLabels[record.status], `início em ${formatDate(record.startedOn)}`, record.method].filter(Boolean).join(' · ')
+const facts = record && <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[
+  { label: 'Situação', value: enumLabels[record.status] },
+  { label: 'Método', value: record.method || 'Não informado' },
+  { label: 'Data de início', value: formatDate(record.startedOn) },
+  { label: 'Data de encerramento', value: record.endedOn ? formatDate(record.endedOn) : 'Em andamento' },
+  { label: 'Massa seca total', value: record.totalDryMassKg === null ? 'Não pesada' : `${formatNumber(record.totalDryMassKg)} kg` },
+  { label: 'Responsável pelo trabalho', value: record.responsibleParticipantId ? <a className="underline" href={linkTo(route.garden, 'participantes', record.responsibleParticipantId)}>{choiceLabel(options.data?.participant, record.responsibleParticipantId) ?? 'Participante'}</a> : 'Não informado' },
+  { label: 'Incluído em', value: formatInstant(record.recordedAt) },
+]} /></>
+const origins = record && <div className="cycle-records">
+  <DryingActions garden={route.garden} record={record} changed={() => saved("Alteração confirmada. Dados e indicadores recarregados.")} />
+  <section className="cycle-record-group" aria-label="Colheitas de origem">
+    <header><h3>Colheitas de origem <span>({record.items.length})</span></h3></header>
+    {record.items.length === 0 ? <p className="cycle-record-empty">Nenhuma colheita de origem.</p> : <ul>
+      {record.items.map((item, index) => <li key={`${item.harvestId}/${index}`}><a href={linkTo(route.garden, 'producao/colheitas', item.harvestId)}>
+        <strong>{formatNumber(item.allocatedMassKg)} kg destinados</strong>
+        <span>{choiceLabel(options.data?.harvest, item.harvestId) ?? 'Colheita'}</span>
+      </a></li>)}
+    </ul>}
+  </section>
+</div>
+return <RecordDetail state={state} eyebrow="Lote de secagem" title={lotName} description={description} version={record?.version ?? 0} active={record?.validity === "Valid"} catalog={false}
+  back={() => { const query = new URLSearchParams(route.search); goToSame(route, '', query) }} edit={() => { const query = new URLSearchParams(route.search); goToSame(route, route.id, query, 'editar') }}
+  sections={origins ? [{ id: 'origens', label: 'Origens', content: <div className="panel">{origins}</div> }] : []}
+  items={facts ? [{ label: 'Dados do lote', value: facts }] : []}
+  attachments={record && <EvidenceSection garden={route.garden} targetType="DryingLot" targetId={record.id} active={record.validity === "Valid"} />} />
 }

@@ -10,6 +10,7 @@ import { RecordTabs } from "./RecordTabs";
 import type { RecordTab } from "./RecordTabs";
 import type { useRecord } from "../hooks/useRecord";
 import { useCanManage } from "../features/auth/hooks/useAuth";
+import { useBackLink } from "../hooks/useBackLink";
 
 /**
  * Detalhe padrão: cabeçalho com a ação principal e abas do mesmo registro.
@@ -36,9 +37,12 @@ export function RecordDetail<T>({
   hideBack = false,
   deactivationInitiallyOpen = false,
   attachments,
+  maintenanceExtra,
 }: {
   /** Conteúdo da aba Fotos, exibida logo após Dados. */
   attachments?: ReactNode;
+  /** Ações adicionais da aba Manutenção (ex.: exclusão definitiva), exibidas a quem gerencia o cadastro. */
+  maintenanceExtra?: ReactNode;
   compact?: boolean;
   hideBack?: boolean;
   deactivationInitiallyOpen?: boolean;
@@ -60,6 +64,7 @@ export function RecordDetail<T>({
   requireActiveGarden?: boolean;
 }) {
   const garden = useGardenState();
+  const returnLink = useBackLink();
   // Em estrutura e catálogos, editar e inativar são do perfil Adm; nas demais páginas, ambos os perfis alteram.
   const canManage = useCanManage();
   const canChange = canManage && active && (!requireActiveGarden || garden.isActive);
@@ -80,7 +85,7 @@ export function RecordDetail<T>({
     {state.history.error && <Failure error={state.history.error} retry={state.refresh} />}
     {state.history.data && <AuditHistory data={state.history.data} change={state.setPage} />}
   </div>;
-  const maintenance: ReactNode = <section className="panel maintenance-section">
+  const deactivation: ReactNode = canChange && <section className="panel maintenance-section">
     <h2>{catalog ? "Inativar cadastro" : "Invalidar registro"}</h2>
     <p className="text-horta-muted">O histórico permanece disponível. Dependentes podem impedir a alteração.</p>
     {state.error && <Failure error={state.error} />}
@@ -93,16 +98,18 @@ export function RecordDetail<T>({
       {state.error?.status === 409 && state.reviewReady && !state.detail.loading && state.detail.data && <button className="secondary" onClick={state.acknowledge}>Revisei o registro atual</button>}
     </div>
   </section>;
+  const maintenance: ReactNode = <>{deactivation}{canManage && maintenanceExtra}</>;
   const tabs: RecordTab[] = [
     ...sections,
     { id: "dados", label: "Dados", content: data },
     ...(attachments ? [{ id: "fotos", label: "Fotos", content: attachments }] : []),
     { id: "historico", label: "Histórico", content: history },
-    ...(canChange ? [{ id: "manutencao", label: "Manutenção", content: maintenance }] : []),
+    ...(canChange || canManage && maintenanceExtra ? [{ id: "manutencao", label: "Manutenção", content: maintenance }] : []),
   ];
   return (
     <>
-      {!hideBack && <button className="text-button" onClick={back} disabled={state.busy}>← Voltar</button>}
+      {/* Com retorno explícito (`voltar`), a barra de contexto já oferece o voltar: não duplicar. */}
+      {!hideBack && !returnLink && <button className="text-button" onClick={back} disabled={state.busy}>← Voltar</button>}
       {state.notice && <p className="feedback success" role="status">{state.notice}</p>}
       {state.detail.data && heading ? (
         <>

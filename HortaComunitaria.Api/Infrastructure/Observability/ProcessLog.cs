@@ -49,14 +49,19 @@ internal sealed class ProcessLog : IDisposable
         properties["ElapsedMs"] = context.ElapsedMs;
         properties["ResultCount"] = resultCount;
         properties["ErrorCode"] = result.IsSuccess ? null : result.Error.Code;
+        // Campos e mensagem pública identificam a causa sem copiar valores enviados pela pessoa.
+        var fields = result.IsSuccess ? null : result.Error.Fields?.Keys.ToArray();
+        properties["ErrorFields"] = fields;
         using var eventScope = logger.BeginScope(properties);
         if (result.IsSuccess)
             logger.LogInformation("Processo {ProcessName} concluído em {ElapsedMs:0.000} ms", context.Name, context.ElapsedMs);
         else
-            logger.LogWarning("Processo {ProcessName} rejeitado na etapa {StepName}: {ErrorCode}",
-                context.Name, context.StepName, result.Error.Code);
+            logger.LogWarning("Processo {ProcessName} rejeitado na etapa {StepName}: {ErrorCode} [{ErrorFieldList}] {ErrorMessage}",
+                context.Name, context.StepName, result.Error.Code, fields is { Length: > 0 } ? string.Join(", ", fields) : "-", Truncate(result.Error.Message));
         return result;
     }
+
+    private static string Truncate(string value) => value.Length <= 300 ? value : value[..300] + "…";
 
     public void Dispose()
     {

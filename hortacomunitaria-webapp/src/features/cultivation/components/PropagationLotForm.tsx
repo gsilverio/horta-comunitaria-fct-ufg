@@ -34,7 +34,7 @@ notes: optionalText(draft.notes),
 } }
 return <EditorFrame dependenciesReady={!options.loading && !options.error} title={original ? "Corrigir lote de origem" : "Novo lote de origem"} busy={editor.busy} uncertain={!!editor.attempt || editor.catalogUncertain} catalogUncertain={editor.catalogUncertain} error={editor.error} reason={original ? editor.reason : undefined} changeReason={original ? editor.setReason : undefined} submit={() => void editor.submit(values)} cancel={cancel} conflict={original ? () => void editor.reloadConflict() : undefined} review={editor.review && <Facts items={[{ label: "Versão", value: editor.review.version }, { label: "Valores atuais", value: <PropagationLotReview record={editor.review} /> }]} />} acceptReview={editor.acceptReview}>
 {options.loading && <p role="status">Carregando cadastros de apoio…</p>}{options.error && <Failure error={options.error} retry={options.retry} />}
-<div className="grid min-w-0 gap-5">
+<div className="form-stack">
 <Group title="Material">
 <SelectField name="speciesId" label="Espécie" required value={draft.speciesId} change={value => change("speciesId", value)} options={options.data?.species ?? []} error={editor.error} />
 <SelectField name="cultivarId" label="Cultivar" value={draft.cultivarId} change={value => change("cultivarId", value)} options={options.data?.cultivar?.filter(x => x.speciesId === draft.speciesId) ?? []} error={editor.error} />

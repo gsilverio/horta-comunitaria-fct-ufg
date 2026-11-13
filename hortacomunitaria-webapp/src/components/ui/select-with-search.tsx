@@ -280,7 +280,7 @@ export function SelectWithSearch<TData = unknown>({
                       `
                         flex w-full items-center justify-between gap-3 rounded-md
                         px-2.5 py-2 text-left text-sm transition-colors
-                        hover:bg-[#e3e3e3]
+                        hover:bg-horta-canvas
                         disabled:cursor-not-allowed disabled:opacity-50
                       `,
                       selected && "bg-horta-forest/10",

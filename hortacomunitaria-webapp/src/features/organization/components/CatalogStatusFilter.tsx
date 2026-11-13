@@ -1,3 +1,8 @@
+const choices = [{ id: 'active', label: 'Ativos' }, { id: 'inactive', label: 'Inativos' }, { id: 'all', label: 'Todos' }]
+
+/** Filtro de situação em botões segmentados: as três opções ficam visíveis, sem abrir lista. */
 export function CatalogStatusFilter({ value, change }: { value: string; change: (value: string) => void }) {
-  return <label className="flex-row items-center gap-2 text-xs text-horta-muted">Mostrar<select className="w-auto" value={value} onChange={event => change(event.target.value)}><option value="active">Ativos</option><option value="inactive">Inativos</option><option value="all">Todos</option></select></label>
+  return <div className="segmented" role="group" aria-label="Mostrar">
+    {choices.map(choice => <button key={choice.id} type="button" aria-pressed={value === choice.id} onClick={() => { if (value !== choice.id) change(choice.id) }}>{choice.label}</button>)}
+  </div>
 }

@@ -1,6 +1,6 @@
 import type { AppRoute } from '../../../routes/routes'
 import { goToSame } from '../../../routes/navigation'
-import { samePage } from '../../../routes/routes'
+import { linkTo, samePage } from '../../../routes/routes'
 import { EvidenceSection } from "../../evidence/pages/EvidenceSection"
 import { RecordRow } from '../../../components/RecordRow'
 import { choiceLabel } from '../../../services/lookups'
@@ -10,7 +10,7 @@ import { formatInstant } from "../../irrigation/formValues"
 import { useCallback } from "react"
 import { RecordList } from "../../../components/RecordList"
 import { RecordDetail } from "../../../components/RecordDetail"
-import { Field, SelectField } from "../../../components/Fields"
+import { Facts, Field, SelectField } from "../../../components/Fields"
 import { Failure } from "../../../components/Feedback"
 import { useRecord } from "../../../hooks/useRecord"
 import { useRemote } from "../../../hooks/useRemote"
@@ -19,7 +19,7 @@ import { useListFilters } from "../../../hooks/useListFilters"
 
 import type { CultivationCycle } from "../types/CultivationCycle"
 import { cultivationCycleApi } from "../services/CultivationCycleApi"
-import { CultivationCycleForm, CultivationCycleReview } from "../components/CultivationCycleForm"
+import { CultivationCycleForm } from "../components/CultivationCycleForm"
 import { enumLabels } from "../../../services/labels"
 import { CycleActions } from "../components/CycleActions"
 export function CultivationCyclePage({ route, saved }: { route: AppRoute; saved: (message: string) => void }) {
@@ -50,6 +50,27 @@ const get = useCallback((signal: AbortSignal) => cultivationCycleApi.get(route.g
 const audit = useCallback((page: number, signal: AbortSignal) => cultivationCycleApi.history(route.garden, route.id, page, signal), [route.id, route.garden])
 const state = useRecord<CultivationCycle>(route.id, get, audit, (version, reason) => cultivationCycleApi.deactivate(route.garden, route.id, version, reason), () => saved("Alteração confirmada."))
 const record = state.detail.data
+const options = useLookups(route.garden, ['bed', 'species', 'cultivar', 'participant'])
 if (route.action === 'editar' && record) return <CultivationCycleForm garden={route.garden} original={record} saved={record => { saved("Registro salvo. Dados e indicadores serão recarregados."); const query = new URLSearchParams(route.search); goToSame(route, record.id, query); state.refresh() }} cancel={() => { const query = new URLSearchParams(route.search); goToSame(route, route.id, query) }} />
-return <RecordDetail attachments={record && <EvidenceSection garden={route.garden} targetType="CultivationCycle" targetId={record.id} active={record.validity === "Valid"} />} state={state} title="Ciclo de cultivo" version={record?.version ?? 0} active={record?.validity === "Valid"} catalog={false} back={() => { const query = new URLSearchParams(route.search); goToSame(route, '', query) }} edit={() => { const query = new URLSearchParams(route.search); goToSame(route, route.id, query, 'editar') }} items={record ? [{ label: "Valores do registro", value: <CultivationCycleReview record={record} /> }, { label: "Incluído em", value: formatInstant(record.recordedAt) }, { label: "Autor do registro (identificador)", value: record.recordedByUserId }, { label: "Área de referência preservada (m²)", value: record.referenceAreaM2 }, { label: "Configuração de origem", value: record.bedConfigurationId }, { label: "Situação", value: enumLabels[record.status] }] : []}>{record && <><CycleActions route={route} record={record} changed={state.refresh} /></>}</RecordDetail>
+const label = (kind: 'bed' | 'species' | 'cultivar' | 'participant', id: string | null) => id ? options.data?.[kind]?.find(item => item.id === id)?.label : undefined
+const speciesName = record ? label('species', record.speciesId) ?? 'Espécie' : 'Ciclo de cultivo'
+const bedName = record ? label('bed', record.bedId) ?? 'Canteiro' : ''
+// Resumo no cabeçalho; os dados completos ficam numa grade única, sem identificadores técnicos.
+const description = record && `${bedName} · ${enumLabels[record.status]}${record.status === 'Closed' && record.endedOn ? ` em ${formatDate(record.endedOn)}` : ` desde ${formatDate(record.startedOn)}`} · ${formatNumber(record.occupiedAreaM2)} m²`
+const facts = record && <Facts items={[
+  { label: 'Canteiro', value: <a className="underline" href={linkTo(route.garden, 'horta/canteiros', record.bedId)}>{bedName}</a> },
+  { label: 'Espécie', value: <a className="underline" href={linkTo(route.garden, 'catalogo/especies', record.speciesId)}>{speciesName}</a> },
+  { label: 'Cultivar', value: record.cultivarId ? <a className="underline" href={linkTo(route.garden, 'catalogo/cultivares', record.cultivarId, new URLSearchParams({ speciesId: record.speciesId }))}>{label('cultivar', record.cultivarId) ?? 'Cultivar'}</a> : 'Não informada' },
+  { label: 'Início', value: formatDate(record.startedOn) },
+  { label: record.status === 'Closed' ? 'Encerramento' : 'Situação', value: record.status === 'Closed' && record.endedOn ? formatDate(record.endedOn) : enumLabels[record.status] },
+  { label: 'Área ocupada', value: `${formatNumber(record.occupiedAreaM2)} m²` },
+  { label: 'Área do canteiro no início', value: `${formatNumber(record.referenceAreaM2)} m²` },
+  { label: 'Responsável pelo trabalho', value: label('participant', record.responsibleParticipantId) ?? 'Não informado' },
+  { label: 'Incluído em', value: formatInstant(record.recordedAt) },
+]} />
+return <RecordDetail state={state} eyebrow="Ciclo de cultivo" title={speciesName} description={description} version={record?.version ?? 0} active={record?.validity === "Valid"} catalog={false}
+  back={() => { const query = new URLSearchParams(route.search); goToSame(route, '', query) }} edit={() => { const query = new URLSearchParams(route.search); goToSame(route, route.id, query, 'editar') }}
+  sections={record ? [{ id: 'registros', label: 'Registros', content: <div className="panel"><CycleActions route={route} record={record} changed={() => saved("Alteração confirmada. Dados e indicadores recarregados.")} /></div> }] : []}
+  items={facts ? [{ label: 'Dados do ciclo', value: facts }] : []}
+  attachments={record && <EvidenceSection garden={route.garden} targetType="CultivationCycle" targetId={record.id} active={record.validity === "Valid"} />} />
 }

@@ -28,15 +28,15 @@ description: optionalText(draft.description),
 } }
 return <EditorFrame dependenciesReady={!options.loading && !options.error} requireActiveGarden={false} title={original ? "Corrigir variável ambiental" : "Nova variável ambiental"} busy={editor.busy} uncertain={!!editor.attempt || editor.catalogUncertain} catalogUncertain={editor.catalogUncertain} error={editor.error} reason={original ? editor.reason : undefined} changeReason={original ? editor.setReason : undefined} submit={() => void editor.submit(values)} cancel={cancel} conflict={original ? () => void editor.reloadConflict() : undefined} review={editor.review && <Facts items={[{ label: "Versão", value: editor.review.version }, { label: "Valores atuais", value: <EnvironmentalVariableReview record={editor.review} /> }]} />} acceptReview={editor.acceptReview}>
 {options.loading && <p role="status">Carregando cadastros de apoio…</p>}{options.error && <Failure error={options.error} retry={options.retry} />}
-<div className="grid min-w-0 gap-5">
+<div className="form-stack">
 <Group title="Identificação">
 <Field name="name" label="Nome" required type="text" value={draft.name} change={value => change("name", value)} error={editor.error} />
-<Field name="description" label="Descrição" type="textarea" value={draft.description} change={value => change("description", value)} error={editor.error} />
-</Group>
-<Group title="Medição">
 <Field name="quantity" label="Grandeza" required type="text" value={draft.quantity} change={value => change("quantity", value)} error={editor.error} />
 <Field name="referenceUnit" label="Unidade de referência" required type="text" value={draft.referenceUnit} change={value => change("referenceUnit", value)} error={editor.error} />
 <Toggle label="Esta variável mede umidade do solo" checked={draft.isSoilMoisture} change={value => change("isSoilMoisture", value)} />
+</Group>
+<Group title="Descrição" hint="Opcional.">
+<Field name="description" label="Descrição" type="textarea" value={draft.description} change={value => change("description", value)} error={editor.error} />
 </Group>
 </div></EditorFrame>
 }

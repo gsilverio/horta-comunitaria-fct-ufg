@@ -13,7 +13,7 @@
  * Filtros e contexto de preenchimento ficam na query; `voltar` guarda o endereço para retorno.
  */
 
-export type Area = 'visao-geral' | 'horta' | 'irrigacao' | 'ambiente' | 'cultivo' | 'producao' | 'fotos' | 'atividades' | 'ocorrencias' | 'custos'
+export type Area = 'visao-geral' | 'horta' | 'irrigacao' | 'ambiente' | 'cultivo' | 'producao' | 'fotos' | 'atividades' | 'participantes' | 'ocorrencias' | 'custos'
 
 interface PageMeta { area: Area; label: string; /** Nome de um registro da página (singular); ausente em páginas sem registros. */ item?: string; records: boolean }
 
@@ -48,7 +48,7 @@ export const gardenPages = {
   'producao/secagens': page('producao', 'Secagens', 'Secagem'),
   'fotos': page('fotos', 'Galeria'),
   'atividades/registros': page('atividades', 'Atividades', 'Atividade'),
-  'atividades/participantes': page('atividades', 'Participantes', 'Participante'),
+  'participantes': page('participantes', 'Participantes', 'Participante'),
   'atividades/insumos': page('atividades', 'Insumos', 'Insumo'),
   'atividades/instituicoes': page('atividades', 'Instituições', 'Instituição'),
   'ocorrencias': page('ocorrencias', 'Ocorrências', 'Ocorrência'),
@@ -88,7 +88,8 @@ export const navigationGroups: { label: string; areas: { id: Area; label: string
   ] },
   { label: 'Organização', areas: [
     { id: 'horta', label: 'Horta', pages: ['horta/setores', 'horta/canteiros', 'horta/mapa', 'horta/dados'] },
-    { id: 'atividades', label: 'Atividades', pages: ['atividades/registros', 'atividades/participantes', 'atividades/insumos', 'atividades/instituicoes'] },
+    { id: 'atividades', label: 'Atividades', pages: ['atividades/registros', 'atividades/insumos', 'atividades/instituicoes'] },
+    { id: 'participantes', label: 'Participantes', pages: ['participantes'] },
     { id: 'ocorrencias', label: 'Ocorrências', pages: ['ocorrencias'] },
     { id: 'custos', label: 'Custos', pages: ['custos'] },
   ] },
@@ -105,7 +106,7 @@ const areas = navigationGroups.flatMap(group => group.areas)
 /** Página aberta ao entrar em uma área (/hortas/{horta}/{área}). */
 const areaDefaults: Record<Area, PageKey> = {
   'visao-geral': 'visao-geral', horta: 'horta/setores', irrigacao: 'irrigacao', ambiente: 'ambiente/medicoes', cultivo: 'cultivo/ciclos',
-  producao: 'producao/colheitas', fotos: 'fotos', atividades: 'atividades/registros', ocorrencias: 'ocorrencias', custos: 'custos',
+  producao: 'producao/colheitas', fotos: 'fotos', atividades: 'atividades/registros', participantes: 'participantes', ocorrencias: 'ocorrencias', custos: 'custos',
 }
 
 export function pageMeta(key: PageKey | ''): PageMeta | undefined {
@@ -212,7 +213,7 @@ export const changePasswordHref = '/conta/senha'
  * `horta/canteiros` com a ação `cultivar` registra plantio e continua disponível ao Operador.
  */
 const managedPages: ReadonlySet<PageKey> = new Set<PageKey>(['hortas', 'horta/setores', 'horta/canteiros', 'horta/dados', 'ambiente/variaveis',
-  'ambiente/pontos', 'atividades/participantes', 'atividades/insumos', 'atividades/instituicoes', 'catalogo/especies', 'catalogo/cultivares'])
+  'ambiente/pontos', 'participantes', 'atividades/insumos', 'atividades/instituicoes', 'catalogo/especies', 'catalogo/cultivares'])
 export const isManagedPage = (key: PageKey | '') => !!key && managedPages.has(key)
 /** Rota que altera estrutura ou catálogo (formulário de criação/edição/configuração). */
 export const changesManagedRecord = (route: AppRoute) =>

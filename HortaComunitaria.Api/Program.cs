@@ -43,6 +43,13 @@ try
         Environment.ExitCode = await bootstrapScope.ServiceProvider.GetRequiredService<AdministratorBootstrap>().RunAsync(CancellationToken.None);
         return;
     }
+    if (args.Contains("--seed-test-admins", StringComparer.Ordinal))
+    {
+        // Comando administrativo explícito: contas Adm de teste do ambiente demonstrativo, lidas do ambiente.
+        using var testAdminsScope = app.Services.CreateScope();
+        Environment.ExitCode = await testAdminsScope.ServiceProvider.GetRequiredService<TestAdministratorsSeed>().RunAsync(CancellationToken.None);
+        return;
+    }
     if (args.Contains("--seed-demo", StringComparer.Ordinal))
     {
         // Comando administrativo explícito: cenário fictício da reunião de validação, sem servidor nem migrations.
@@ -52,6 +59,14 @@ try
         Environment.ExitCode = await demoScope.ServiceProvider
             .GetRequiredService<HortaComunitaria.Api.Features.Demonstration.SeedValidationScenario.SeedValidationScenarioCommandHandler>()
             .RunAsync(cancellation.Token);
+        // Segunda horta: mapa com canteiros de várias formas e cultivos em fases distintas para o panorama.
+        if (Environment.ExitCode == 0)
+        {
+            using var panoramaScope = app.Services.CreateScope();
+            Environment.ExitCode = await panoramaScope.ServiceProvider
+                .GetRequiredService<HortaComunitaria.Api.Features.Demonstration.SeedPanoramaScenario.SeedPanoramaScenarioCommandHandler>()
+                .RunAsync(cancellation.Token);
+        }
         return;
     }
     app.UseObservability();

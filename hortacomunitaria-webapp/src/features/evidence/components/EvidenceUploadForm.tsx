@@ -28,9 +28,11 @@ export function EvidenceUploadForm({ busy, progress, error, submit, clearError }
     if (await submit(draft)) { choose(null); setDraft(empty); if (input.current) input.current.value = '' }
   }
 
-  return <form className="grid gap-4 border border-horta-line bg-white p-4 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]" onSubmit={event => void send(event)} aria-busy={busy}>
+  return <form className="evidence-upload" onSubmit={event => void send(event)} aria-busy={busy} aria-labelledby={`${id}-title`}>
+    <h3 id={`${id}-title`} className="evidence-upload-title">Adicionar fotografia</h3>
+    <div className="evidence-upload-body">
     <div className="grid content-start gap-2">
-      <label htmlFor={id} className="flex aspect-[4/3] w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden border border-dashed border-[#b8c8bc] bg-horta-canvas text-center text-sm text-horta-muted hover:border-horta-forest focus-within:outline focus-within:outline-2 focus-within:outline-horta-focus">
+      <label htmlFor={id} className="flex aspect-[4/3] w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-md border border-dashed border-[#b8c8bc] bg-horta-canvas text-center text-sm text-horta-muted hover:border-horta-forest focus-within:outline focus-within:outline-2 focus-within:outline-horta-focus">
         {preview ? <img src={preview} alt="Prévia da fotografia selecionada (ainda não salva)" className="h-full w-full object-cover" /> : <><ImagePlus aria-hidden="true" className="size-7 text-horta-forest" /><span>Tirar foto ou escolher arquivo</span><span className="text-xs">JPEG, PNG ou WebP</span></>}
         <input ref={input} id={id} name="file" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-invalid={!!fileErrors} aria-describedby={`${id}-error`} onChange={event => choose(event.target.files?.[0] ?? null)} />
       </label>
@@ -38,15 +40,18 @@ export function EvidenceUploadForm({ busy, progress, error, submit, clearError }
       <span className="field-error" id={`${id}-error`}>{fileErrors?.join(' ')}</span>
     </div>
     <div className="grid min-w-0 content-start gap-3">
-      <Field name="title" label="Título" required value={draft.title} maxLength={120} change={value => setDraft(current => ({ ...current, title: value }))} error={error} hint="Ex.: Pulgões na face inferior das folhas" />
-      <Field name="capturedOn" label="Data da foto" type="date" value={draft.capturedOn} change={value => setDraft(current => ({ ...current, capturedOn: value }))} error={error} />
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,12rem)]">
+        <Field name="title" label="Título" required value={draft.title} maxLength={120} change={value => setDraft(current => ({ ...current, title: value }))} error={error} hint="Ex.: Pulgões na face inferior das folhas" />
+        <Field name="capturedOn" label="Data da foto" type="date" value={draft.capturedOn} change={value => setDraft(current => ({ ...current, capturedOn: value }))} error={error} />
+      </div>
       <Field name="description" label="Descrição" type="textarea" value={draft.description} maxLength={500} change={value => setDraft(current => ({ ...current, description: value }))} error={error} />
       {error && Object.keys(error.fields).length === 0 && <Failure error={error} />}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center justify-end gap-3">
         <button type="submit" className="inline-flex items-center gap-2" disabled={busy || !draft.file}><Upload aria-hidden="true" className="size-4" />{busy ? 'Enviando…' : 'Salvar fotografia'}</button>
         {busy && <span role="status" className="text-sm text-horta-muted">{progress > 0 ? `Enviando ${Math.round(progress * 100)}%` : 'Preparando imagem…'}</span>}
         {error && !busy && error.status !== 400 && <span className="text-sm text-horta-muted">O envio pode ser repetido com segurança; a mesma tentativa não duplica a foto.</span>}
       </div>
+    </div>
     </div>
   </form>
 }

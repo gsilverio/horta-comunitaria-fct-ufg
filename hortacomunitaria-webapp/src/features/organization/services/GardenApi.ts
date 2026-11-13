@@ -10,5 +10,6 @@ export const gardenApi = {
   create: async (values: GardenValues) => (await http.post<Garden>(path(), { code: values.code, name: values.name, location: values.location, institutionalAreaM2: values.institutionalAreaM2, operationalAreaM2: values.operationalAreaM2, experimentalAreaM2: values.experimentalAreaM2 })).data,
   correct: async (id: string, values: GardenValues, expectedVersion: number, reason: string) => (await http.put<Garden>(`${path()}/${encodeURIComponent(id)}`, { ...values, expectedVersion, reason })).data,
   deactivate: async (id: string, expectedVersion: number, reason: string) => (await http.post<Garden>(`${path()}/${encodeURIComponent(id)}/inactivation`, { expectedVersion, reason })).data,
+  remove: async (id: string, expectedVersion: number, reason: string) => { await http.post(`${path()}/${encodeURIComponent(id)}/deletion`, { expectedVersion, reason }) },
   history: async (id: string, page: number, signal: AbortSignal) => (await http.get<Page<AuditEntry>>(`${path()}/${encodeURIComponent(id)}/history`, { signal, params: { page, pageSize: 5 } })).data,
 }

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { AppShell } from './components/AppShell'
-import { InlineSelect } from './components/InlineSelect'
+import { GardenSwitcher } from './components/GardenSwitcher'
 import { BackLink } from './components/PageTrail'
 import { BackLinkState } from './hooks/useBackLink'
 import { Failure } from './components/Feedback'
 import { irrigationApi } from './features/irrigation/services/irrigationApi'
 import { gardenApi } from './features/organization/services/GardenApi'
 import { useRemote } from './hooks/useRemote'
+import { invalidateCatalogs } from './services/lookups'
 import { GardenState } from './hooks/useGardenState'
 import { go, replaceRoute, useNavigationGuard, useRoute, useRouteFocus } from './routes/navigation'
 import { backTarget, describeHref, linkTo } from './routes/routes'
@@ -37,7 +38,10 @@ export default function App() {
   useEffect(() => { if (home) replaceRoute(home) }, [home])
 
   const pageRoute: AppRoute = route.scope === 'catalog' ? { ...route, garden: contextGarden } : route
-  const saved = (message: string) => { setNotice({ message, garden: contextGarden }); setRevision(value => value + 1) }
+  // A lista de hortas e os catálogos não têm horta no endereço: o menu usa a horta de contexto para que seus links
+  // levem às áreas dessa horta (sem isso, todos apontariam para /hortas e a navegação parecia travada).
+  const shellRoute: AppRoute = route.scope === 'gardens' ? { ...route, garden: contextGarden } : pageRoute
+  const saved = (message: string) => { invalidateCatalogs(); setNotice({ message, garden: contextGarden }); setRevision(value => value + 1) }
   const backHref = backTarget(route)
   const back = backHref ? { href: backHref, label: describeHref(backHref) } : undefined
   function selectGarden(id: string) {
@@ -46,9 +50,10 @@ export default function App() {
     go(linkTo(id, 'visao-geral'))
   }
   const showGardenSelect = (gardens.data?.length ?? 0) > 1
+  const gardenOptions = [...(gardens.data ?? []).map(item => ({ id: item.id, name: item.name })), ...(garden && !gardens.data?.some(item => item.id === garden.id) ? [{ id: garden.id, name: `${garden.name}${!garden.isActive ? ' (inativa)' : ''}` }] : [])]
   const noGardens = !gardens.loading && !gardens.error && gardens.data?.length === 0
   const needsGarden = route.scope === 'garden' || route.scope === 'catalog'
-  return <BackLinkState.Provider value={back}><AppShell route={pageRoute} gardenName={garden?.name} gardenSelect={showGardenSelect ? <InlineSelect className="garden-picker" label="Horta" value={contextGarden} disabled={gardens.loading || !!gardens.error || (inFlow && route.page === 'irrigacao')} onChange={event => selectGarden(event.target.value)}>{gardens.data?.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}{garden && !gardens.data?.some(item => item.id === garden.id) && <option value={garden.id}>{garden.name}{!garden.isActive ? ' (inativa)' : ''}</option>}</InlineSelect> : gardens.loading ? <span className="text-xs text-horta-muted" role="status">Carregando hortas…</span> : noGardens && route.scope !== 'gardens' ? <a className="inline-flex min-h-11 items-center text-sm underline" href={linkTo('', 'hortas', 'nova')}>Cadastrar horta</a> : undefined}>
+  return <BackLinkState.Provider value={back}><AppShell route={shellRoute} gardenName={garden?.name} gardenSwitcher={showGardenSelect ? <GardenSwitcher value={contextGarden} disabled={gardens.loading || !!gardens.error || (inFlow && route.page === 'irrigacao')} onChange={selectGarden} options={gardenOptions} /> : undefined} gardenSelect={showGardenSelect ? undefined : gardens.loading ? <span className="text-xs text-horta-muted" role="status">Carregando hortas…</span> : noGardens && route.scope !== 'gardens' ? <a className="inline-flex min-h-11 items-center text-sm underline" href={linkTo('', 'hortas', 'nova')}>Cadastrar horta</a> : undefined}>
     <GardenState.Provider value={{ id: garden?.id ?? '', name: garden?.name ?? '', isActive: garden?.isActive ?? true, institutionalAreaM2: garden?.institutionalAreaM2 ?? null, operationalAreaM2: garden?.operationalAreaM2 ?? null, experimentalAreaM2: garden?.experimentalAreaM2 ?? null }}>
       {notice && notice.garden === contextGarden && <div className="feedback success" role="status"><span>{notice.message}</span><button type="button" className="text-button" onClick={() => setNotice(undefined)} aria-label="Dispensar confirmação">Fechar</button></div>}
       {needsGarden && contextGarden && selected.loading && <p role="status">Carregando horta…</p>}

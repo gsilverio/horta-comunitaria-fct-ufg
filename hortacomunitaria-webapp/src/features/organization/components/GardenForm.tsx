@@ -29,14 +29,14 @@ experimentalAreaM2: numeric(draft.experimentalAreaM2, 'experimentalAreaM2', fals
 } }
 return <EditorFrame dependenciesReady={!options.loading && !options.error} requireActiveGarden={false} title={original ? "Editar horta" : "Nova horta"} submitLabel={original ? "Salvar alterações" : "Cadastrar horta"} description="Comece pelo nome da horta. Os demais dados podem ser preenchidos depois." busy={editor.busy} uncertain={!!editor.attempt || editor.catalogUncertain} catalogUncertain={editor.catalogUncertain} error={editor.error} reason={original ? editor.reason : undefined} changeReason={original ? editor.setReason : undefined} submit={() => void editor.submit(values)} cancel={cancel} conflict={original ? () => void editor.reloadConflict() : undefined} review={editor.review && <Facts items={[{ label: "Versão", value: editor.review.version }, { label: "Valores atuais", value: <GardenReview record={editor.review} /> }]} />} acceptReview={editor.acceptReview}>
 {options.loading && <p role="status">Carregando cadastros de apoio…</p>}{options.error && <Failure error={options.error} retry={options.retry} />}
-<div className="grid min-w-0 gap-5">
+<div className="form-stack">
 <Group title="Identificação">
-<Field name="name" label="Nome da horta" required type="text" value={draft.name} change={value => change("name", value)} error={editor.error} />
-<Field name="location" label="Localização" type="text" value={draft.location} change={value => change("location", value)} error={editor.error} />
+<Field name="name" label="Nome da horta" required placeholder="Ex.: Horta Comunitária FCT/UFG" type="text" value={draft.name} change={value => change("name", value)} error={editor.error} />
+<Field name="location" label="Localização" placeholder="Bloco, campus ou referência" type="text" value={draft.location} change={value => change("location", value)} error={editor.error} />
 </Group>
-<Group title="Áreas da horta" hint="Opcionais, em m². Preencha somente as áreas conhecidas; você pode completar depois."><Field name="institutionalAreaM2" label="Área institucional (m²)" type="decimal" value={draft.institutionalAreaM2} change={value => change("institutionalAreaM2", value)} error={editor.error} />
-<Field name="operationalAreaM2" label="Área operacional (m²)" type="decimal" value={draft.operationalAreaM2} change={value => change("operationalAreaM2", value)} error={editor.error} />
-<Field name="experimentalAreaM2" label="Área experimental (m²)" type="decimal" value={draft.experimentalAreaM2} change={value => change("experimentalAreaM2", value)} error={editor.error} />
+<Group title="Áreas da horta" hint="Opcionais. Preencha somente as áreas conhecidas; você pode completar depois."><Field name="institutionalAreaM2" label="Área institucional" unit="m²" placeholder="0,00" type="decimal" value={draft.institutionalAreaM2} change={value => change("institutionalAreaM2", value)} error={editor.error} />
+<Field name="operationalAreaM2" label="Área operacional" unit="m²" placeholder="0,00" type="decimal" value={draft.operationalAreaM2} change={value => change("operationalAreaM2", value)} error={editor.error} />
+<Field name="experimentalAreaM2" label="Área experimental" unit="m²" placeholder="0,00" type="decimal" value={draft.experimentalAreaM2} change={value => change("experimentalAreaM2", value)} error={editor.error} />
 </Group></div></EditorFrame>
 }
 export function GardenReview({ record }: { record: Garden }) { const options = useLookups(readRoute().garden, []); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Nome', value: record.name }, { label: 'Localização', value: record.location }, { label: 'Área institucional (m²)', value: record.institutionalAreaM2 === null ? "Não informado" : formatNumber(record.institutionalAreaM2) }, { label: 'Área operacional (m²)', value: record.operationalAreaM2 === null ? "Não informado" : formatNumber(record.operationalAreaM2) }, { label: 'Área experimental (m²)', value: record.experimentalAreaM2 === null ? "Não informado" : formatNumber(record.experimentalAreaM2) }]} /></> }

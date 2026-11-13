@@ -21,7 +21,7 @@ category: optionalText(draft.category),
 } }
 return <EditorFrame dependenciesReady={!options.loading && !options.error} title={original ? "Corrigir participante" : "Novo participante"} busy={editor.busy} uncertain={!!editor.attempt || editor.catalogUncertain} catalogUncertain={editor.catalogUncertain} error={editor.error} reason={original ? editor.reason : undefined} changeReason={original ? editor.setReason : undefined} submit={() => void editor.submit(values)} cancel={cancel} conflict={original ? () => void editor.reloadConflict() : undefined} review={editor.review && <Facts items={[{ label: "Versão", value: editor.review.version }, { label: "Valores atuais", value: <ParticipantReview record={editor.review} /> }]} />} acceptReview={editor.acceptReview}>
 {options.loading && <p role="status">Carregando cadastros de apoio…</p>}{options.error && <Failure error={options.error} retry={options.retry} />}
-<div className="grid min-w-0 gap-5">
+<div className="form-stack">
 <Group title="Identificação">
 <Field name="displayName" label="Nome de exibição" required type="text" value={draft.displayName} change={value => change("displayName", value)} error={editor.error} />
 <Field name="category" label="Categoria" type="text" value={draft.category} change={value => change("category", value)} error={editor.error} />

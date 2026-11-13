@@ -96,20 +96,21 @@ test('organização pela interface, vigências, manutenção de inativos e acess
   expect(detail.version).toBe(3)
   expect(detail.configuration.cultivableAreaM2).toBe(5)
   expect(detail.sectorAssignment.sectorId).toBe(sector.id)
-  await page.getByText('Consultar ou alterar área e setor por data', { exact: true }).click()
-  await page.getByText('Consultar área, setor e histórico de vigências', { exact: true }).click()
-  await expect(page.getByText(/2026-10-01 → sem fim · 5 m²/)).toBeVisible()
-  await open(page, garden.id, 'atividades/participantes', 'novo'); await fill(page, 'displayName', 'Participante fictício da interface')
+  await page.getByRole('tab', { name: 'Área e setor', exact: true }).click()
+  const areaHistory = page.getByRole('region', { name: 'Histórico de área' })
+  await expect(areaHistory.getByText('Desde 01/10/2026', { exact: true })).toBeVisible()
+  await expect(areaHistory.getByText('5 m²', { exact: true })).toBeVisible()
+  await open(page, garden.id, 'participantes', 'novo'); await fill(page, 'displayName', 'Participante fictício da interface')
   const participant = await save(page, `${prefix}/participants`)
   await page.getByText('Inativar cadastro', { exact: true }).click(); await fill(page, 'reason', 'Conferência do cadastro de teste')
   await page.getByRole('button', { name: 'Confirmar inativação' }).click()
   await expect(page.getByText('Inativo · Versão 2')).toBeVisible()
-  await open(page, garden.id, 'atividades/participantes', '', 'isActive=false')
+  await open(page, garden.id, 'participantes', '', 'isActive=false')
   await expect(page.getByRole('link', { name: 'Participante fictício da interface', exact: true })).toBeVisible()
   expect(await (await request.get(`${api()}${prefix}/participants`)).json()).toMatchObject({ totalCount: 0 })
   await open(page, garden.id, 'horta/canteiros', bed.id); await page.reload()
   await expect(page.getByRole('heading', { name: 'Canteiro adicional pela interface', exact: true })).toBeVisible()
-  await open(page, garden.id, 'atividades/participantes', participant.id)
+  await open(page, garden.id, 'participantes', participant.id)
   await expect(page.getByText('Inativo · Versão 2')).toBeVisible()
 })
 
@@ -169,7 +170,7 @@ test('cultivo e produção: espécie/origem, ciclo, plantio, avaliações, obser
 
 test('atividades e ocorrências: cadastros, filhos, público, instituições, providência e resolução', async ({ page, request }) => {
   const ctx = await context(request)
-  await open(page, ctx.garden.id, 'atividades/participantes', 'novo'); await fill(page, 'displayName', 'Pessoa fictícia de teste'); const person = await save(page, `${ctx.prefix}/participants`)
+  await open(page, ctx.garden.id, 'participantes', 'novo'); await fill(page, 'displayName', 'Pessoa fictícia de teste'); const person = await save(page, `${ctx.prefix}/participants`)
   await open(page, ctx.garden.id, 'atividades/insumos', 'novo'); await fill(page, 'name', `Insumo fictício ${ctx.suffix}`); await fill(page, 'referenceUnit', 'kg'); const input = await save(page, '/inputs')
   await open(page, ctx.garden.id, 'atividades/instituicoes', 'novo'); await fill(page, 'name', `Instituição fictícia ${ctx.suffix}`); const institution = await save(page, '/institutions')
   await open(page, ctx.garden.id, 'ocorrencias', 'novo'); await fill(page, 'openedAt', `${date}T08:00`); await fill(page, 'category', 'Inspeção'); await fill(page, 'description', 'Falha fictícia em acompanhamento'); const occurrence = await save(page, `${ctx.prefix}/occurrences`)
@@ -243,7 +244,7 @@ test('celular, teclado, descarte explícito e leitura falha após gravação con
 
 test('cadastro com resposta perdida exige revisar a lista; horta inativa mantém consulta', async ({ page, request }) => {
   const ctx = await context(request)
-  await open(page, ctx.garden.id, 'atividades/participantes', 'novo')
+  await open(page, ctx.garden.id, 'participantes', 'novo')
   await fill(page, 'displayName', 'Pessoa de envio incerto')
   let calls = 0
   await page.route(`**/api/v1${ctx.prefix}/participants`, async route => {
@@ -259,7 +260,7 @@ test('cadastro com resposta perdida exige revisar a lista; horta inativa mantém
   await page.unroute(`**/api/v1${ctx.prefix}/participants`)
   const inactive = await request.post(`${api()}/gardens/${ctx.garden.id}/inactivation`, { data: { expectedVersion: 1, reason: 'Suspensão da horta fictícia' } })
   expect(inactive.status(), await inactive.text()).toBe(200)
-  await open(page, ctx.garden.id, 'atividades/participantes'); await page.reload()
+  await open(page, ctx.garden.id, 'participantes'); await page.reload()
   await expect(page.getByText(/Horta inativa/).first()).toBeVisible()
   await expect(page.getByRole('button', { name: 'Novo registro' })).toBeDisabled()
   await expect(page.getByRole('link', { name: 'Pessoa de envio incerto', exact: true })).toBeVisible()

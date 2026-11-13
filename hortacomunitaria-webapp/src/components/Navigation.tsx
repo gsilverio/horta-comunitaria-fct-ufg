@@ -1,7 +1,10 @@
 import { useLayoutEffect, useRef } from 'react'
+import { Lock } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { areaHomePage, areaOf, linkTo, navigationGroups, pageMeta } from '../routes/routes'
 import type { AppRoute, PageKey } from '../routes/routes'
 import { Icon } from './Icon'
+import { terrainBlocks, useTerrainRequirement } from '../features/organization/hooks/useTerrainRequirement'
 
 /** Altura mínima da lista de páginas (três itens) antes de o menu inteiro passar a rolar. */
 const MIN_PAGES_HEIGHT = 120
@@ -18,7 +21,7 @@ function queryFor(route: AppRoute, target: PageKey) {
 }
 
 /** `garden` é a horta de contexto: em catálogos e na lista de hortas, os links das áreas continuam nela. */
-export function Navigation({ route, onNavigate }: { route: AppRoute; onNavigate?: () => void }) {
+export function Navigation({ route, onNavigate, gardenSwitcher }: { route: AppRoute; onNavigate?: () => void; gardenSwitcher?: ReactNode }) {
   const close = (event: React.MouseEvent) => { if (!event.defaultPrevented) onNavigate?.() }
   // As páginas da área aberta ocupam só o espaço livre do menu e rolam internamente, para que todas as áreas
   // continuem visíveis. Abaixo de três itens de altura, o menu inteiro volta a rolar.
@@ -43,8 +46,12 @@ export function Navigation({ route, onNavigate }: { route: AppRoute; onNavigate?
     return () => observer.disconnect()
   }, [area, route.page, route.garden])
   const current = areaOf(route.page)?.id ?? (route.scope === 'gardens' ? 'horta' : undefined)
+  // Com a área Horta aberta, Setores e Canteiros mostram cadeado enquanto a horta não tem terreno.
+  const terrain = useTerrainRequirement(current === 'horta' && route.scope === 'garden' ? route.garden : '', `${route.page}/${route.id}`)
+  const locked = terrainBlocks(terrain.data)
   const preserve = route.page === 'horta/mapa' ? 'true' : undefined
   return <nav className="primary-navigation" aria-label="Áreas da aplicação">
+    {gardenSwitcher && <div className="nav-garden">{gardenSwitcher}</div>}
     {navigationGroups.map(group => <div className="nav-group" key={group.label}>
       <p className="nav-group-title">{group.label}</p>
       {group.areas.map(area => {
@@ -58,7 +65,10 @@ export function Navigation({ route, onNavigate }: { route: AppRoute; onNavigate?
             <Icon name={area.id} /><span>{area.label}</span>
           </a>
           {pages.length > 0 && <ul ref={pagesRef} className="nav-pages" aria-label={`Páginas de ${area.label}`}>
-            {pages.map(key => <li key={key}><a className="nav-page" aria-current={key === route.page ? 'page' : undefined} href={linkTo(route.garden, key, '', queryFor(route, key))} onClick={close}>{pageMeta(key)?.label}</a></li>)}
+            {pages.map(key => {
+              const blocked = locked && (key === 'horta/setores' || key === 'horta/canteiros')
+              return <li key={key}><a className="nav-page" data-locked={blocked || undefined} aria-current={key === route.page ? 'page' : undefined} href={linkTo(route.garden, key, '', queryFor(route, key))} onClick={close} title={blocked ? 'Desenhe o terreno no mapa primeiro' : undefined}>{pageMeta(key)?.label}{blocked && <><Lock aria-hidden="true" className="nav-page-lock" /><span className="sr-only"> (requer terreno)</span></>}</a></li>
+            })}
           </ul>}
         </div>
       })}

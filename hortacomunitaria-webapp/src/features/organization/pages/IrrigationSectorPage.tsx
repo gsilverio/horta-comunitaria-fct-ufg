@@ -22,8 +22,7 @@ export function IrrigationSectorPage({ route, saved }: { route: AppRoute; saved:
 function SectorList({ route }: { route: AppRoute }) {
   const garden = useGardenState()
   return <><OrganizationTrail /><OrganizationHeading eyebrow={garden.name} title="Setores" description="Organize a horta em setores. Abra um setor para ver e cadastrar seus canteiros." action={garden.isActive && <CreateLink href={linkTo(route.garden, 'horta/setores', 'novo')}>Novo setor</CreateLink>} />
-    <SectorCollection route={route} />
-    <div className="organization-secondary-links"><a href={linkTo(route.garden, 'horta/canteiros')}>Todos os canteiros e cadastros pendentes</a></div>
+    <SectorCollection route={route} action={<a className="org-collection-link" href={linkTo(route.garden, 'horta/canteiros')}>Todos os canteiros</a>} />
   </>
 }
 function SectorDetail({ route, saved }: { route: AppRoute; saved: (message: string) => void }) {

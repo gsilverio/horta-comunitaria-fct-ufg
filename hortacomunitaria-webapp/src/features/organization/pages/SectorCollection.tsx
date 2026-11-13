@@ -17,6 +17,6 @@ export function SectorCollection({ route, action }: { route: AppRoute; action?: 
   const load = useCallback((signal: AbortSignal) => irrigationSectorApi.list(route.garden, { page, pageSize: 10, isActive }, signal), [route.garden, page, isActive])
   const result = useRemote(`${route.garden}/${page}/${status}/${revision}`, load)
   return <OrganizationCollection title="Setores da horta" {...result} retry={retry} changePage={changePage} action={action} emptyTitle="Comece pelo primeiro setor" emptyText={status === 'active' ? 'Um setor reúne os canteiros de uma mesma área. Use um nome fácil de reconhecer, como Setor norte.' : 'Não há setores nesta situação. Altere a opção Mostrar para consultar os demais.'} filter={<CatalogStatusFilter value={status} change={changeStatus} />}>
-    {result.data?.items.map(item => <OrganizationRow key={item.id} title={item.name} description={item.description || 'Abra este setor para organizar seus canteiros.'} status={!item.isActive ? 'Inativo' : undefined} statusTone="invalid" href={linkTo(garden.id || route.garden, 'horta/setores', item.id)} action="Ver canteiros" />)}
+    {result.data?.items.map(item => <OrganizationRow key={item.id} title={item.name} kind="sector" description={item.description || undefined} status={!item.isActive ? 'Inativo' : undefined} statusTone="invalid" href={linkTo(garden.id || route.garden, 'horta/setores', item.id)} action="Ver canteiros" />)}
   </OrganizationCollection>
 }

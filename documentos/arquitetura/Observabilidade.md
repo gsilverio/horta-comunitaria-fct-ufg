@@ -17,6 +17,10 @@ O início agora aparece em Information. Handler, resumo HTTP e erro global compa
 | Phase | Received, Started, Executing, Completed, Rejected, Failed, Cancelled ou RequestCompleted |
 | StepName / StepNumber | Etapa significativa e sua posição; falha/rejeição conserva a etapa corrente |
 | EventName / Outcome / ErrorCode | Evento estável, resultado e código de rejeição/falha |
+| ErrorFields / ErrorMessage | Em `ProcessRejected` (12/11/2026): campos recusados e mensagem pública do domínio. Nunca contém o valor enviado. |
+| ErrorField / BindingReason | Em `RequestBindingRejected`: caminho JSON do campo (camelCase) e motivo resumido (`tipo ou formato incompatível`, `propriedade obrigatória ausente: …`, `JSON inválido`), sem o valor recebido. |
+
+Como diagnosticar um 400: pegue o `traceId` da resposta (ou o cabeçalho `X-Trace-Id`) e filtre o log por ele. O evento de rejeição diz o processo, a etapa, o campo e o motivo. Exemplo de consulta no deploy Docker: `docker compose -f deploy/compose.yaml logs api | Select-String <traceId>`. A resposta HTTP também passa a trazer `errors` com o campo nas falhas de binding, para o formulário marcar o controle certo.
 
 Uma tentativa nova recebe outro ProcessId; reenvios podem conservar OperationId e apontar à mesma IrrigationId. Os IDs de recurso podem estar no escopo ou no evento da etapa, conforme sua disponibilidade. TraceId pode reunir operações distribuídas e não substitui a identidade local. Etapas são marcadas antes da operação correspondente; mensagens de gravação concluída só aparecem após confirmação.
 

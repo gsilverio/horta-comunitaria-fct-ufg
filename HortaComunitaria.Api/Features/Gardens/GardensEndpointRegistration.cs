@@ -18,6 +18,7 @@ using HortaComunitaria.Api.Features.Gardens.ListGardenHistory;
 using HortaComunitaria.Api.Features.Gardens.GetBed;
 using HortaComunitaria.Api.Features.Gardens.ListBedHistory;
 using HortaComunitaria.Api.Features.Gardens.InactivateGarden;
+using HortaComunitaria.Api.Features.Gardens.DeleteGarden;
 using HortaComunitaria.Api.Features.Gardens.CreateGarden;
 using HortaComunitaria.Api.Features.Gardens.UpdateIrrigationSector;
 using HortaComunitaria.Api.Features.Gardens.ListBedConfigurations;
@@ -32,6 +33,6 @@ namespace HortaComunitaria.Api.Features.Gardens;
 internal static class GardensEndpointRegistration
 {
     internal static RouteGroupBuilder MapGardensEndpoints(this RouteGroupBuilder group) =>
-        group.MapSaveLayoutEndpoints().MapGetLayoutEndpoints().MapListGardenCatalogEndpoints().MapListIrrigationSectorCatalogEndpoints().MapListGardensEndpoints().MapListIrrigationSectorsEndpoints().MapListBedsForIrrigationEndpoints().MapCreateGardenEndpoints().MapUpdateGardenEndpoints().MapGetGardenEndpoints().MapInactivateGardenEndpoints().MapListGardenHistoryEndpoints().MapCreateIrrigationSectorEndpoints().MapUpdateIrrigationSectorEndpoints().MapGetIrrigationSectorEndpoints().MapInactivateIrrigationSectorEndpoints().MapListIrrigationSectorHistoryEndpoints().MapCreateBedEndpoints().MapUpdateBedEndpoints().MapGetBedEndpoints().MapInactivateBedEndpoints().MapListBedHistoryEndpoints().MapConfigureBedEndpoints().MapListBedConfigurationsEndpoints().MapAssignBedToSectorEndpoints().MapListBedSectorAssignmentsEndpoints().MapListBedCatalogEndpoints();
+        group.MapSaveLayoutEndpoints().MapGetLayoutEndpoints().MapListGardenCatalogEndpoints().MapListIrrigationSectorCatalogEndpoints().MapListGardensEndpoints().MapListIrrigationSectorsEndpoints().MapListBedsForIrrigationEndpoints().MapCreateGardenEndpoints().MapUpdateGardenEndpoints().MapGetGardenEndpoints().MapInactivateGardenEndpoints().MapDeleteGardenEndpoints().MapListGardenHistoryEndpoints().MapCreateIrrigationSectorEndpoints().MapUpdateIrrigationSectorEndpoints().MapGetIrrigationSectorEndpoints().MapInactivateIrrigationSectorEndpoints().MapListIrrigationSectorHistoryEndpoints().MapCreateBedEndpoints().MapUpdateBedEndpoints().MapGetBedEndpoints().MapInactivateBedEndpoints().MapListBedHistoryEndpoints().MapConfigureBedEndpoints().MapListBedConfigurationsEndpoints().MapAssignBedToSectorEndpoints().MapListBedSectorAssignmentsEndpoints().MapListBedCatalogEndpoints();
 }
 

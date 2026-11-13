@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using HortaComunitaria.Api.Common.Results;
+using HortaComunitaria.Api.Domain.Costs;
 using HortaComunitaria.Api.Domain.Cultivation;
+using HortaComunitaria.Api.Domain.Environment;
 using HortaComunitaria.Api.Domain.Gardens;
 using HortaComunitaria.Api.Domain.Irrigation;
 using HortaComunitaria.Api.Domain.Occurrences;
@@ -12,7 +14,10 @@ using HortaComunitaria.Api.Features.Activities.CreateInput;
 using HortaComunitaria.Api.Features.Activities.CreateInstitution;
 using HortaComunitaria.Api.Features.Activities.CreateParticipant;
 using HortaComunitaria.Api.Features.Activities.RegisterActivity;
+using HortaComunitaria.Api.Features.Costs.RegisterFinancialEntry;
 using HortaComunitaria.Api.Features.Cultivation.CloseCultivationCycle;
+using HortaComunitaria.Api.Features.Cultivation.CompleteDryingLot;
+using HortaComunitaria.Api.Features.Cultivation.CreateDryingLot;
 using HortaComunitaria.Api.Features.Cultivation.CorrectHarvest;
 using HortaComunitaria.Api.Features.Cultivation.OpenCultivationCycle;
 using HortaComunitaria.Api.Features.Cultivation.RegisterAgronomicObservation;
@@ -26,6 +31,9 @@ using HortaComunitaria.Api.Features.Gardens.CreateBed;
 using HortaComunitaria.Api.Features.Gardens.CreateGarden;
 using HortaComunitaria.Api.Features.Gardens.CreateIrrigationSector;
 using HortaComunitaria.Api.Features.Gardens.SaveLayout;
+using HortaComunitaria.Api.Features.Environment.CreateEnvironmentalVariable;
+using HortaComunitaria.Api.Features.Environment.CreateSamplingPoint;
+using HortaComunitaria.Api.Features.Environment.RegisterEnvironmentalMeasurement;
 using HortaComunitaria.Api.Features.Irrigation.RegisterIrrigation;
 using HortaComunitaria.Api.Features.Occurrences.ChangeOccurrenceStatus;
 using HortaComunitaria.Api.Features.Occurrences.OpenOccurrence;
@@ -56,7 +64,10 @@ internal sealed class SeedValidationScenarioCommandHandler(
     RegisterHarvestCommandHandler registerHarvest, CorrectHarvestCommandHandler correctHarvest, CloseCultivationCycleCommandHandler closeCycle,
     RegisterActivityCommandHandler registerActivity, OpenOccurrenceCommandHandler openOccurrence,
     ChangeOccurrenceStatusCommandHandler changeOccurrence, ResolveOccurrenceCommandHandler resolveOccurrence,
-    RegisterIrrigationCommandHandler registerIrrigation, ILogger<SeedValidationScenarioCommandHandler> logger)
+    RegisterIrrigationCommandHandler registerIrrigation, RegisterFinancialEntryCommandHandler registerCost,
+    CreateDryingLotCommandHandler createDrying, CompleteDryingLotCommandHandler completeDrying,
+    CreateEnvironmentalVariableCommandHandler createVariable, CreateSamplingPointCommandHandler createPoint,
+    RegisterEnvironmentalMeasurementCommandHandler registerMeasurement, ILogger<SeedValidationScenarioCommandHandler> logger)
 {
     /// <summary>Código estável da horta demonstrativa; sua existência torna o comando idempotente.</summary>
     internal const string GardenCode = "DEMO-VALIDACAO";
@@ -119,9 +130,17 @@ internal sealed class SeedValidationScenarioCommandHandler(
         var ana = Ok(await createParticipant.HandleAsync(garden, new("Ana (participante fictícia)", "Estudante"), token)).Id;
         var bruno = Ok(await createParticipant.HandleAsync(garden, new("Bruno (participante fictício)", "Voluntário"), token)).Id;
         var carla = Ok(await createParticipant.HandleAsync(garden, new("Carla (participante fictícia)", "Técnica"), token)).Id;
-        var school = Ok(await createInstitution.HandleAsync(new("Escola Estadual Exemplo (fictícia)", "EEE", "Escola"), token)).Id;
-        var compost = Ok(await createInput.HandleAsync(new("Composto orgânico (demonstração)", "Adubo", "kg"), token)).Id;
-        var neem = Ok(await createInput.HandleAsync(new("Calda de neem (demonstração)", "Controle de pragas", "L"), token)).Id;
+        var diego = Ok(await createParticipant.HandleAsync(garden, new("Diego (colaborador fictício)", "Estudante"), token)).Id;
+        var elisa = Ok(await createParticipant.HandleAsync(garden, new("Elisa (colaboradora fictícia)", "Professora"), token)).Id;
+        var fabio = Ok(await createParticipant.HandleAsync(garden, new("Fábio (colaborador fictício)", "Morador do entorno"), token)).Id;
+        // Instituições e insumos são cadastros globais: reaproveita os de uma execução anterior em vez de duplicar.
+        var school = await db.Institutions.AsNoTracking().Where(x => x.Name == "Escola Estadual Exemplo (fictícia)").Select(x => (Guid?)x.Id).FirstOrDefaultAsync(token)
+            ?? Ok(await createInstitution.HandleAsync(new("Escola Estadual Exemplo (fictícia)", "EEE", "Escola"), token)).Id;
+        async Task<Guid> Input(string name, string category, string unit) =>
+            await db.Inputs.AsNoTracking().Where(x => x.Name == name).Select(x => (Guid?)x.Id).FirstOrDefaultAsync(token)
+            ?? Ok(await createInput.HandleAsync(new(name, category, unit), token)).Id;
+        var compost = await Input("Composto orgânico (demonstração)", "Adubo", "kg");
+        var neem = await Input("Calda de neem (demonstração)", "Controle de pragas", "L");
         Guid Lot(PropagationLotResponse lot) => lot.Id;
         var lettuceLot = Lot(Ok(await registerLot.HandleAsync(garden, new("DEMO-L01", species["alface"], Cultivar("alface", "BRS Leila"), MaterialType.Seedling, "Viveiro fictício", Day(0), Fictitious), token)));
         var tomatoLot = Lot(Ok(await registerLot.HandleAsync(garden, new("DEMO-L02", species["tomate"], Cultivar("tomate", "BRS Sena"), MaterialType.Seedling, "Viveiro fictício", Day(5), Fictitious), token)));
@@ -187,10 +206,10 @@ internal sealed class SeedValidationScenarioCommandHandler(
         var mustard = await Cycle("C04", "mostarda", Cultivar("mostarda", "Gisilba"), 30, 5m, bruno);
         var mustardPlanting = await Plant(mustard.Id, mustardLot, null, 30, 40, 30m, 30m, bruno);
         await Assess(mustardPlanting, 40, 38, null, bruno);
-        await Harvest(mustard.Id, 60, 2.0m, 1.8m, "Folhas amareladas", bruno);
-        await Harvest(mustard.Id, 70, 1.6m, 1.5m, null, bruno);
+        var mustard1 = await Harvest(mustard.Id, 60, 2.0m, 1.8m, "Folhas amareladas", bruno);
+        var mustard2 = await Harvest(mustard.Id, 70, 1.6m, 1.5m, null, bruno);
         await Observe(mustard.Id, 72, "Capacidade de rebrote", "Rebrote vigoroso após o segundo corte.", null, null, "Inspeção visual", bruno);
-        await Harvest(mustard.Id, 80, 1.4m, 1.4m, null, ana);
+        var mustard3 = await Harvest(mustard.Id, 80, 1.4m, 1.4m, null, ana);
 
         process.Step("RegisteringIrrigations", "Registrando irrigações manuais, antes da integração com sensores");
         Guid? interrupted = null;
@@ -241,6 +260,59 @@ internal sealed class SeedValidationScenarioCommandHandler(
             institutions: [new(school, "Escola participante")]);
         await Activity("Reposição de cobertura morta no setor Experimental", "Manutenção", 74, Fictitious, null, experimental.Id, null, null,
             [(bruno, 1m, "Execução", false)]);
+
+        await Activity("Plantio coletivo com colaboradores", "Plantio", 58, "Novo ciclo de alface com a equipe de colaboradores (fictício).",
+            null, null, lettuce2.Id, null, [(diego, 2m, "Execução", false), (elisa, 2m, "Orientação", false), (fabio, 2m, "Execução", false)], social: true);
+        await Activity("Colheita e pesagem da mostarda", "Colheita", 80, Fictitious, null, null, mustard.Id, null,
+            [(diego, 1m, "Execução", false), (fabio, 1m, "Pesagem", false)]);
+
+        process.Step("RegisteringDrying", "Registrando secagem concluída e secagem em andamento da mostarda");
+        var drying = Ok(await createDrying.HandleAsync(garden, new(Guid.CreateVersion7(), "DEMO-SEC01", "Secador solar", Day(71), elisa,
+            [new(mustard1.Id, 1.8m), new(mustard2.Id, 1.5m)]), token)).Detail;
+        Ok(await completeDrying.HandleAsync(garden, drying.Id, new(Day(78), 0.42m, drying.Version, "Pesagem após secagem (fictício)."), token));
+        Ok(await createDrying.HandleAsync(garden, new(Guid.CreateVersion7(), "DEMO-SEC02", "Secador solar", Day(81), diego,
+            [new(mustard3.Id, 1.0m)]), token));
+
+        process.Step("RegisteringCosts", "Registrando custos previstos e realizados");
+        async Task Cost(int day, string description, string category, decimal amount, FinancialNature nature, Guid? bed = null, Guid? cycle = null) =>
+            Ok(await registerCost.HandleAsync(garden, new(Guid.CreateVersion7(), Day(day), description + " (fictício)", category, amount, nature, bed, cycle), token));
+        await Cost(0, "Mudas de alface e tomate", "Mudas e sementes", 120m, FinancialNature.Planned);
+        await Cost(2, "Mudas de alface e tomate", "Mudas e sementes", 98.50m, FinancialNature.Actual);
+        await Cost(9, "Sementes de cenoura", "Mudas e sementes", 18.90m, FinancialNature.Actual, null, carrot.Id);
+        await Cost(0, "Composto orgânico", "Insumos", 60m, FinancialNature.Actual);
+        await Cost(30, "Estacas e fitilho para tutoramento", "Materiais", 35m, FinancialNature.Actual, null, tomato.Id);
+        await Cost(15, "Regadores e mangueira", "Ferramentas", 150m, FinancialNature.Planned);
+        await Cost(18, "Regadores e mangueira", "Ferramentas", 162.40m, FinancialNature.Actual);
+        await Cost(67, "Reparo do vazamento da mangueira", "Manutenção da irrigação", 45m, FinancialNature.Actual);
+        await Cost(60, "Materiais da oficina com estudantes", "Atividades educativas", 80m, FinancialNature.Planned);
+
+        process.Step("RegisteringEnvironment", "Registrando pontos de coleta e medições manuais de umidade do solo e temperatura");
+        async Task<Guid> Variable(string code, string name, string quantity, string unit, bool soil) =>
+            await db.EnvironmentalVariables.AsNoTracking().Where(x => x.Code == code).Select(x => (Guid?)x.Id).FirstOrDefaultAsync(token)
+            ?? Ok(await createVariable.HandleAsync(new(code, name, quantity, unit, "Variável usada no cenário demonstrativo.", soil), token)).Id;
+        var moisture = await Variable("DEMO-UMIDADE-SOLO", "Umidade do solo (demonstração)", "Umidade volumétrica", "%", true);
+        var temperature = await Variable("DEMO-TEMP-AR", "Temperatura do ar (demonstração)", "Temperatura", "°C", false);
+        var points = new[]
+        {
+            Ok(await createPoint.HandleAsync(garden, new("DEMO-P1", "Ponto central do setor Norte (fictício)", "Entre C01 e C02", null, north.Id), token)).Id,
+            Ok(await createPoint.HandleAsync(garden, new("DEMO-P2", "Ponto do canteiro de tomate (fictício)", "Cabeceira do C03", beds["C03"], null), token)).Id,
+            Ok(await createPoint.HandleAsync(garden, new("DEMO-P3", "Ponto do setor Experimental (fictício)", "Ao lado do C05", beds["C05"], null), token)).Id,
+        };
+        var reading = 0;
+        foreach (var day in new[] { 49, 53, 57, 61, 65, 69, 73, 77, 81, 83 })
+        {
+            for (var i = 0; i < points.Length; i++)
+            {
+                var value = 18m + (reading * 7 + i * 5) % 14;
+                var questionable = day == 65 && i == 1;
+                Ok(await registerMeasurement.HandleAsync(garden, new(Guid.CreateVersion7(), points[i], moisture, At(day, 8, 10 + i * 5), value, "%",
+                    "Medidor portátil (leitura manual)", questionable ? MeasurementQuality.Questionable : MeasurementQuality.Normal, i == 0 ? diego : elisa,
+                    questionable ? "Leitura logo após irrigação; revisar (fictício)." : null), token));
+                reading++;
+            }
+            Ok(await registerMeasurement.HandleAsync(garden, new(Guid.CreateVersion7(), points[0], temperature, At(day, 12), 26m + day % 6, "°C",
+                "Termômetro de bulbo", MeasurementQuality.Normal, diego, null), token));
+        }
 
         // Ajustes de hoje: a configuração física ainda está em definição. Não reclassificam os fatos anteriores.
         process.Step("AdjustingStructure", "Mudando um canteiro de setor e redimensionando outro a partir de hoje");

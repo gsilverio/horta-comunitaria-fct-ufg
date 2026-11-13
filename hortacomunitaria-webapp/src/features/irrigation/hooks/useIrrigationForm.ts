@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import type { ApiFailure } from '../../../types/api'
 import { apiFailure } from '../../../services/http'
-import { editDraft, emptyDraft, FormFailure, toValues } from '../formValues'
+import { editDraft, emptyDraft, FormFailure, rememberedWaterPrice, rememberWaterPrice, toValues } from '../formValues'
 import type { Draft } from '../formValues'
 import { irrigationApi } from '../services/irrigationApi'
 import type { IrrigationDetail, IrrigationValues } from '../types/irrigation'
@@ -9,7 +9,7 @@ import { useRemote } from './useRemote'
 import { releaseNavigationGuard } from '../../../services/navigationGuard'
 
 export function useIrrigationForm(garden: string, original: IrrigationDetail | undefined, saved: (detail: IrrigationDetail) => void) {
-  const [draft, setDraft] = useState<Draft>(() => original ? editDraft(original) : emptyDraft())
+  const [draft, setDraft] = useState<Draft>(() => original ? editDraft(original) : emptyDraft(rememberedWaterPrice(garden)))
   const [reason, setReason] = useState('')
   const [baseline, setBaseline] = useState(original)
   const [review, setReview] = useState<IrrigationDetail>()
@@ -46,6 +46,7 @@ export function useIrrigationForm(garden: string, original: IrrigationDetail | u
         const current = attempt ?? { id: crypto.randomUUID(), values }
         setAttempt(current)
         detail = await irrigationApi.create(garden, current.values, current.id)
+        rememberWaterPrice(garden, draft.waterPrice)
       }
       setAttempt(undefined)
       releaseNavigationGuard()

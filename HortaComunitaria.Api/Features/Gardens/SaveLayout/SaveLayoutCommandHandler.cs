@@ -50,6 +50,14 @@ internal sealed class SaveLayoutCommandHandler(AppDbContext db, CurrentAuthor au
                 var existing = await db.IrrigationSectors.SingleOrDefaultAsync(x => x.Id == entityId && x.GardenId == gardenId && x.IsActive, token);
                 if (existing is null) return Reject(Error.NotFound());
                 sector = existing;
+                // O nome editado no mapa é o nome do cadastro; sem isso as demais telas continuariam com o nome antigo.
+                if (sector.Name != element.Name.Trim())
+                {
+                    var before = AuditSnapshots.Capture(IrrigationSectorProjection.Map(sector));
+                    var renamed = sector.Update(sector.Version, reason, now, sector.Code, element.Name, sector.Description);
+                    if (!renamed.IsSuccess) return Reject(renamed.Error);
+                    db.AuditEntries.Add(AuditSnapshots.Create(gardenId, "IrrigationSector", sector.Id, actor, now, before, AuditSnapshots.Capture(IrrigationSectorProjection.Map(sector)), reason.Value, AuditOperation.Corrected));
+                }
             }
             else
             {
@@ -72,6 +80,13 @@ internal sealed class SaveLayoutCommandHandler(AppDbContext db, CurrentAuthor au
                 var existing = await db.Beds.SingleOrDefaultAsync(x => x.Id == entityId && x.GardenId == gardenId && x.IsActive, token);
                 if (existing is null) return Reject(Error.NotFound());
                 bed = existing;
+                if (bed.Name != element.Name.Trim())
+                {
+                    var beforeName = AuditSnapshots.Capture(BedProjection.Map(bed));
+                    var renamed = bed.Update(bed.Version, reason, now, bed.Code, element.Name, bed.Location);
+                    if (!renamed.IsSuccess) return Reject(renamed.Error);
+                    db.AuditEntries.Add(AuditSnapshots.Create(gardenId, "Bed", bed.Id, actor, now, beforeName, AuditSnapshots.Capture(BedProjection.Map(bed)), reason.Value, AuditOperation.Corrected));
+                }
             }
             else
             {
