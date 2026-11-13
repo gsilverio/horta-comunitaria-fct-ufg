@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
+import loginBackground from '../../../assets/login-garden-pixel.svg'
 
 /** Moldura das telas sem sessão (entrar e troca obrigatória de senha). */
 export function AuthShell({ title, description, children }: { title: string; description: string; children: ReactNode }) {
-  return <main id="main-content" className="flex min-h-dvh items-center justify-center bg-horta-canvas px-4 py-10">
-    <section className="w-full max-w-sm border border-horta-line bg-white p-6 sm:p-8" aria-labelledby="auth-title">
+  // Fundo decorativo em pixel art (horta com canteiros, cerca e regador); o cartão mantém a leitura sobre a cena.
+  return <main id="main-content" className="flex min-h-dvh items-center justify-center bg-horta-canvas bg-cover bg-bottom bg-no-repeat px-4 py-10"
+    style={{ backgroundImage: `url(${loginBackground})` }}>
+    <section className="w-full max-w-sm rounded-lg border border-horta-line bg-white/95 p-6 shadow-[0_24px_48px_-20px_rgb(28_73_57/0.55)] backdrop-blur-sm sm:p-8" aria-labelledby="auth-title">
       <div className="mb-6 flex items-center gap-3 text-horta-forest">
         <svg viewBox="0 0 32 32" aria-hidden="true" className="size-9 fill-none stroke-current stroke-2">
           <path d="M16 27V15M16 19C6 21 3 13 5 6c8 0 12 5 11 13ZM16 15C15 7 21 3 28 4c0 7-4 12-12 11Z" />
