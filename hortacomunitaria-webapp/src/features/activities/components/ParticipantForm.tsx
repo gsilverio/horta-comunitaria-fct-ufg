@@ -1,3 +1,4 @@
+import type { DetailItem } from "../../../types/records"
 import { useState } from "react"
 import { EditorFrame } from "../../../components/EditorFrame"
 import { Field, Facts, Group } from "../../../components/Fields"
@@ -27,4 +28,4 @@ return <EditorFrame dependenciesReady={!options.loading && !options.error} title
 <Field name="category" label="Categoria" type="text" value={draft.category} change={value => change("category", value)} error={editor.error} />
 </Group></div></EditorFrame>
 }
-export function ParticipantReview({ record }: { record: Participant }) { const options = useLookups(record.gardenId, []); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Nome de exibição', value: record.displayName }, { label: 'Categoria', value: record.category }]} /></> }
+export function ParticipantReview({ record, extra = [] }: { record: Participant; extra?: DetailItem[] }) { const options = useLookups(record.gardenId, []); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Nome de exibição', value: record.displayName }, { label: 'Categoria', value: record.category }, ...extra]} /></> }

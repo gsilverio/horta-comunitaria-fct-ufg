@@ -1,3 +1,4 @@
+import type { DetailItem } from "../../../types/records"
 import { readRoute } from '../../../routes/navigation'
 import { useState } from "react"
 import { EditorFrame } from "../../../components/EditorFrame"
@@ -31,4 +32,4 @@ return <EditorFrame dependenciesReady={!options.loading && !options.error} requi
 <Field name="referenceUnit" label="Unidade de referência" required type="text" value={draft.referenceUnit} change={value => change("referenceUnit", value)} error={editor.error} />
 </Group></div></EditorFrame>
 }
-export function AgriculturalInputReview({ record }: { record: AgriculturalInput }) { const options = useLookups(readRoute().garden, []); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Nome', value: record.name }, { label: 'Categoria', value: record.category }, { label: 'Unidade de referência', value: record.referenceUnit }]} /></> }
+export function AgriculturalInputReview({ record, extra = [] }: { record: AgriculturalInput; extra?: DetailItem[] }) { const options = useLookups(readRoute().garden, []); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Nome', value: record.name }, { label: 'Categoria', value: record.category }, { label: 'Unidade de referência', value: record.referenceUnit }, ...extra]} /></> }

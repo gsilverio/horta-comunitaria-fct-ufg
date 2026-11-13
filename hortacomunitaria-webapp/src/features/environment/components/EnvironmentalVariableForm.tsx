@@ -1,3 +1,4 @@
+import type { DetailItem } from "../../../types/records"
 import { readRoute } from '../../../routes/navigation'
 import { useState } from "react"
 import { EditorFrame } from "../../../components/EditorFrame"
@@ -40,4 +41,4 @@ return <EditorFrame dependenciesReady={!options.loading && !options.error} requi
 </Group>
 </div></EditorFrame>
 }
-export function EnvironmentalVariableReview({ record }: { record: EnvironmentalVariable }) { const options = useLookups(readRoute().garden, []); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Nome', value: record.name }, { label: 'Umidade do solo', value: record.isSoilMoisture ? 'Sim' : 'Não' }, { label: 'Grandeza', value: record.quantity }, { label: 'Unidade de referência', value: record.referenceUnit }, { label: 'Descrição', value: record.description }]} /></> }
+export function EnvironmentalVariableReview({ record, extra = [] }: { record: EnvironmentalVariable; extra?: DetailItem[] }) { const options = useLookups(readRoute().garden, []); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Nome', value: record.name }, { label: 'Umidade do solo', value: record.isSoilMoisture ? 'Sim' : 'Não' }, { label: 'Grandeza', value: record.quantity }, { label: 'Unidade de referência', value: record.referenceUnit }, { label: 'Descrição', value: record.description }, ...extra]} /></> }

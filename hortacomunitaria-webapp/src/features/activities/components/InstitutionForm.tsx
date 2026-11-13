@@ -1,3 +1,4 @@
+import type { DetailItem } from "../../../types/records"
 import { readRoute } from '../../../routes/navigation'
 import { useState } from "react"
 import { EditorFrame } from "../../../components/EditorFrame"
@@ -31,4 +32,4 @@ return <EditorFrame dependenciesReady={!options.loading && !options.error} requi
 <Field name="type" label="Tipo" type="text" value={draft.type} change={value => change("type", value)} error={editor.error} />
 </Group></div></EditorFrame>
 }
-export function InstitutionReview({ record }: { record: Institution }) { const options = useLookups(readRoute().garden, []); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Nome', value: record.name }, { label: 'Sigla', value: record.acronym }, { label: 'Tipo', value: record.type }]} /></> }
+export function InstitutionReview({ record, extra = [] }: { record: Institution; extra?: DetailItem[] }) { const options = useLookups(readRoute().garden, []); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Nome', value: record.name }, { label: 'Sigla', value: record.acronym }, { label: 'Tipo', value: record.type }, ...extra]} /></> }

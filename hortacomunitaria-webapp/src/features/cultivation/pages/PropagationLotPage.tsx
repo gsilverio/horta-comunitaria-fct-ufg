@@ -1,3 +1,4 @@
+import { formatDate } from "../../../services/dates"
 import type { AppRoute } from '../../../routes/routes'
 import { goToSame } from '../../../routes/navigation'
 import { samePage } from '../../../routes/routes'
@@ -40,5 +41,5 @@ const audit = useCallback((page: number, signal: AbortSignal) => propagationLotA
 const state = useRecord<PropagationLot>(route.id, get, audit, (version, reason) => propagationLotApi.deactivate(route.garden, route.id, version, reason), () => saved("Alteração confirmada."))
 const record = state.detail.data
 if (route.action === 'editar' && record) return <PropagationLotForm garden={route.garden} original={record} saved={record => { saved("Registro salvo. Dados e indicadores serão recarregados."); const query = new URLSearchParams(route.search); goToSame(route, record.id, query); state.refresh() }} cancel={() => { const query = new URLSearchParams(route.search); goToSame(route, route.id, query) }} />
-return <RecordDetail state={state} title="Lote de origem" version={record?.version ?? 0} active={record?.isActive === true} catalog={true} back={() => { const query = new URLSearchParams(route.search); goToSame(route, '', query) }} edit={() => { const query = new URLSearchParams(route.search); goToSame(route, route.id, query, 'editar') }} items={record ? [{ label: "Valores do registro", value: <PropagationLotReview record={record} /> }] : []}>{record && <></>}</RecordDetail>
+return <RecordDetail state={state} eyebrow="Lote de origem" title={(record?.code) || "Lote de origem"} description={record && [enumLabels[record.materialType], record.origin, record.receivedOn ? `recebido em ${formatDate(record.receivedOn)}` : null].filter(Boolean).join(' · ')} version={record?.version ?? 0} active={record?.isActive === true} catalog={true} back={() => { const query = new URLSearchParams(route.search); goToSame(route, '', query) }} edit={() => { const query = new URLSearchParams(route.search); goToSame(route, route.id, query, 'editar') }} items={record ? [{ label: "Dados do lote", value: <PropagationLotReview record={record} /> }] : []}>{record && <></>}</RecordDetail>
 }

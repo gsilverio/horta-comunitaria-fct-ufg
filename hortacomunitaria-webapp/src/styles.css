@@ -69,6 +69,9 @@
     select:open { @apply border-horta-forest; }
     ::picker(select) { @apply mt-1.5 max-h-80 min-w-48 overflow-y-auto rounded-lg border border-horta-line bg-white p-1 text-sm text-horta-ink opacity-100 shadow-[0_1px_2px_rgb(28_73_57/0.08),0_14px_32px_-14px_rgb(28_73_57/0.4)]; scrollbar-gutter: stable; transition: opacity .12s, translate .12s, display .12s allow-discrete, overlay .12s allow-discrete; }
     ::picker(select):popover-open { @starting-style { opacity: 0; translate: 0 -4px; } }
+    /* Nunca rolar na horizontal: nomes longos quebram linha dentro da opção. */
+    ::picker(select) { overflow-x: hidden; max-width: calc(100vw - 24px); }
+    option { white-space: normal; overflow-wrap: anywhere; }
     option { @apply flex min-h-9 cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-1.5 leading-5 text-horta-ink transition-colors; }
     option:hover:not(:disabled), option:focus-visible { @apply bg-horta-canvas outline-none; }
     option:checked { @apply bg-horta-soft font-semibold text-horta-forest; }
@@ -162,7 +165,8 @@
   @supports (appearance: base-select) {
     .garden-switcher-select { appearance: base-select; @apply bg-transparent text-transparent opacity-100 shadow-none outline-none hover:border-0; }
     .garden-switcher-select::picker-icon { @apply hidden; }
-    .garden-switcher-select::picker(select) { width: anchor-size(width); min-width: 0; }
+    /* Pelo menos a largura do controle; cresce para mostrar o nome inteiro até o limite e, acima dele, quebra linha. */
+    .garden-switcher-select::picker(select) { min-width: anchor-size(width); width: max-content; max-width: min(22rem, calc(100vw - 24px)); }
   }
   .nav-pages { @apply m-0 mb-1 ml-5 list-none border-l border-horta-line p-0 pl-2; }
   /* Páginas da área aberta: a altura máxima vem do espaço livre do menu (Navigation.tsx); acima disso, rolam internamente. */

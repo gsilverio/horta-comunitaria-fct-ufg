@@ -1,3 +1,4 @@
+import type { DetailItem } from "../../../types/records"
 import { readRoute } from '../../../routes/navigation'
 import { linkTo } from '../../../routes/routes'
 import { useState } from "react"
@@ -38,4 +39,4 @@ return <EditorFrame dependenciesReady={!options.loading && !options.error} title
 </Group>
 </div></EditorFrame>
 }
-export function SamplingPointReview({ record }: { record: SamplingPoint }) { const options = useLookups(record.gardenId, ['bed', 'irrigationSector']); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Descrição', value: record.description }, { label: 'Localização', value: record.location }, { label: 'Canteiro', value: record.bedId ? <a className="underline" href={linkTo(readRoute().garden, 'horta/canteiros', record.bedId)}>{options.data?.bed?.find(x => x.id === record.bedId)?.label ?? record.bedId}</a> : "Não informado" }, { label: 'Setor', value: record.sectorId ? <a className="underline" href={linkTo(readRoute().garden, 'horta/setores', record.sectorId)}>{options.data?.irrigationSector?.find(x => x.id === record.sectorId)?.label ?? record.sectorId}</a> : "Não informado" }]} /></> }
+export function SamplingPointReview({ record, extra = [] }: { record: SamplingPoint; extra?: DetailItem[] }) { const options = useLookups(record.gardenId, ['bed', 'irrigationSector']); return <>{options.error && <Failure error={options.error} retry={options.retry} />}<Facts items={[{ label: 'Descrição', value: record.description }, { label: 'Localização', value: record.location }, { label: 'Canteiro', value: record.bedId ? <a className="underline" href={linkTo(readRoute().garden, 'horta/canteiros', record.bedId)}>{options.data?.bed?.find(x => x.id === record.bedId)?.label ?? record.bedId}</a> : "Não informado" }, { label: 'Setor', value: record.sectorId ? <a className="underline" href={linkTo(readRoute().garden, 'horta/setores', record.sectorId)}>{options.data?.irrigationSector?.find(x => x.id === record.sectorId)?.label ?? record.sectorId}</a> : "Não informado" }, ...extra]} /></> }
