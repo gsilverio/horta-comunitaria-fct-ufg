@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import type { ReactNode } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 
 /** Moldura das telas sem sessão (entrar e troca obrigatória de senha). */
 export function AuthShell({ title, description, children }: { title: string; description: string; children: ReactNode }) {
@@ -17,16 +19,30 @@ export function AuthShell({ title, description, children }: { title: string; des
   </main>
 }
 
-/** Campo de credencial com rótulo, autocomplete e erro associado. */
+/**
+ * Campo de credencial com rótulo, autocomplete e erro associado. Senhas têm um botão para mostrar/ocultar o texto
+ * digitado; o valor não muda, só a forma de exibição.
+ */
 export function CredentialField({ id, label, type, value, change, autoComplete, error, hint, inputRef }: {
   id: string; label: string; type: 'email' | 'password' | 'text'; value: string; change: (value: string) => void
   autoComplete: string; error?: string; hint?: string; inputRef?: React.Ref<HTMLInputElement>
 }) {
-  return <label htmlFor={id} className="mb-4 grid gap-1">
-    <span className="field-label">{label}</span>
-    <input ref={inputRef} id={id} name={id} type={type} value={value} required autoComplete={autoComplete} maxLength={type === 'password' ? 128 : 256}
-      aria-invalid={!!error} aria-describedby={`${id}-hint ${id}-error`} onChange={event => change(event.target.value)} />
+  const [visible, setVisible] = useState(false)
+  const isPassword = type === 'password'
+  const input = <input ref={inputRef} id={id} name={id} type={isPassword && visible ? 'text' : type} value={value} required autoComplete={autoComplete}
+    maxLength={isPassword ? 128 : 256} className={isPassword ? 'pr-11' : undefined} autoCapitalize={isPassword ? 'none' : undefined} spellCheck={isPassword ? false : undefined}
+    aria-invalid={!!error} aria-describedby={`${id}-hint ${id}-error`} onChange={event => change(event.target.value)} />
+  return <div className="mb-4 grid gap-1">
+    <label htmlFor={id} className="field-label">{label}</label>
+    {isPassword ? <div className="relative">
+      {input}
+      <button type="button" aria-controls={id} aria-pressed={visible} aria-label={visible ? `Ocultar ${label.toLocaleLowerCase('pt-BR')}` : `Mostrar ${label.toLocaleLowerCase('pt-BR')}`}
+        title={visible ? 'Ocultar senha' : 'Mostrar senha'} onClick={() => setVisible(current => !current)}
+        className="absolute inset-y-0 right-0 m-0 flex w-11 min-h-0 items-center justify-center rounded-r-md border-0 bg-transparent p-0 text-horta-muted shadow-none hover:bg-transparent hover:text-horta-forest focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-horta-focus">
+        {visible ? <EyeOff aria-hidden="true" className="size-4" /> : <Eye aria-hidden="true" className="size-4" />}
+      </button>
+    </div> : input}
     <small id={`${id}-hint`} className="hint">{hint}</small>
     <span id={`${id}-error`} className="field-error">{error}</span>
-  </label>
+  </div>
 }
